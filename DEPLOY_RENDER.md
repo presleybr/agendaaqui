@@ -349,9 +349,35 @@ git push -u origin main
 4. Clique em **"Create Database"**
 
 5. **IMPORTANTE**: Anote as informações de conexão:
-   - **Internal Database URL** (use esta para o backend)
+   - **Internal Database URL** (use esta para o backend) 
+postgresql://agendamentos_0jat_user:ocvizWWoGqw02cQNl8Hl6egGdawSHnHF@dpg-d42qpl75r7bs73b9huc0-a/agendamentos_0jat
+
    - **External Database URL** (use esta para acessar externamente se necessário)
+postgresql://agendamentos_0jat_user:ocvizWWoGqw02cQNl8Hl6egGdawSHnHF@dpg-d42qpl75r7bs73b9huc0-a.oregon-postgres.render.com/agendamentos_0jat
+
+
    - **Password** (será exibido apenas uma vez!)
+   Esse é o Username = ocvizWWoGqw02cQNl8Hl6egGdawSHnHF
+
+
+Connections
+Hostname
+An internal hostname used by your Render services.
+dpg-d42qpl75r7bs73b9huc0-a
+
+Port
+5432
+
+Database
+agendamentos_0jat
+
+Username
+agendamentos_0jat_user
+
+Password
+ocvizWWoGqw02cQNl8Hl6egGdawSHnHF
+
+   
 
 ## 🔧 Passo 3: Deploy do Backend
 
@@ -408,8 +434,8 @@ ADMIN_PASSWORD=SuaSenhaSegura123!@#
 ADMIN_NAME=Administrador
 
 # Mercado Pago (suas credenciais de produção)
-MP_ACCESS_TOKEN=seu_access_token_de_producao
-MP_PUBLIC_KEY=sua_public_key_de_producao
+MP_ACCESS_TOKEN=TEST-727307920606410-110100-b65a7008e2bd0221e134d9b2ec1abc9a-17728094
+MP_PUBLIC_KEY=TEST-62c37382-077f-4b94-80c7-cd027cce815a
 
 # Scheduling
 MIN_ADVANCE_HOURS=2
