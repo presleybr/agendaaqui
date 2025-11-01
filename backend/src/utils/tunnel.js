@@ -33,10 +33,21 @@ async function startTunnel() {
       subdomain: subdomain
     });
 
-    console.log('✅ LocalTunnel ativo!');
+    console.log('');
+    console.log('================================================================');
+    console.log('✅ LocalTunnel iniciado com sucesso!');
+    console.log('================================================================');
+    console.log('');
     console.log(`🌐 URL Pública: ${tunnel.url}`);
-    console.log('📌 Configure este URL como webhook no Mercado Pago:');
-    console.log(`   ${tunnel.url}/api/payment/webhook`);
+    console.log('');
+    console.log('🔗 URL do Webhook:');
+    console.log(`   ${tunnel.url}/api/webhook/mercadopago`);
+    console.log('');
+    console.log('⚠️  Configure esta URL no Mercado Pago como webhook!');
+    console.log('📖 Guia: WEBHOOK_LOCAL_SETUP.md');
+    console.log('');
+    console.log('🔄 Modo: Sempre ativo com reconexão automática');
+    console.log('================================================================');
     console.log('');
 
     // Listener para quando o tunnel fechar
@@ -73,7 +84,8 @@ async function startTunnel() {
       }
     });
 
-    // Heartbeat - verifica se o tunnel ainda está ativo a cada 30 segundos
+    // Heartbeat - verifica se o tunnel ainda está ativo a cada 15 segundos
+    // Mantém o tunnel sempre ativo e reconecta automaticamente se necessário
     const heartbeat = setInterval(async () => {
       if (isShuttingDown) {
         clearInterval(heartbeat);
@@ -85,13 +97,31 @@ async function startTunnel() {
           console.log('⚠️  Tunnel não está respondendo');
           clearInterval(heartbeat);
           await startTunnel();
+        } else {
+          // Faz um ping silencioso no tunnel para mantê-lo ativo
+          const https = require('https');
+          const url = new URL(tunnel.url);
+
+          const req = https.get({
+            hostname: url.hostname,
+            path: '/api/health',
+            timeout: 5000
+          }, () => {
+            // Ping bem-sucedido, tunnel está ativo
+          });
+
+          req.on('error', () => {
+            // Erro no ping, mas não precisa fazer nada
+            // O listener de 'close' vai cuidar da reconexão se necessário
+          });
+
+          req.end();
         }
       } catch (error) {
-        console.error('❌ Erro no heartbeat:', error.message);
-        clearInterval(heartbeat);
-        await startTunnel();
+        // Erro silencioso no heartbeat, não precisa logar
+        // O listener de 'close' vai cuidar da reconexão
       }
-    }, 30000);
+    }, 15000);
 
   } catch (error) {
     console.error('❌ Erro ao iniciar LocalTunnel:', error.message);
