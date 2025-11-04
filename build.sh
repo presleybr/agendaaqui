@@ -9,13 +9,20 @@ echo "📦 Instalando dependências do backend..."
 cd backend
 npm install
 
-# Rodar migrações do banco de dados
-echo "🗄️ Executando migrações do banco de dados..."
-npm run migrate
+# Detectar qual banco usar (PostgreSQL se DATABASE_URL existe, senão SQLite)
+if [ -n "$DATABASE_URL" ]; then
+  echo "🗄️ Detectado PostgreSQL (DATABASE_URL configurado)"
+  echo "🗄️ Executando migrações para PostgreSQL..."
+  npm run migrate:postgres
+else
+  echo "🗄️ Detectado SQLite (DATABASE_URL não configurado)"
+  echo "🗄️ Executando migrações para SQLite..."
+  npm run migrate
 
-# Criar usuário admin inicial
-echo "👤 Criando usuário admin inicial..."
-npm run seed
+  # Criar usuário admin inicial (só para SQLite, PostgreSQL já cria no migrate)
+  echo "👤 Criando usuário admin inicial..."
+  npm run seed
+fi
 
 # Voltar para a raiz e instalar dependências do frontend
 echo "📦 Instalando dependências do frontend..."
