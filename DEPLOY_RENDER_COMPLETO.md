@@ -248,29 +248,34 @@ WORKING_DAYS=1,2,3,4,5,6
 #### 💰 Preços (em centavos)
 
 ```bash
-PRICE_CAUTELAR=15000
-PRICE_TRANSFERENCIA=12000
+# Cautelar: R$ 350,00 = 35000 centavos
+PRICE_CAUTELAR=35000
+# Transferência: R$ 220,00 = 22000 centavos
+PRICE_TRANSFERENCIA=22000
+# Outros: R$ 100,00 = 10000 centavos
 PRICE_OUTROS=10000
 ```
 
-📝 **Exemplo**: 15000 centavos = R$ 150,00
+📝 **Exemplo**: 35000 centavos = R$ 350,00
 
 #### 📊 Meta Pixel (Opcional)
 
 ```bash
 META_PIXEL_ID=seu_pixel_id_aqui
-VITE_META_PIXEL_ID=seu_pixel_id_aqui
 ```
 
 📝 Como obter: https://business.facebook.com/events_manager
 
-#### 🔧 Variável Extra do Vite (Frontend)
+#### 🔧 Variável do Vite (Frontend) - OPCIONAL
 
 ```bash
 VITE_API_URL=/api
 ```
 
-⚠️ **IMPORTANTE**: Em produção, use `/api` (caminho relativo), não `http://localhost:3000/api`
+⚠️ **NOTA**: Esta variável é opcional! O sistema detecta automaticamente:
+- Em produção (Render): usa `/api` (caminho relativo)
+- Em desenvolvimento: usa `http://localhost:3000/api`
+- Se definir `VITE_API_URL`, essa será usada com prioridade
 
 ---
 

@@ -5,20 +5,33 @@ function getApiUrl() {
   console.log('🔍 Detectando URL da API...');
   console.log('   window.location.hostname:', window.location.hostname);
   console.log('   window.location.href:', window.location.href);
+  console.log('   VITE_API_URL:', import.meta.env.VITE_API_URL);
+
+  // Se tiver variável de ambiente VITE_API_URL, usar ela
+  if (import.meta.env.VITE_API_URL) {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    console.log('✅ Usando VITE_API_URL:', apiUrl);
+    return apiUrl;
+  }
+
+  // Se estiver em produção (não localhost), usar caminho relativo
+  if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')) {
+    const apiUrl = '/api';
+    console.log('🌐 Produção detectada! Usando caminho relativo:', apiUrl);
+    return apiUrl;
+  }
 
   // Se estiver sendo acessado via LocalTunnel
   if (window.location.hostname.includes('loca.lt')) {
-    // Substituir 'agendamento-app' por 'agendamento-api' no hostname
     const backendHostname = window.location.hostname.replace('agendamento-app', 'agendamento-api');
     const apiUrl = `https://${backendHostname}/api`;
     console.log('🌐 LocalTunnel detectado! Usando API:', apiUrl);
     return apiUrl;
   }
 
-  // Caso contrário, usar localhost ou variável de ambiente
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  // Caso contrário, usar localhost (desenvolvimento)
+  const apiUrl = 'http://localhost:3000/api';
   console.log('🏠 Modo local. Usando API:', apiUrl);
-  console.log('   VITE_API_URL:', import.meta.env.VITE_API_URL);
   return apiUrl;
 }
 
