@@ -118,15 +118,42 @@ app.post('/api/agendamentos', agendamentoLimiter);
 // Serve static files from frontend build in production
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');
-  app.use(express.static(frontendPath));
 
-  // Handle client-side routing - serve index.html for all non-API routes
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(frontendPath, 'index.html'));
-    } else {
-      res.status(404).json({ error: 'Rota não encontrada' });
+  // Serve static files with proper MIME types
+  app.use(express.static(frontendPath, {
+    setHeaders: (res, filePath) => {
+      // Set correct MIME types for assets
+      if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      } else if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      }
     }
+  }));
+
+  // Handle client-side routing - serve index.html for all non-API, non-asset routes
+  app.get('*', (req, res) => {
+    // Don't intercept API routes
+    if (req.path.startsWith('/api')) {
+      res.status(404).json({ error: 'Rota não encontrada' });
+      return;
+    }
+
+    // Don't intercept static asset requests (they should have been handled by express.static)
+    // If we got here and it's an asset request, it means the file doesn't exist
+    if (req.path.startsWith('/assets/') ||
+        req.path.endsWith('.js') ||
+        req.path.endsWith('.css') ||
+        req.path.endsWith('.ico') ||
+        req.path.endsWith('.png') ||
+        req.path.endsWith('.jpg') ||
+        req.path.endsWith('.svg')) {
+      res.status(404).json({ error: 'Arquivo não encontrado' });
+      return;
+    }
+
+    // For all other routes, serve the SPA index.html
+    res.sendFile(path.join(frontendPath, 'index.html'));
   });
 } else {
   // 404 handler for development
