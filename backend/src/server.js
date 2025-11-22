@@ -25,6 +25,24 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
+// Serve static files from frontend build in production BEFORE any other middleware
+if (process.env.NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../../frontend/dist');
+  console.log("Serving static files from:", frontendPath);
+
+  // Serve static files with proper MIME types
+  app.use(express.static(frontendPath, {
+    setHeaders: (res, filePath) => {
+      // Set correct MIME types for assets
+      if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      } else if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      }
+    }
+  }));
+}
+
 // CORS - Allow both common Vite ports and LocalTunnel
 const allowedOrigins = [
   'http://localhost:5173',
@@ -33,7 +51,7 @@ const allowedOrigins = [
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
@@ -57,7 +75,10 @@ app.use(cors({
     return callback(new Error(msg), false);
   },
   credentials: true
-}));
+};
+
+// Apply CORS only to API routes
+app.use('/api', cors(corsOptions));
 
 // Body parser
 app.use(express.json());
@@ -115,22 +136,9 @@ app.use('/api/payment', paymentRoutes);
 // Apply stricter rate limit to agendamento creation
 app.post('/api/agendamentos', agendamentoLimiter);
 
-// Serve static files from frontend build in production
+// Handle client-side routing in production - serve index.html for all non-API routes
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');
-  console.log("Serving static files from:", frontendPath);
-
-  // Serve static files with proper MIME types
-  app.use(express.static(frontendPath, {
-    setHeaders: (res, filePath) => {
-      // Set correct MIME types for assets
-      if (filePath.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-      } else if (filePath.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-      }
-    }
-  }));
 
   // Handle client-side routing - serve index.html for all non-API, non-asset routes
   app.get('*', (req, res) => {
