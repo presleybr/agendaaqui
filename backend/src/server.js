@@ -118,6 +118,7 @@ app.post('/api/agendamentos', agendamentoLimiter);
 // Serve static files from frontend build in production
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');
+  console.log("Serving static files from:", frontendPath);
 
   // Serve static files with proper MIME types
   app.use(express.static(frontendPath, {
@@ -148,7 +149,7 @@ if (process.env.NODE_ENV === 'production') {
         req.path.endsWith('.png') ||
         req.path.endsWith('.jpg') ||
         req.path.endsWith('.svg')) {
-      res.status(404).json({ error: 'Arquivo não encontrado' });
+      res.status(404).send('File not found');
       return;
     }
 
