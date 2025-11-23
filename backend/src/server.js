@@ -31,6 +31,18 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
+// Serve public folder for static assets (admin panel, etc.)
+const publicPath = path.join(__dirname, '../public');
+app.use(express.static(publicPath, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    } else if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
+
 // Serve static files from frontend build in production BEFORE any other middleware
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');

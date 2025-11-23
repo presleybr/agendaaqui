@@ -5,8 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel Super Admin - Vistoria Express</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="/src/styles/theme.css">
-  <link rel="stylesheet" href="/src/styles/admin.css">
+  <style>
+    /* CSS Variables - Theme */
+    :root {
+      --brand-primary: #ed6a2b;
+      --brand-primary-dark: #d55a1f;
+      --brand-primary-light: #f58649;
+      --brand-primary-lightest: #ffe8dc;
+
+      --text-primary: #171717;
+      --text-secondary: #525252;
+      --text-tertiary: #a3a3a3;
+
+      --bg-primary: #ffffff;
+      --bg-secondary: #fafafa;
+      --bg-elevated: #ffffff;
+      --bg-hover: #f5f5f5;
+      --bg-overlay: rgba(0, 0, 0, 0.5);
+
+      --border-light: #e5e5e5;
+      --border-medium: #d4d4d4;
+
+      --status-success: #10b981;
+      --status-success-light: #d1fae5;
+      --status-success-dark: #065f46;
+      --status-danger: #ef4444;
+      --status-danger-light: #fee2e2;
+      --status-danger-dark: #991b1b;
+
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+      --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+      --shadow-focus: 0 0 0 3px var(--brand-primary-lightest);
+
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-full: 9999px;
+
+      --spacing-2: 8px;
+      --spacing-3: 12px;
+      --spacing-4: 16px;
+      --spacing-6: 24px;
+      --spacing-8: 32px;
+      --spacing-12: 48px;
+
+      --font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      --text-sm: 0.875rem;
+      --text-base: 1rem;
+      --text-lg: 1.125rem;
+      --text-xl: 1.25rem;
+      --text-2xl: 1.5rem;
+      --text-3xl: 1.875rem;
+      --text-4xl: 2.25rem;
+
+      --font-medium: 500;
+      --font-semibold: 600;
+      --font-bold: 700;
+
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --z-modal: 1300;
+    }
+  </style>
   <style>
     * {
       margin: 0;
@@ -681,6 +742,6 @@
     </div>
   </div>
 
-  <script type="module" src="/src/super-admin.js"></script>
+  <script src="/super-admin.js"></script>
 </body>
 </html>

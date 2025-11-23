@@ -4,14 +4,14 @@ const db = require('../config/database');
 const { addDays, format, parse, isAfter, isBefore, addHours } = require('date-fns');
 
 class AvailabilityService {
-  static getAvailableSlots(data) {
-    const config = Configuracao.getWorkingHours();
-    const vagasPorHorario = parseInt(Configuracao.get('vagas_por_horario') || '3');
-    const agendamentosNaData = Agendamento.findByDate(data);
+  static async getAvailableSlots(data) {
+    const config = await Configuracao.getWorkingHours();
+    const vagasPorHorario = parseInt(await Configuracao.get('vagas_por_horario') || '3');
+    const agendamentosNaData = await Agendamento.findByDate(data);
 
     const slots = [];
-    const [horaInicio, minutoInicio] = config.inicio.split(':').map(Number);
-    const [horaFim, minutoFim] = config.fim.split(':').map(Number);
+    const [horaInicio, minutoInicio] = (config.inicio || '08:00').split(':').map(Number);
+    const [horaFim, minutoFim] = (config.fim || '18:00').split(':').map(Number);
 
     let currentTime = new Date();
     currentTime.setHours(horaInicio, minutoInicio, 0, 0);
@@ -49,15 +49,15 @@ class AvailabilityService {
     return slots;
   }
 
-  static isSlotAvailable(data, horario) {
-    const slots = this.getAvailableSlots(data);
+  static async isSlotAvailable(data, horario) {
+    const slots = await this.getAvailableSlots(data);
     const slot = slots.find(s => s.horario === horario);
     return slot ? slot.disponivel : false;
   }
 
-  static canSchedule(data, horario) {
-    const antecedenciaMinima = parseInt(Configuracao.get('antecedencia_minima') || '2');
-    const antecedenciaMaxima = parseInt(Configuracao.get('antecedencia_maxima') || '30');
+  static async canSchedule(data, horario) {
+    const antecedenciaMinima = parseInt(await Configuracao.get('antecedencia_minima') || '2');
+    const antecedenciaMaxima = parseInt(await Configuracao.get('antecedencia_maxima') || '30');
 
     const agora = new Date();
     const dataAgendamento = parse(`${data} ${horario}`, 'yyyy-MM-dd HH:mm', new Date());
@@ -82,7 +82,7 @@ class AvailabilityService {
 
     // Verificar dia da semana
     const diaSemana = dataAgendamento.getDay();
-    const config = Configuracao.getWorkingHours();
+    const config = await Configuracao.getWorkingHours();
     if (!config.dias_trabalho.includes(diaSemana)) {
       return {
         allowed: false,
@@ -91,7 +91,7 @@ class AvailabilityService {
     }
 
     // Verificar disponibilidade
-    if (!this.isSlotAvailable(data, horario)) {
+    if (!(await this.isSlotAvailable(data, horario))) {
       return {
         allowed: false,
         reason: 'Horário não disponível'
@@ -101,8 +101,8 @@ class AvailabilityService {
     return { allowed: true };
   }
 
-  static getAvailableDates(days = 30) {
-    const config = Configuracao.getWorkingHours();
+  static async getAvailableDates(days = 30) {
+    const config = await Configuracao.getWorkingHours();
     const dates = [];
     const today = new Date();
 
@@ -120,7 +120,7 @@ class AvailabilityService {
         `).get(dataFormatada);
 
         if (!diaBloqueado) {
-          const slots = this.getAvailableSlots(dataFormatada);
+          const slots = await this.getAvailableSlots(dataFormatada);
           const slotsDisponiveis = slots.filter(s => s.disponivel).length;
 
           dates.push({
