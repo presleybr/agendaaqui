@@ -232,7 +232,20 @@ const createTables = async () => {
     console.log('✅ Configurações padrão inseridas\n');
 
     await client.query('COMMIT');
-    console.log('✅ Migrations executadas com sucesso!\n');
+    console.log('✅ Migrations básicas executadas com sucesso!\n');
+
+    // Executar migration de multi-tenancy
+    console.log('🔄 Executando migration de multi-tenancy...\n');
+    const fs = require('fs');
+    const path = require('path');
+    const multitenantSQL = fs.readFileSync(
+      path.join(__dirname, '005_multitenant_saas.sql'),
+      'utf8'
+    );
+
+    await client.query(multitenantSQL);
+    console.log('✅ Migration de multi-tenancy executada com sucesso!\n');
+
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('\n❌ Erro ao executar migrations:', error);
