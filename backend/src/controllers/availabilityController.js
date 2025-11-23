@@ -47,7 +47,7 @@ class AvailabilityController {
 
   static async getPrices(req, res) {
     try {
-      const precos = Configuracao.getPrices();
+      const precos = await Configuracao.getPrices();
 
       res.json({
         cautelar: {
@@ -64,6 +64,7 @@ class AvailabilityController {
         }
       });
     } catch (error) {
+      console.error('Erro ao buscar preços:', error);
       res.status(500).json({ error: 'Erro ao buscar preços' });
     }
   }
