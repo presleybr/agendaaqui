@@ -18,6 +18,7 @@ const clientesRoutes = require('./routes/clientes');
 const notificationsRoutes = require('./routes/notifications');
 const paymentRoutes = require('./routes/payment');
 const adminRoutes = require('./routes/admin');
+const empresasRoutes = require('./routes/empresas');
 
 const app = express();
 
@@ -169,6 +170,7 @@ app.get('/api/health', (req, res) => {
 
 // Admin Routes (protegidas por autenticação)
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/empresas', empresasRoutes);
 
 // Public Routes (sistema de agendamento)
 app.use('/api/auth', authRoutes);
