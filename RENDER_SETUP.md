@@ -172,11 +172,20 @@ Deve retornar:
 1. Verifique a variável `FRONTEND_URL` no backend
 2. Use `*` para permitir qualquer origem (ou a URL específica do frontend)
 
-### Banco de dados vazio:
+### Banco de dados vazio ou Login não funciona:
 
 1. Entre no backend via **Shell** (Render Shell)
-2. Execute: `npm run migrate:postgres`
-3. Execute: `cd src && node setup.js && node create-admin.js`
+2. Execute as migrations:
+   ```bash
+   npm run migrate:postgres
+   ```
+3. Garanta que o admin existe:
+   ```bash
+   npm run ensure-admin
+   ```
+4. Você verá as credenciais:
+   - Email: `admin@vistoria.com`
+   - Senha: `Admin123!@#`
 
 ---
 
