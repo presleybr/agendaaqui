@@ -30,19 +30,27 @@ app.use(helmet({
 // Serve static files from frontend build in production BEFORE any other middleware
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');
-  console.log("Serving static files from:", frontendPath);
+  const fs = require('fs');
 
-  // Serve static files with proper MIME types
-  app.use(express.static(frontendPath, {
-    setHeaders: (res, filePath) => {
-      // Set correct MIME types for assets
-      if (filePath.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-      } else if (filePath.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
+  // Verificar se o diretório do frontend existe
+  if (fs.existsSync(frontendPath)) {
+    console.log("✅ Serving static files from:", frontendPath);
+
+    // Serve static files with proper MIME types
+    app.use(express.static(frontendPath, {
+      setHeaders: (res, filePath) => {
+        // Set correct MIME types for assets
+        if (filePath.endsWith('.css')) {
+          res.setHeader('Content-Type', 'text/css');
+        } else if (filePath.endsWith('.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        }
       }
-    }
-  }));
+    }));
+  } else {
+    console.log("⚠️  Frontend dist not found at:", frontendPath);
+    console.log("📌 API-only mode: Frontend should be served separately");
+  }
 }
 
 // CORS - Allow both common Vite ports and LocalTunnel
@@ -147,6 +155,9 @@ app.post('/api/agendamentos', agendamentoLimiter);
 // Handle client-side routing in production - serve index.html for all non-API routes
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');
+  const fs = require('fs');
+  const indexPath = path.join(frontendPath, 'index.html');
+  const frontendExists = fs.existsSync(indexPath);
 
   // Handle client-side routing - serve index.html for all non-API, non-asset routes
   app.get('*', (req, res) => {
@@ -169,8 +180,16 @@ if (process.env.NODE_ENV === 'production') {
       return;
     }
 
-    // For all other routes, serve the SPA index.html
-    res.sendFile(path.join(frontendPath, 'index.html'));
+    // For all other routes, serve the SPA index.html if it exists
+    if (frontendExists) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(200).json({
+        message: 'API Server Running',
+        note: 'Frontend should be served separately',
+        api_docs: '/api/health'
+      });
+    }
   });
 } else {
   // 404 handler for development
