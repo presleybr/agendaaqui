@@ -381,9 +381,16 @@ export class ScheduleForm {
     container.innerHTML = '<div class="spinner"></div>';
 
     try {
-      const slots = await scheduleService.getAvailableSlots(date);
+      const response = await scheduleService.getAvailableSlots(date);
+      console.log('📅 Response from getAvailableSlots:', response);
+      console.log('📅 Response type:', typeof response);
+      console.log('📅 Is Array?:', Array.isArray(response));
 
-      if (slots.length === 0) {
+      // Handle both array response and object with slots property
+      const slots = Array.isArray(response) ? response : (response.slots || []);
+      console.log('📅 Slots after normalization:', slots);
+
+      if (!Array.isArray(slots) || slots.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #666;">Nenhum horário disponível para esta data</p>';
         return;
       }
