@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 const errorHandler = require('./middleware/errorHandler');
+const { detectTenant } = require('./middleware/tenantMiddleware');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -16,6 +17,7 @@ const configRoutes = require('./routes/config');
 const clientesRoutes = require('./routes/clientes');
 const notificationsRoutes = require('./routes/notifications');
 const paymentRoutes = require('./routes/payment');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
@@ -84,6 +86,9 @@ app.use('/api', cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Tenant detection middleware (detecta subdomínio)
+app.use(detectTenant);
+
 // Rate limiting mais flexível para desenvolvimento
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
@@ -124,7 +129,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Routes
+// Admin Routes (protegidas por autenticação)
+app.use('/api/admin', adminRoutes);
+
+// Public Routes (sistema de agendamento)
 app.use('/api/auth', authRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/availability', availabilityRoutes);

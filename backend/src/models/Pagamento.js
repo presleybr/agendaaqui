@@ -141,6 +141,31 @@ class Pagamento {
       fields.push(usePostgres ? `qr_code_base64 = $${paramIndex++}` : 'qr_code_base64 = ?');
       values.push(data.qr_code_base64);
     }
+    // Campos do split
+    if (data.empresa_id !== undefined) {
+      fields.push(usePostgres ? `empresa_id = $${paramIndex++}` : 'empresa_id = ?');
+      values.push(data.empresa_id);
+    }
+    if (data.valor_taxa !== undefined) {
+      fields.push(usePostgres ? `valor_taxa = $${paramIndex++}` : 'valor_taxa = ?');
+      values.push(data.valor_taxa);
+    }
+    if (data.valor_empresa !== undefined) {
+      fields.push(usePostgres ? `valor_empresa = $${paramIndex++}` : 'valor_empresa = ?');
+      values.push(data.valor_empresa);
+    }
+    if (data.status_repasse !== undefined) {
+      fields.push(usePostgres ? `status_repasse = $${paramIndex++}` : 'status_repasse = ?');
+      values.push(data.status_repasse);
+    }
+    if (data.data_repasse !== undefined) {
+      fields.push(usePostgres ? `data_repasse = $${paramIndex++}` : 'data_repasse = ?');
+      values.push(data.data_repasse);
+    }
+    if (data.split_data !== undefined) {
+      fields.push(usePostgres ? `split_data = $${paramIndex++}` : 'split_data = ?');
+      values.push(typeof data.split_data === 'string' ? data.split_data : JSON.stringify(data.split_data));
+    }
 
     fields.push(usePostgres ? `atualizado_em = CURRENT_TIMESTAMP` : 'atualizado_em = CURRENT_TIMESTAMP');
     values.push(id);
@@ -168,6 +193,69 @@ class Pagamento {
     const payment = await this.findByMpPaymentId(mpPaymentId);
     if (!payment) return null;
     return await this.update(payment.id, data);
+  }
+
+  static async findPendingSplits() {
+    if (usePostgres) {
+      const result = await db.query(`
+        SELECT * FROM pagamentos
+        WHERE status = 'aprovado'
+        AND (status_repasse IS NULL OR status_repasse = 'pendente')
+        AND empresa_id IS NOT NULL
+        ORDER BY data_pagamento ASC
+      `);
+      return result.rows;
+    } else {
+      return db.prepare(`
+        SELECT * FROM pagamentos
+        WHERE status = 'aprovado'
+        AND (status_repasse IS NULL OR status_repasse = 'pendente')
+        AND empresa_id IS NOT NULL
+        ORDER BY data_pagamento ASC
+      `).all();
+    }
+  }
+
+  static async findByEmpresa(empresaId, filters = {}) {
+    let query = 'SELECT * FROM pagamentos WHERE empresa_id = ';
+    const params = [empresaId];
+
+    if (usePostgres) {
+      query += '$1';
+      let paramIndex = 2;
+
+      if (filters.status) {
+        query += ` AND status = $${paramIndex}`;
+        params.push(filters.status);
+        paramIndex++;
+      }
+
+      query += ' ORDER BY created_at DESC';
+
+      if (filters.limit) {
+        query += ` LIMIT $${paramIndex}`;
+        params.push(filters.limit);
+      }
+
+      const result = await db.query(query, params);
+      return result.rows;
+    } else {
+      query += '?';
+
+      if (filters.status) {
+        query += ` AND status = ?`;
+        params.push(filters.status);
+      }
+
+      query += ' ORDER BY created_at DESC';
+
+      if (filters.limit) {
+        query += ` LIMIT ?`;
+        params.push(filters.limit);
+      }
+
+      return db.prepare(query).all(...params);
+    }
   }
 }
 
