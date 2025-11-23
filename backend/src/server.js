@@ -21,6 +21,10 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 
+// Trust proxy - necessário para Render, Heroku, etc (proxies reversos)
+// Isso permite que o rate limiting funcione corretamente
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for static files in production
