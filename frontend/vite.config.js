@@ -42,6 +42,8 @@ export default defineConfig({
       }
     }
   },
+  // Copy public files to dist
+  publicDir: 'public',
   // Disable CSS minification in dev to ensure proper loading
   css: {
     devSourcemap: true

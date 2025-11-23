@@ -124,7 +124,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Tenant detection middleware (detecta subdomínio)
-app.use(detectTenant);
+// DESABILITADO: não estamos usando multi-tenancy
+// app.use(detectTenant);
 
 // Rate limiting mais flexível para desenvolvimento
 const limiter = rateLimit({

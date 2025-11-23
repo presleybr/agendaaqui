@@ -17,6 +17,8 @@ Este projeto usa **dois serviços** no Render:
 4. **Aguarde** a criação (pode levar alguns minutos)
 5. **Copie** a **Internal Database URL** (você vai precisar dela)
 
+postgresql://agendamentos_user:Ir3BriZT5FvaolIk8vHty0NiXPcRXdxy@dpg-d4hoten5r7bs73c13o0g-a/agendamentos_2qh3
+
 ---
 
 ## 2. Criar o Backend (Web Service)
