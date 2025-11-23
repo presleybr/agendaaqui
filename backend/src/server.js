@@ -156,6 +156,18 @@ app.use('/api/payment', paymentRoutes);
 // Apply stricter rate limit to agendamento creation
 app.post('/api/agendamentos', agendamentoLimiter);
 
+// Serve Super Admin Panel at /admin route
+app.get('/admin', (req, res) => {
+  const adminPath = path.join(__dirname, '../../frontend/super-admin.html');
+  const fs = require('fs');
+
+  if (fs.existsSync(adminPath)) {
+    res.sendFile(adminPath);
+  } else {
+    res.status(404).send('Super Admin panel not found');
+  }
+});
+
 // Handle client-side routing in production - serve index.html for all non-API routes
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');

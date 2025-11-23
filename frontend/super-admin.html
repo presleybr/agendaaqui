@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Super Admin - Vistoria Express</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/src/styles/theme.css">
+  <link rel="stylesheet" href="/src/styles/admin.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    /* Login Screen */
+    .login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--gradient-primary);
+      padding: var(--spacing-6);
+    }
+
+    .login-box {
+      background: var(--bg-elevated);
+      padding: var(--spacing-12);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-2xl);
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: var(--spacing-8);
+    }
+
+    .login-logo h1 {
+      color: var(--brand-primary);
+      font-size: var(--text-4xl);
+      font-weight: var(--font-bold);
+      margin-bottom: var(--spacing-2);
+    }
+
+    .login-logo p {
+      color: var(--text-secondary);
+      font-size: var(--text-base);
+    }
+
+    .form-group {
+      margin-bottom: var(--spacing-6);
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: var(--spacing-2);
+      color: var(--text-secondary);
+      font-weight: var(--font-medium);
+      font-size: var(--text-sm);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: var(--spacing-3) var(--spacing-4);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      font-size: var(--text-base);
+      transition: all var(--transition-fast);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--brand-primary);
+      box-shadow: var(--shadow-focus);
+    }
+
+    .alert {
+      padding: var(--spacing-4);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-4);
+      font-size: var(--text-sm);
+    }
+
+    .alert-error {
+      background: var(--status-danger-light);
+      color: var(--status-danger-dark);
+      border: 1px solid var(--status-danger);
+    }
+
+    .alert-success {
+      background: var(--status-success-light);
+      color: var(--status-success-dark);
+      border: 1px solid var(--status-success);
+    }
+
+    /* Dashboard Layout */
+    .dashboard {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: var(--bg-elevated);
+      border-right: 1px solid var(--border-light);
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      padding: var(--spacing-6);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .sidebar-logo {
+      color: var(--brand-primary);
+      font-size: var(--text-2xl);
+      font-weight: var(--font-bold);
+      text-align: center;
+    }
+
+    .sidebar-nav {
+      padding: var(--spacing-4) 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-3) var(--spacing-6);
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all var(--transition-fast);
+      cursor: pointer;
+      font-weight: var(--font-medium);
+      margin: 2px var(--spacing-4);
+      border-radius: var(--radius-md);
+    }
+
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--brand-primary);
+      color: white;
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .sidebar-footer {
+      padding: var(--spacing-6);
+      border-top: 1px solid var(--border-light);
+      position: absolute;
+      bottom: 0;
+      width: 280px;
+      background: var(--bg-elevated);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-4);
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      background: var(--brand-primary-lightest);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--brand-primary);
+    }
+
+    .user-name {
+      font-weight: var(--font-semibold);
+      color: var(--text-primary);
+    }
+
+    .user-role {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+
+    .main-content {
+      margin-left: 280px;
+      flex: 1;
+      padding: var(--spacing-8);
+    }
+
+    .page-header {
+      margin-bottom: var(--spacing-8);
+    }
+
+    .page-title {
+      font-size: var(--text-4xl);
+      font-weight: var(--font-bold);
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-2);
+    }
+
+    .page-subtitle {
+      color: var(--text-secondary);
+      font-size: var(--text-lg);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: var(--spacing-6);
+      margin-bottom: var(--spacing-8);
+    }
+
+    .stat-card {
+      background: var(--bg-elevated);
+      padding: var(--spacing-6);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-light);
+    }
+
+    .stat-label {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-2);
+    }
+
+    .stat-value {
+      font-size: var(--text-3xl);
+      font-weight: var(--font-bold);
+      color: var(--brand-primary);
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-6);
+      margin-bottom: var(--spacing-6);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-6);
+      padding-bottom: var(--spacing-4);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .card-title {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-semibold);
+      color: var(--text-primary);
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: var(--bg-secondary);
+      padding: var(--spacing-4);
+      text-align: left;
+      font-weight: var(--font-semibold);
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    td {
+      padding: var(--spacing-4);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    tr:hover {
+      background: var(--bg-hover);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: var(--spacing-2);
+    }
+
+    .spinner {
+      border: 3px solid var(--border-light);
+      border-top: 3px solid var(--brand-primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: var(--spacing-8) auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: var(--z-modal);
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-overlay);
+      overflow-y: auto;
+    }
+
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-6);
+    }
+
+    .modal-content {
+      background: var(--bg-elevated);
+      padding: var(--spacing-8);
+      border-radius: var(--radius-xl);
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-2xl);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-6);
+    }
+
+    .modal-title {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-bold);
+      color: var(--brand-primary);
+    }
+
+    .btn-close {
+      background: none;
+      border: none;
+      font-size: var(--text-2xl);
+      cursor: pointer;
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
+    }
+
+    .btn-close:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--spacing-4);
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-3);
+      margin-top: var(--spacing-6);
+      padding-top: var(--spacing-6);
+      border-top: 1px solid var(--border-light);
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <div class="login-logo">
+        <h1>Vistoria Express</h1>
+        <p>Painel Super Admin</p>
+      </div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Senha</label>
+          <input type="password" id="password" required autocomplete="current-password">
+        </div>
+        <div id="loginError" class="alert alert-error" style="display: none;"></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="dashboard" style="display: none;">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">Vistoria Express</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" data-section="overview">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" data-section="empresas">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Empresas</span>
+        </a>
+        <a class="nav-item" data-section="transacoes">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+          <span>Transações</span>
+        </a>
+        <a class="nav-item" data-section="config">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"></path>
+          </svg>
+          <span>Configurações</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width: 24px; height: 24px;">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div>
+            <div class="user-name" id="userName">Admin</div>
+            <div class="user-role">Super Admin</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary" id="logoutBtn" style="width: 100%;">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width: 16px; height: 16px; margin-right: 8px;">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          Sair
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Overview Section -->
+      <section id="section-overview" class="section active">
+        <div class="page-header">
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-subtitle">Visão geral do sistema multi-tenant</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total de Empresas</div>
+            <div class="stat-value" id="statTotalEmpresas">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Empresas Ativas</div>
+            <div class="stat-value" id="statEmpresasAtivas">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Receita Total (Mês)</div>
+            <div class="stat-value" id="statReceitaMes">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Taxa Acumulada</div>
+            <div class="stat-value" id="statTaxaAcumulada">-</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Empresas Recentes</h2>
+          </div>
+          <div id="recentEmpresasContent">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Empresas Section -->
+      <section id="section-empresas" class="section">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Gerenciar Empresas</h1>
+            <p class="page-subtitle">Cadastre e gerencie empresas do sistema</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Todas as Empresas</h2>
+            <button class="btn btn-primary" id="btnNovaEmpresa">+ Nova Empresa</button>
+          </div>
+          <div class="table-container" id="empresasTableContainer">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Transações Section -->
+      <section id="section-transacoes" class="section">
+        <div class="page-header">
+          <h1 class="page-title">Transações</h1>
+          <p class="page-subtitle">Histórico de splits e repasses</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Todas as Transações</h2>
+          </div>
+          <div class="table-container" id="transacoesTableContainer">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Config Section -->
+      <section id="section-config" class="section">
+        <div class="page-header">
+          <h1 class="page-title">Configurações do Sistema</h1>
+          <p class="page-subtitle">Configure taxas e parâmetros globais</p>
+        </div>
+
+        <div class="card">
+          <form id="configForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="taxaInicial">Taxa Inicial (primeiros dias) - R$</label>
+                <input type="number" id="taxaInicial" step="0.01" min="0" placeholder="5.00">
+              </div>
+              <div class="form-group">
+                <label for="diasTaxaInicial">Dias com Taxa Inicial</label>
+                <input type="number" id="diasTaxaInicial" min="1" placeholder="30">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="taxaApos">Taxa Após Período Inicial - R$</label>
+                <input type="number" id="taxaApos" step="0.01" min="0" placeholder="7.00">
+              </div>
+              <div class="form-group">
+                <label for="pixSistema">PIX do Sistema</label>
+                <input type="text" id="pixSistema" placeholder="email@sistema.com">
+              </div>
+            </div>
+            <div id="configError" class="alert alert-error" style="display: none;"></div>
+            <div id="configSuccess" class="alert alert-success" style="display: none;"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Salvar Configurações</button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Nova/Editar Empresa -->
+  <div id="empresaModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="empresaModalTitle">Nova Empresa</h2>
+        <button class="btn-close" id="closeEmpresaModal">&times;</button>
+      </div>
+      <form id="empresaForm">
+        <input type="hidden" id="empresaId">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="empresaNome">Nome da Empresa *</label>
+            <input type="text" id="empresaNome" required>
+          </div>
+          <div class="form-group">
+            <label for="empresaSlug">Slug (subdomínio) *</label>
+            <input type="text" id="empresaSlug" required placeholder="minhaempresa">
+            <small style="color: var(--text-secondary);">Será: minhaempresa.agendaaquivistorias.com.br</small>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="empresaEmail">E-mail *</label>
+            <input type="email" id="empresaEmail" required>
+          </div>
+          <div class="form-group">
+            <label for="empresaTelefone">Telefone *</label>
+            <input type="tel" id="empresaTelefone" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="empresaRazaoSocial">Razão Social</label>
+            <input type="text" id="empresaRazaoSocial">
+          </div>
+          <div class="form-group">
+            <label for="empresaCnpj">CNPJ</label>
+            <input type="text" id="empresaCnpj">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="empresaPixKey">Chave PIX *</label>
+            <input type="text" id="empresaPixKey" required>
+          </div>
+          <div class="form-group">
+            <label for="empresaPixType">Tipo de PIX *</label>
+            <select id="empresaPixType" required>
+              <option value="email">E-mail</option>
+              <option value="cpf">CPF</option>
+              <option value="cnpj">CNPJ</option>
+              <option value="telefone">Telefone</option>
+              <option value="chave_aleatoria">Chave Aleatória</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="empresaAtiva">
+            Empresa Ativa
+          </label>
+        </div>
+        <div id="empresaError" class="alert alert-error" style="display: none;"></div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancelEmpresa">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="/src/super-admin.js"></script>
+</body>
+</html>

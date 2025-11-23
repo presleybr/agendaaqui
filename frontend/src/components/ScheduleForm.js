@@ -22,6 +22,15 @@ export class ScheduleForm {
   async init() {
     try {
       console.log('🔄 Initializing schedule form...');
+
+      // Check if a service was pre-selected from pricing table
+      const selectedService = sessionStorage.getItem('selectedService');
+      if (selectedService) {
+        this.formData.tipo_vistoria = selectedService;
+        console.log('📌 Pre-selected service:', selectedService);
+        sessionStorage.removeItem('selectedService'); // Clear after using
+      }
+
       this.prices = await scheduleService.getPrices();
       console.log('✅ Prices loaded:', this.prices);
       this.render();
