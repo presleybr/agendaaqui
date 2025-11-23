@@ -18,7 +18,7 @@
 
 ### Build Command:
 ```bash
-cd backend && npm install && node src/setup.js
+cd backend && npm install && node src/setup.js && node src/create-admin.js
 ```
 
 ### Start Command:
