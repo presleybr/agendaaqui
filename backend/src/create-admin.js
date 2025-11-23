@@ -10,10 +10,21 @@ async function createAdmin() {
     const usePostgres = !!process.env.DATABASE_URL;
     console.log(`📊 Usando: ${usePostgres ? 'PostgreSQL' : 'SQLite'}\n`);
 
-    // Dados do admin
-    const adminEmail = process.env.ADMIN_EMAIL || 'automacoesvon@gmail.com';
-    const adminSenha = process.env.ADMIN_PASSWORD || '1657victOr@';
-    const adminNome = process.env.ADMIN_NAME || 'Victor';
+    // Dados do admin - SEMPRE use as variáveis de ambiente
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminSenha = process.env.ADMIN_PASSWORD;
+    const adminNome = process.env.ADMIN_NAME;
+
+    if (!adminEmail || !adminSenha || !adminNome) {
+      console.error('❌ ERRO: Variáveis de ambiente obrigatórias não definidas!');
+      console.error('   Configure no Render: ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_NAME');
+      console.error('');
+      console.error('Valores encontrados:');
+      console.error(`   ADMIN_EMAIL: ${adminEmail || 'NÃO DEFINIDO'}`);
+      console.error(`   ADMIN_PASSWORD: ${adminSenha ? '***' : 'NÃO DEFINIDO'}`);
+      console.error(`   ADMIN_NAME: ${adminNome || 'NÃO DEFINIDO'}`);
+      process.exit(1);
+    }
 
     console.log('👤 Dados do admin:');
     console.log(`   Email: ${adminEmail}`);

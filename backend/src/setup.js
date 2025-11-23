@@ -12,37 +12,8 @@ async function setup() {
     await up();
     console.log('✅ Migrations executadas com sucesso!\n');
 
-    // Criar usuário admin padrão
-    console.log('👤 Criando usuário admin padrão...');
-
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@agendaaqui.com.br';
-    const adminSenha = process.env.ADMIN_PASSWORD || 'admin123456';
-    const adminNome = process.env.ADMIN_NAME || 'Administrador';
-
-    // Verificar se já existe
-    const adminExistente = await UsuarioAdmin.findByEmail(adminEmail);
-
-    if (adminExistente) {
-      console.log('⚠️  Usuário admin já existe:', adminEmail);
-    } else {
-      const admin = await UsuarioAdmin.create({
-        nome: adminNome,
-        email: adminEmail,
-        senha: adminSenha,
-        role: 'super_admin'
-      });
-
-      console.log('✅ Usuário admin criado com sucesso!');
-      console.log('');
-      console.log('📝 CREDENCIAIS DO ADMIN:');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log(`   Email: ${adminEmail}`);
-      console.log(`   Senha: ${adminSenha}`);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('');
-      console.log('⚠️  IMPORTANTE: Altere a senha após o primeiro login!');
-      console.log('');
-    }
+    // Nota: O admin será criado pelo script create-admin.js
+    console.log('ℹ️  Admin será criado pelo script create-admin.js...\n');
 
     console.log('');
     console.log('🎉 Setup concluído com sucesso!');

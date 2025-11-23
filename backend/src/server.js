@@ -74,7 +74,9 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:3000',
-  process.env.FRONTEND_URL
+  process.env.FRONTEND_URL,
+  'https://agendaaquivistorias.com.br',
+  'http://agendaaquivistorias.com.br'
 ].filter(Boolean);
 
 const corsOptions = {
@@ -84,6 +86,11 @@ const corsOptions = {
 
     // Allow localhost origins
     if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+
+    // Allow subdomains of main domain (for multi-tenant)
+    if (origin && origin.match(/https?:\/\/.*\.agendaaquivistorias\.com\.br$/)) {
       return callback(null, true);
     }
 
@@ -97,6 +104,12 @@ const corsOptions = {
       return callback(null, true);
     }
 
+    // In production, if serving frontend from same domain, allow it
+    if (process.env.NODE_ENV === 'production') {
+      return callback(null, true);
+    }
+
+    console.log('⚠️  CORS blocked origin:', origin);
     const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
     return callback(new Error(msg), false);
   },

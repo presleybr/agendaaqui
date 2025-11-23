@@ -27,7 +27,7 @@ FRONTEND_URL=https://agendaaquivistorias.com.br
 # ============================================================================
 
 BUILD COMMAND:
-cd backend && npm install && node src/setup.js && node src/create-admin.js
+cd frontend && npm install && npm run build && cd ../backend && npm install && node src/setup.js && node src/create-admin.js
 
 START COMMAND:
 cd backend && node src/server.js
