@@ -79,6 +79,8 @@ api.interceptors.response.use((response) => {
 });
 
 export const scheduleService = {
+  API_URL: API_URL, // Expose API_URL for components
+
   // Get available dates
   async getAvailableDates(days = 30) {
     return await api.get(`/availability/dates?days=${days}`);
