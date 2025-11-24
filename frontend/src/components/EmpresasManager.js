@@ -29,6 +29,16 @@ export class EmpresasManager {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('❌ Erro da API:', errorData);
+
+        // Se for erro 500 ou erro de tabela não existente, ignorar silenciosamente
+        // (funcionalidade multi-tenant pode não estar ativa)
+        if (response.status === 500 || errorData.error?.includes('empresas')) {
+          console.warn('⚠️ Funcionalidade de empresas não disponível. Ignorando...');
+          this.empresas = [];
+          this.renderLista();
+          return;
+        }
+
         throw new Error(errorData.error || 'Erro ao carregar empresas');
       }
 
@@ -37,7 +47,10 @@ export class EmpresasManager {
       this.renderLista();
     } catch (error) {
       console.error('❌ Erro ao carregar empresas:', error);
-      alert(`Erro ao carregar empresas: ${error.message}`);
+      // Não mostrar alert para erros de funcionalidade não implementada
+      if (!error.message.includes('não disponível')) {
+        console.warn('⚠️ Não foi possível carregar empresas. A funcionalidade pode não estar ativa.');
+      }
     }
   }
 
