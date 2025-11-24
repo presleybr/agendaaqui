@@ -37,7 +37,7 @@ router.post('/pix', async (req, res) => {
     }
 
     // Check if agendamento exists
-    const agendamento = Agendamento.findById(agendamento_id);
+    const agendamento = await Agendamento.findById(agendamento_id);
     if (!agendamento) {
       return res.status(404).json({ error: 'Agendamento não encontrado' });
     }
@@ -132,7 +132,7 @@ router.post('/card', async (req, res) => {
     }
 
     // Check if agendamento exists
-    const agendamento = Agendamento.findById(agendamento_id);
+    const agendamento = await Agendamento.findById(agendamento_id);
     if (!agendamento) {
       return res.status(404).json({ error: 'Agendamento não encontrado' });
     }
