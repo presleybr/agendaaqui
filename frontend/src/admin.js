@@ -1474,18 +1474,18 @@ class AdminPanel {
       this.calendarSetup = true;
     }
 
-    // Load appointments for the month if needed
-    if (!this.appointments || this.appointments.length === 0) {
-      const firstDay = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth(), 1);
-      const lastDay = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth() + 1, 0);
+    // Always reload appointments for the calendar month
+    const firstDay = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth(), 1);
+    const lastDay = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth() + 1, 0);
 
-      try {
-        const response = await api.get(`/agendamentos?data_inicio=${format(firstDay, 'yyyy-MM-dd')}&data_fim=${format(lastDay, 'yyyy-MM-dd')}`);
-        this.appointments = response.data.agendamentos || [];
-      } catch (error) {
-        console.error('Error loading appointments for calendar:', error);
-        this.appointments = [];
-      }
+    try {
+      console.log(`📅 Loading appointments for calendar: ${format(firstDay, 'yyyy-MM-dd')} to ${format(lastDay, 'yyyy-MM-dd')}`);
+      const response = await api.get(`/agendamentos?data_inicio=${format(firstDay, 'yyyy-MM-dd')}&data_fim=${format(lastDay, 'yyyy-MM-dd')}`);
+      this.appointments = response.agendamentos || [];
+      console.log(`📅 Calendar loaded ${this.appointments.length} appointments`);
+    } catch (error) {
+      console.error('Error loading appointments for calendar:', error);
+      this.appointments = [];
     }
 
     // Update month label
@@ -1566,7 +1566,11 @@ class AdminPanel {
 
     // Get appointments for this day
     const dateStr = format(date, 'yyyy-MM-dd');
-    const dayAppointments = this.appointments.filter(apt => apt.data === dateStr);
+    const dayAppointments = this.appointments.filter(apt => {
+      // Handle both 'YYYY-MM-DD' and 'YYYY-MM-DDTHH:MM:SS' formats
+      const aptDateStr = apt.data.includes('T') ? apt.data.split('T')[0] : apt.data;
+      return aptDateStr === dateStr;
+    });
 
     if (dayAppointments.length > 0 && !isOtherMonth) {
       dayElement.classList.add('has-appointments');
