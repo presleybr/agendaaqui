@@ -101,7 +101,7 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // Get notification counts by section
-router.get('/counts', authMiddleware, (req, res) => {
+router.get('/counts', authenticateToken, (req, res) => {
   try {
     const counts = {
       dashboard: 0,
