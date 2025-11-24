@@ -14,21 +14,30 @@ export class EmpresasManager {
 
   async loadEmpresas() {
     try {
+      const token = localStorage.getItem('token');
+      console.log('🔐 Token presente:', !!token);
+      console.log('🔗 Fazendo request para:', `${scheduleService.API_URL}/admin/empresas`);
+
       const response = await fetch(`${scheduleService.API_URL}/admin/empresas`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
+      console.log('📡 Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Erro ao carregar empresas');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Erro da API:', errorData);
+        throw new Error(errorData.error || 'Erro ao carregar empresas');
       }
 
       this.empresas = await response.json();
+      console.log('✅ Empresas carregadas:', this.empresas.length);
       this.renderLista();
     } catch (error) {
-      console.error('Erro ao carregar empresas:', error);
-      alert('Erro ao carregar empresas');
+      console.error('❌ Erro ao carregar empresas:', error);
+      alert(`Erro ao carregar empresas: ${error.message}`);
     }
   }
 
