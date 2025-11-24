@@ -10,6 +10,7 @@ DATABASE_URL=postgresql://agendamentos_9udt_user:izmIfyl9S6WJhLCdyqT52j6idIMm44y
 NODE_ENV=production
 
 # ============ ADMIN ============
+JWT_SECRET=1657victOr@@_
 JWT_SECRET_ADMIN=1657victOr@@_
 ADMIN_EMAIL=automacoesvon@gmail.com
 ADMIN_PASSWORD=1657victOr@
