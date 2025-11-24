@@ -309,7 +309,13 @@ class AdminPanel {
     console.log(`🎨 Rendering ${this.appointments.length} appointments`);
 
     try {
-      const tableHTML = this.appointments.map(appointment => `
+      const tableHTML = this.appointments.map(appointment => {
+        // Parse date safely - handle both YYYY-MM-DD and full ISO formats
+        const dateStr = appointment.data.includes('T') ? appointment.data.split('T')[0] : appointment.data;
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const appointmentDate = new Date(year, month - 1, day);
+
+        return `
       <tr>
         <td><strong>${appointment.protocolo}</strong></td>
         <td>
@@ -321,7 +327,7 @@ class AdminPanel {
           <small style="color: #666;">${appointment.veiculo_placa}</small>
         </td>
         <td>
-          ${format(new Date(appointment.data + 'T00:00:00'), 'dd/MM/yyyy')}<br>
+          ${format(appointmentDate, 'dd/MM/yyyy')}<br>
           <small style="color: #666;">${appointment.horario}</small>
         </td>
         <td>${this.getTipoLabel(appointment.tipo_vistoria)}</td>
@@ -357,7 +363,8 @@ class AdminPanel {
           </div>
         </td>
       </tr>
-    `).join('');
+    `;
+      }).join('');
 
       // Render in both tables
       if (dashboardTbody) dashboardTbody.innerHTML = tableHTML;

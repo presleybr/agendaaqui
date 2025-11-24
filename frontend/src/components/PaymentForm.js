@@ -199,6 +199,15 @@ export class PaymentForm {
         return false;
       } catch (error) {
         console.error('Error checking payment:', error);
+
+        // Se o pagamento não foi encontrado (404), pode ser que ainda não tenha sido criado no MP
+        // ou foi removido. Continuar tentando por algumas vezes antes de desistir
+        if (error.response?.status === 404) {
+          console.log('Payment not found yet, will retry...');
+          return false;
+        }
+
+        // Para outros erros, também continuar tentando
         return false;
       }
     };

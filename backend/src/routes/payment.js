@@ -268,6 +268,16 @@ router.get('/status/:paymentId', async (req, res) => {
 
   } catch (error) {
     console.error('Error checking payment status:', error);
+
+    // Se for um erro 404 do Mercado Pago (pagamento não encontrado)
+    if (error.status === 404 || error.cause?.[0]?.code === 2000) {
+      return res.status(404).json({
+        error: 'Pagamento não encontrado',
+        message: 'Payment not found',
+        details: 'O pagamento ainda não foi criado ou não existe no Mercado Pago'
+      });
+    }
+
     res.status(500).json({
       error: 'Erro ao verificar status do pagamento',
       details: error.message
