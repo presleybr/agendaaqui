@@ -17,32 +17,32 @@ class AgendamentoController {
       const { cliente: clienteData, veiculo: veiculoData, tipo_vistoria, data, horario, endereco_vistoria, observacoes } = req.body;
 
       // Verificar disponibilidade
-      const availability = AvailabilityService.canSchedule(data, horario);
+      const availability = await AvailabilityService.canSchedule(data, horario);
       if (!availability.allowed) {
         return res.status(400).json({ error: availability.reason });
       }
 
       // Buscar ou criar cliente
-      let cliente = Cliente.findByCPF(clienteData.cpf);
+      let cliente = await Cliente.findByCPF(clienteData.cpf);
       if (!cliente) {
-        cliente = Cliente.create(clienteData);
+        cliente = await Cliente.create(clienteData);
       } else {
         // Atualizar dados do cliente se necessário
-        cliente = Cliente.update(cliente.id, clienteData);
+        cliente = await Cliente.update(cliente.id, clienteData);
       }
 
       // Buscar ou criar veículo
-      let veiculo = Veiculo.findByPlaca(veiculoData.placa);
+      let veiculo = await Veiculo.findByPlaca(veiculoData.placa);
       if (!veiculo) {
-        veiculo = Veiculo.create({ ...veiculoData, cliente_id: cliente.id });
+        veiculo = await Veiculo.create({ ...veiculoData, cliente_id: cliente.id });
       }
 
       // Obter preço
-      const precos = Configuracao.getPrices();
+      const precos = await Configuracao.getPrices();
       const preco = precos[tipo_vistoria] || precos.outros;
 
       // Criar agendamento
-      const agendamento = Agendamento.create({
+      const agendamento = await Agendamento.create({
         cliente_id: cliente.id,
         veiculo_id: veiculo.id,
         tipo_vistoria,
@@ -55,11 +55,11 @@ class AgendamentoController {
       });
 
       // Enviar email de confirmação
-      const emailAtivo = Configuracao.get('email_confirmacao_ativo') === '1';
+      const emailAtivo = await Configuracao.get('email_confirmacao_ativo') === '1';
       if (emailAtivo) {
         try {
           await emailService.sendConfirmacaoAgendamento(agendamento);
-          Agendamento.update(agendamento.id, { confirmado_email: 1 });
+          await Agendamento.update(agendamento.id, { confirmado_email: 1 });
         } catch (error) {
           console.error('Erro ao enviar email:', error);
         }
@@ -76,7 +76,7 @@ class AgendamentoController {
     try {
       const { data, status, tipo_vistoria, data_inicio, data_fim, limit, offset } = req.query;
 
-      const agendamentos = Agendamento.findAll({
+      const agendamentos = await Agendamento.findAll({
         data,
         status,
         tipo_vistoria,
@@ -86,7 +86,7 @@ class AgendamentoController {
         offset: offset ? parseInt(offset) : 0
       });
 
-      const total = Agendamento.count({ status, data_inicio, data_fim });
+      const total = await Agendamento.count({ status, data_inicio, data_fim });
 
       res.json({
         agendamentos,
@@ -103,7 +103,7 @@ class AgendamentoController {
   static async getById(req, res) {
     try {
       const { id } = req.params;
-      const agendamento = Agendamento.findById(id);
+      const agendamento = await Agendamento.findById(id);
 
       if (!agendamento) {
         return res.status(404).json({ error: 'Agendamento não encontrado' });
@@ -118,7 +118,7 @@ class AgendamentoController {
   static async getByProtocolo(req, res) {
     try {
       const { protocolo } = req.params;
-      const agendamento = Agendamento.findByProtocolo(protocolo);
+      const agendamento = await Agendamento.findByProtocolo(protocolo);
 
       if (!agendamento) {
         return res.status(404).json({ error: 'Agendamento não encontrado' });
@@ -135,7 +135,7 @@ class AgendamentoController {
       const { id } = req.params;
       const { status } = req.body;
 
-      const agendamento = Agendamento.updateStatus(id, status);
+      const agendamento = await Agendamento.updateStatus(id, status);
 
       if (!agendamento) {
         return res.status(404).json({ error: 'Agendamento não encontrado' });
@@ -169,7 +169,7 @@ class AgendamentoController {
       } = req.body;
 
       // Get current appointment
-      const currentAppointment = Agendamento.findById(id);
+      const currentAppointment = await Agendamento.findById(id);
       if (!currentAppointment) {
         return res.status(404).json({ error: 'Agendamento não encontrado' });
       }
@@ -182,7 +182,7 @@ class AgendamentoController {
           email: cliente_email,
           telefone: cliente_telefone
         };
-        Cliente.update(currentAppointment.cliente_id, clienteData);
+        await Cliente.update(currentAppointment.cliente_id, clienteData);
       }
 
       // Update veiculo if data provided
@@ -193,7 +193,7 @@ class AgendamentoController {
           modelo: veiculo_modelo,
           ano: veiculo_ano
         };
-        Veiculo.update(currentAppointment.veiculo_id, veiculoData);
+        await Veiculo.update(currentAppointment.veiculo_id, veiculoData);
       }
 
       // Update agendamento
@@ -214,7 +214,7 @@ class AgendamentoController {
         }
       });
 
-      const agendamento = Agendamento.update(id, agendamentoData);
+      const agendamento = await Agendamento.update(id, agendamentoData);
 
       res.json(agendamento);
     } catch (error) {
@@ -226,7 +226,7 @@ class AgendamentoController {
   static async delete(req, res) {
     try {
       const { id } = req.params;
-      Agendamento.delete(id);
+      await Agendamento.delete(id);
       res.json({ message: 'Agendamento excluído com sucesso' });
     } catch (error) {
       res.status(500).json({ error: 'Erro ao excluir agendamento' });
@@ -241,7 +241,7 @@ class AgendamentoController {
         return res.status(400).json({ error: 'Período obrigatório' });
       }
 
-      const stats = Agendamento.getStats(data_inicio, data_fim);
+      const stats = await Agendamento.getStats(data_inicio, data_fim);
       res.json(stats);
     } catch (error) {
       res.status(500).json({ error: 'Erro ao buscar estatísticas' });
