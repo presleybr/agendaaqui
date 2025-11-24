@@ -1,80 +1,38 @@
 const db = require('../config/database');
 
-// Detecta se está usando PostgreSQL (retorna Promises) ou SQLite (síncrono)
-const usePostgres = !!process.env.DATABASE_URL;
-
 class Configuracao {
   static async get(chave) {
-    if (usePostgres) {
-      const result = await db.query('SELECT valor FROM configuracoes WHERE chave = $1', [chave]);
-      return result.rows[0] ? result.rows[0].valor : null;
-    } else {
-      const result = db.prepare('SELECT valor FROM configuracoes WHERE chave = ?').get(chave);
-      return result ? result.valor : null;
-    }
+    const result = await db.query('SELECT valor FROM configuracoes WHERE chave = $1', [chave]);
+    return result.rows[0] ? result.rows[0].valor : null;
   }
 
   static async getAll() {
-    if (usePostgres) {
-      const result = await db.query('SELECT chave, valor, descricao FROM configuracoes');
-      return result.rows.reduce((acc, config) => {
-        acc[config.chave] = config.valor;
-        return acc;
-      }, {});
-    } else {
-      const configs = db.prepare('SELECT chave, valor, descricao FROM configuracoes').all();
-      return configs.reduce((acc, config) => {
-        acc[config.chave] = config.valor;
-        return acc;
-      }, {});
-    }
+    const result = await db.query('SELECT chave, valor, descricao FROM configuracoes');
+    return result.rows.reduce((acc, config) => {
+      acc[config.chave] = config.valor;
+      return acc;
+    }, {});
   }
 
   static async set(chave, valor) {
-    if (usePostgres) {
+    await db.query(`
+      INSERT INTO configuracoes (chave, valor, updated_at)
+      VALUES ($1, $2, CURRENT_TIMESTAMP)
+      ON CONFLICT(chave) DO UPDATE SET valor = $2, updated_at = CURRENT_TIMESTAMP
+    `, [chave, valor]);
+    return this.get(chave);
+  }
+
+  static async setMultiple(configs) {
+    const entries = Object.entries(configs);
+    for (const [chave, valor] of entries) {
       await db.query(`
         INSERT INTO configuracoes (chave, valor, updated_at)
         VALUES ($1, $2, CURRENT_TIMESTAMP)
         ON CONFLICT(chave) DO UPDATE SET valor = $2, updated_at = CURRENT_TIMESTAMP
       `, [chave, valor]);
-      return this.get(chave);
-    } else {
-      db.prepare(`
-        INSERT INTO configuracoes (chave, valor, updated_at)
-        VALUES (?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(chave) DO UPDATE SET valor = ?, updated_at = CURRENT_TIMESTAMP
-      `).run(chave, valor, valor);
-      return this.get(chave);
     }
-  }
-
-  static async setMultiple(configs) {
-    if (usePostgres) {
-      const entries = Object.entries(configs);
-      for (const [chave, valor] of entries) {
-        await db.query(`
-          INSERT INTO configuracoes (chave, valor, updated_at)
-          VALUES ($1, $2, CURRENT_TIMESTAMP)
-          ON CONFLICT(chave) DO UPDATE SET valor = $2, updated_at = CURRENT_TIMESTAMP
-        `, [chave, valor]);
-      }
-      return this.getAll();
-    } else {
-      const stmt = db.prepare(`
-        INSERT INTO configuracoes (chave, valor, updated_at)
-        VALUES (?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(chave) DO UPDATE SET valor = ?, updated_at = CURRENT_TIMESTAMP
-      `);
-
-      const transaction = db.transaction((configsArray) => {
-        configsArray.forEach(([chave, valor]) => {
-          stmt.run(chave, valor, valor);
-        });
-      });
-
-      transaction(Object.entries(configs));
-      return this.getAll();
-    }
+    return this.getAll();
   }
 
   static async getPrices() {

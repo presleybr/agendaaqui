@@ -1,48 +1,56 @@
 const db = require('../config/database');
 
 class Cliente {
-  static create(data) {
-    const stmt = db.prepare(`
+  static async create(data) {
+    const result = await db.query(`
       INSERT INTO clientes (nome, telefone, email, cpf)
-      VALUES (?, ?, ?, ?)
-    `);
-    const result = stmt.run(data.nome, data.telefone, data.email, data.cpf);
-    return this.findById(result.lastInsertRowid);
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `, [data.nome, data.telefone, data.email, data.cpf]);
+    return result.rows[0];
   }
 
-  static findById(id) {
-    return db.prepare('SELECT * FROM clientes WHERE id = ?').get(id);
+  static async findById(id) {
+    const result = await db.query('SELECT * FROM clientes WHERE id = $1', [id]);
+    return result.rows[0];
   }
 
-  static findByCPF(cpf) {
-    return db.prepare('SELECT * FROM clientes WHERE cpf = ?').get(cpf);
+  static async findByCPF(cpf) {
+    const result = await db.query('SELECT * FROM clientes WHERE cpf = $1', [cpf]);
+    return result.rows[0];
   }
 
-  static findByEmail(email) {
-    return db.prepare('SELECT * FROM clientes WHERE email = ?').get(email);
+  static async findByEmail(email) {
+    const result = await db.query('SELECT * FROM clientes WHERE email = $1', [email]);
+    return result.rows[0];
   }
 
-  static findAll(limit = 100, offset = 0) {
-    return db.prepare('SELECT * FROM clientes ORDER BY created_at DESC LIMIT ? OFFSET ?')
-      .all(limit, offset);
+  static async findAll(limit = 100, offset = 0) {
+    const result = await db.query(
+      'SELECT * FROM clientes ORDER BY created_at DESC LIMIT $1 OFFSET $2',
+      [limit, offset]
+    );
+    return result.rows;
   }
 
-  static update(id, data) {
-    const stmt = db.prepare(`
+  static async update(id, data) {
+    const result = await db.query(`
       UPDATE clientes
-      SET nome = ?, telefone = ?, email = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `);
-    stmt.run(data.nome, data.telefone, data.email, id);
-    return this.findById(id);
+      SET nome = $1, telefone = $2, email = $3, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4
+      RETURNING *
+    `, [data.nome, data.telefone, data.email, id]);
+    return result.rows[0];
   }
 
-  static delete(id) {
-    return db.prepare('DELETE FROM clientes WHERE id = ?').run(id);
+  static async delete(id) {
+    await db.query('DELETE FROM clientes WHERE id = $1', [id]);
+    return { success: true };
   }
 
-  static count() {
-    return db.prepare('SELECT COUNT(*) as total FROM clientes').get().total;
+  static async count() {
+    const result = await db.query('SELECT COUNT(*) as total FROM clientes');
+    return parseInt(result.rows[0].total);
   }
 }
 
