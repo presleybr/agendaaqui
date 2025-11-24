@@ -23,28 +23,15 @@ class AvailabilityService {
       const horario = format(currentTime, 'HH:mm');
 
       // Verificar horários bloqueados
-      const usePostgres = !!process.env.DATABASE_URL;
-      let bloqueado = null;
-
-      if (usePostgres) {
-        const result = await db.query(`
-          SELECT * FROM horarios_bloqueados
-          WHERE data = $1 AND (
-            (horario_inicio IS NULL AND horario_fim IS NULL) OR
-            ($2 >= horario_inicio AND $2 < horario_fim)
-          )
-          LIMIT 1
-        `, [data, horario]);
-        bloqueado = result.rows[0];
-      } else {
-        bloqueado = db.prepare(`
-          SELECT * FROM horarios_bloqueados
-          WHERE data = ? AND (
-            (horario_inicio IS NULL AND horario_fim IS NULL) OR
-            (? >= horario_inicio AND ? < horario_fim)
-          )
-        `).get(data, horario, horario);
-      }
+      const result = await db.query(`
+        SELECT * FROM horarios_bloqueados
+        WHERE data = $1 AND (
+          (horario_inicio IS NULL AND horario_fim IS NULL) OR
+          ($2 >= horario_inicio AND $2 < horario_fim)
+        )
+        LIMIT 1
+      `, [data, horario]);
+      const bloqueado = result.rows[0];
 
       if (!bloqueado) {
         const agendamentosNoHorario = agendamentosNaData.filter(a => a.horario === horario);
@@ -129,22 +116,12 @@ class AvailabilityService {
         const dataFormatada = format(date, 'yyyy-MM-dd');
 
         // Verificar se o dia inteiro está bloqueado
-        const usePostgres = !!process.env.DATABASE_URL;
-        let diaBloqueado = null;
-
-        if (usePostgres) {
-          const result = await db.query(`
-            SELECT * FROM horarios_bloqueados
-            WHERE data = $1 AND horario_inicio IS NULL AND horario_fim IS NULL
-            LIMIT 1
-          `, [dataFormatada]);
-          diaBloqueado = result.rows[0];
-        } else {
-          diaBloqueado = db.prepare(`
-            SELECT * FROM horarios_bloqueados
-            WHERE data = ? AND horario_inicio IS NULL AND horario_fim IS NULL
-          `).get(dataFormatada);
-        }
+        const result = await db.query(`
+          SELECT * FROM horarios_bloqueados
+          WHERE data = $1 AND horario_inicio IS NULL AND horario_fim IS NULL
+          LIMIT 1
+        `, [dataFormatada]);
+        const diaBloqueado = result.rows[0];
 
         if (!diaBloqueado) {
           const slots = await this.getAvailableSlots(dataFormatada);
