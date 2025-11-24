@@ -172,20 +172,11 @@ router.post('/card', async (req, res) => {
 
     // Update agendamento status if payment is approved
     if (mpPayment.status === 'approved') {
-      const usePostgres = !!process.env.DATABASE_URL;
-      if (usePostgres) {
-        await db.query(`
-          UPDATE agendamentos
-          SET status = 'confirmado', pagamento_confirmado = true
-          WHERE id = $1
-        `, [agendamento_id]);
-      } else {
-        db.prepare(`
-          UPDATE agendamentos
-          SET status = 'confirmado', pagamento_confirmado = 1
-          WHERE id = ?
-        `).run(agendamento_id);
-      }
+      await db.query(`
+        UPDATE agendamentos
+        SET status = 'confirmado', pagamento_confirmado = true
+        WHERE id = $1
+      `, [agendamento_id]);
 
       // Process payment split if agendamento has empresa_id
       if (agendamento.empresa_id) {
@@ -245,20 +236,11 @@ router.get('/status/:paymentId', async (req, res) => {
       if (mpPayment.status === 'approved') {
         const agendamento = await Agendamento.findById(pagamentoRecord.agendamento_id);
         if (agendamento && agendamento.status !== 'confirmado') {
-          const usePostgres = !!process.env.DATABASE_URL;
-          if (usePostgres) {
-            await db.query(`
-              UPDATE agendamentos
-              SET status = 'confirmado', pagamento_confirmado = true
-              WHERE id = $1
-            `, [pagamentoRecord.agendamento_id]);
-          } else {
-            db.prepare(`
-              UPDATE agendamentos
-              SET status = 'confirmado', pagamento_confirmado = 1
-              WHERE id = ?
-            `).run(pagamentoRecord.agendamento_id);
-          }
+          await db.query(`
+            UPDATE agendamentos
+            SET status = 'confirmado', pagamento_confirmado = true
+            WHERE id = $1
+          `, [pagamentoRecord.agendamento_id]);
 
           // Process payment split if agendamento has empresa_id
           if (agendamento.empresa_id) {
@@ -343,20 +325,11 @@ router.post('/webhook', async (req, res) => {
           if (mpPayment.status === 'approved') {
             const agendamento = await Agendamento.findById(pagamentoRecord.agendamento_id);
             if (agendamento) {
-              const usePostgres = !!process.env.DATABASE_URL;
-              if (usePostgres) {
-                await db.query(`
-                  UPDATE agendamentos
-                  SET status = 'confirmado', pagamento_confirmado = true
-                  WHERE id = $1
-                `, [pagamentoRecord.agendamento_id]);
-              } else {
-                db.prepare(`
-                  UPDATE agendamentos
-                  SET status = 'confirmado', pagamento_confirmado = 1
-                  WHERE id = ?
-                `).run(pagamentoRecord.agendamento_id);
-              }
+              await db.query(`
+                UPDATE agendamentos
+                SET status = 'confirmado', pagamento_confirmado = true
+                WHERE id = $1
+              `, [pagamentoRecord.agendamento_id]);
 
               console.log('✅ Agendamento confirmed:', agendamento.protocolo);
 
