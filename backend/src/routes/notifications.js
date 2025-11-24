@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const db = require('../config/database');
 
 // Get all notifications
-router.get('/', authMiddleware, (req, res) => {
+router.get('/', authenticateToken, (req, res) => {
   try {
     const notifications = [];
 

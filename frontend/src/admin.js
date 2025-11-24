@@ -3,6 +3,7 @@ import api from './services/api.js';
 import { formatters } from './utils/validators.js';
 import { format } from 'date-fns';
 import { ReportsManager } from './components/ReportsManager.js';
+import { EmpresasManager } from './components/EmpresasManager.js';
 
 class AdminPanel {
   constructor() {
@@ -10,6 +11,7 @@ class AdminPanel {
     this.appointments = [];
     this.currentCalendarDate = new Date();
     this.reportsManager = null; // Será inicializado após login
+    this.empresasManager = null; // Será inicializado após login
     this.init();
   }
 
@@ -72,6 +74,12 @@ class AdminPanel {
 
     // Initialize reports manager
     this.reportsManager = new ReportsManager();
+
+    // Initialize empresas manager
+    this.empresasManager = new EmpresasManager();
+
+    // Setup empresas modal controls
+    this.setupEmpresasModal();
 
     // Setup navigation
     this.setupNavigation();
@@ -2719,7 +2727,54 @@ class AdminPanel {
       alert('Erro ao exportar relatório. Tente novamente.');
     }
   }
+
+  setupEmpresasModal() {
+    // Preview do slug
+    const empresaSlugInput = document.getElementById('empresaSlug');
+    const previewSlug = document.getElementById('previewSlug');
+
+    if (empresaSlugInput && previewSlug) {
+      empresaSlugInput.addEventListener('input', (e) => {
+        previewSlug.textContent = e.target.value || '...';
+      });
+    }
+
+    // Cancelar modal
+    const cancelarBtn = document.getElementById('cancelarEmpresa');
+    if (cancelarBtn) {
+      cancelarBtn.addEventListener('click', () => {
+        const modal = document.getElementById('modalEmpresa');
+        if (modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+
+    // Fechar modal com X
+    const fecharBtn = document.getElementById('fecharModalEmpresa');
+    if (fecharBtn) {
+      fecharBtn.addEventListener('click', () => {
+        const modal = document.getElementById('modalEmpresa');
+        if (modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+
+    // Fechar modal clicando fora
+    const modal = document.getElementById('modalEmpresa');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+  }
 }
 
 // Initialize admin panel
 window.adminPanel = new AdminPanel();
+
+// Make empresasManager globally accessible for onclick handlers
+window.empresasManager = window.adminPanel.empresasManager;

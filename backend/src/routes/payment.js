@@ -3,6 +3,7 @@ const router = express.Router();
 const { MercadoPagoConfig, Payment } = require('mercadopago');
 const Pagamento = require('../models/Pagamento');
 const Agendamento = require('../models/Agendamento');
+const PaymentSplitService = require('../services/PaymentSplitService');
 const db = require('../config/database');
 
 // Initialize Mercado Pago client
@@ -70,6 +71,21 @@ router.post('/pix', async (req, res) => {
       qr_code_base64: mpPayment.point_of_interaction?.transaction_data?.qr_code_base64,
       dados_pagamento: mpPayment
     });
+
+    // Process payment split if agendamento has empresa_id
+    if (agendamento.empresa_id) {
+      try {
+        await PaymentSplitService.processarPagamento(
+          pagamentoRecord.id,
+          agendamento.empresa_id,
+          Math.round(transaction_amount * 100)
+        );
+        console.log(`✅ Split processado para pagamento ${pagamentoRecord.id}`);
+      } catch (splitError) {
+        console.error('⚠️ Erro ao processar split (pagamento criado):', splitError);
+        // Não bloqueia o pagamento se split falhar
+      }
+    }
 
     res.json({
       payment_id: mpPayment.id.toString(),
@@ -170,6 +186,21 @@ router.post('/card', async (req, res) => {
           WHERE id = ?
         `).run(agendamento_id);
       }
+
+      // Process payment split if agendamento has empresa_id
+      if (agendamento.empresa_id) {
+        try {
+          await PaymentSplitService.processarPagamento(
+            pagamentoRecord.id,
+            agendamento.empresa_id,
+            Math.round(transaction_amount * 100)
+          );
+          console.log(`✅ Split processado para pagamento ${pagamentoRecord.id}`);
+        } catch (splitError) {
+          console.error('⚠️ Erro ao processar split (pagamento aprovado):', splitError);
+          // Não bloqueia o pagamento se split falhar
+        }
+      }
     }
 
     res.json({
@@ -227,6 +258,21 @@ router.get('/status/:paymentId', async (req, res) => {
               SET status = 'confirmado', pagamento_confirmado = 1
               WHERE id = ?
             `).run(pagamentoRecord.agendamento_id);
+          }
+
+          // Process payment split if agendamento has empresa_id
+          if (agendamento.empresa_id) {
+            try {
+              await PaymentSplitService.processarPagamento(
+                pagamentoRecord.id,
+                agendamento.empresa_id,
+                pagamentoRecord.valor
+              );
+              console.log(`✅ Split processado via status check para pagamento ${pagamentoRecord.id}`);
+            } catch (splitError) {
+              console.error('⚠️ Erro ao processar split (status check):', splitError);
+              // Não bloqueia o fluxo se split falhar
+            }
           }
         }
       }
@@ -313,6 +359,21 @@ router.post('/webhook', async (req, res) => {
               }
 
               console.log('✅ Agendamento confirmed:', agendamento.protocolo);
+
+              // Process payment split if agendamento has empresa_id
+              if (agendamento.empresa_id) {
+                try {
+                  await PaymentSplitService.processarPagamento(
+                    pagamentoRecord.id,
+                    agendamento.empresa_id,
+                    pagamentoRecord.valor
+                  );
+                  console.log(`✅ Split processado via webhook para pagamento ${pagamentoRecord.id}`);
+                } catch (splitError) {
+                  console.error('⚠️ Erro ao processar split (webhook):', splitError);
+                  // Não bloqueia o fluxo se split falhar
+                }
+              }
             }
           }
         } else {

@@ -118,6 +118,15 @@
           <span class="nav-text">Configurações</span>
           <span class="nav-badge" id="badge-configuracoes" style="display: none;">0</span>
         </a>
+        <a href="#" class="nav-item" data-section="empresas">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          <span class="nav-text">Empresas</span>
+          <span class="nav-badge" id="badge-empresas" style="display: none;">0</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
@@ -735,6 +744,60 @@
         </div>
       </section>
 
+      <!-- Seção Empresas (SaaS Multi-Tenant) -->
+      <section id="section-empresas" class="content-section">
+        <div class="section-header">
+          <h2>🏢 Empresas Clientes</h2>
+          <button class="btn btn-primary" id="btnNovaEmpresa">+ Nova Empresa</button>
+        </div>
+
+        <!-- Resumo -->
+        <div class="stats-grid" style="margin-bottom: 30px;">
+          <div class="stat-card">
+            <div class="stat-label">Total de Empresas</div>
+            <div class="stat-value" id="statTotalEmpresas">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Empresas Ativas</div>
+            <div class="stat-value" id="statEmpresasAtivas">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Receita do Mês</div>
+            <div class="stat-value" id="statReceitaMes">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Comissões Pendentes</div>
+            <div class="stat-value" id="statComissoesPendentes">-</div>
+          </div>
+        </div>
+
+        <!-- Tabela de Empresas -->
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Empresa / Subdomínio</th>
+                <th>Email</th>
+                <th>Telefone</th>
+                <th>Chave PIX</th>
+                <th>Comissão</th>
+                <th>Status</th>
+                <th>Métricas</th>
+                <th style="min-width: 150px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="empresasTableBody">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 40px;">
+                  <div class="spinner"></div>
+                  <p style="margin-top: 10px; color: #666;">Carregando empresas...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- Revenue Detail Section -->
       <section id="section-revenue-detail" class="content-section">
         <div class="section-header">
@@ -1112,6 +1175,131 @@
               <div class="spinner" style="width: 20px; height: 20px; margin: 0;"></div>
             </span>
           </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Nova/Editar Empresa -->
+  <div id="modalEmpresa" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px;">
+      <span class="close" id="fecharModalEmpresa">&times;</span>
+      <h2 id="modalEmpresaTitle" style="margin-bottom: 30px; color: var(--brand-primary);">Nova Empresa</h2>
+
+      <form id="formEmpresa">
+        <!-- Dados Básicos -->
+        <div class="detail-section">
+          <h3>📋 Dados Básicos</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="empresaNome">Nome da Empresa *</label>
+              <input type="text" id="empresaNome" required placeholder="Ex: Vistoria Express SP">
+            </div>
+            <div class="form-group">
+              <label for="empresaSlug">Subdomínio *</label>
+              <input type="text" id="empresaSlug" required placeholder="Ex: vistoria-sp">
+              <small style="color: #666;">
+                Será: <strong><span id="previewSlug">...</span>.agendaaquivistorias.com.br</strong>
+              </small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="empresaEmail">Email *</label>
+              <input type="email" id="empresaEmail" required placeholder="contato@empresa.com">
+            </div>
+            <div class="form-group">
+              <label for="empresaTelefone">Telefone</label>
+              <input type="tel" id="empresaTelefone" placeholder="(67) 99999-9999">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="empresaCNPJ">CNPJ (opcional)</label>
+            <input type="text" id="empresaCNPJ" placeholder="00.000.000/0000-00">
+          </div>
+        </div>
+
+        <!-- Pagamento -->
+        <div class="detail-section">
+          <h3>💰 Configurações de Pagamento</h3>
+          <div class="form-group">
+            <label for="empresaChavePix">Chave PIX (para receber repasses) *</label>
+            <input type="text" id="empresaChavePix" required placeholder="email@empresa.com, telefone ou chave aleatória">
+            <small style="color: #666;">
+              ⚠️ Os repasses serão enviados para esta chave PIX após os primeiros 30 dias.
+            </small>
+          </div>
+
+          <div class="alert alert-info" style="margin-top: 15px;">
+            <strong>ℹ️ Regra de Comissão:</strong><br>
+            • Primeiros 30 dias: <strong>R$ 5,00 fixo</strong> para a plataforma por transação<br>
+            • Após 30 dias: <strong>0% de comissão</strong> (todo valor vai para o cliente)
+          </div>
+        </div>
+
+        <!-- Preços e Horários -->
+        <div class="detail-section">
+          <h3>⚙️ Configurações do Negócio</h3>
+
+          <h4 style="margin-top: 20px;">Preços (em Reais)</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="empresaPrecoCautelar">Vistoria Cautelar</label>
+              <input type="number" id="empresaPrecoCautelar" step="0.01" min="0" value="150.00" placeholder="150.00">
+            </div>
+            <div class="form-group">
+              <label for="empresaPrecoTransferencia">Vistoria Transferência</label>
+              <input type="number" id="empresaPrecoTransferencia" step="0.01" min="0" value="120.00" placeholder="120.00">
+            </div>
+            <div class="form-group">
+              <label for="empresaPrecoOutros">Outros Serviços</label>
+              <input type="number" id="empresaPrecoOutros" step="0.01" min="0" value="100.00" placeholder="100.00">
+            </div>
+          </div>
+
+          <h4 style="margin-top: 20px;">Horário de Funcionamento</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="empresaHorarioInicio">Abertura</label>
+              <input type="time" id="empresaHorarioInicio" value="08:00">
+            </div>
+            <div class="form-group">
+              <label for="empresaHorarioFim">Fechamento</label>
+              <input type="time" id="empresaHorarioFim" value="18:00">
+            </div>
+          </div>
+        </div>
+
+        <!-- Status e Plano -->
+        <div class="detail-section">
+          <h3>📊 Status e Plano</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="empresaStatus">Status</label>
+              <select id="empresaStatus">
+                <option value="ativo">Ativo</option>
+                <option value="trial">Trial (Teste)</option>
+                <option value="inativo">Inativo</option>
+                <option value="suspenso">Suspenso</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="empresaPlano">Plano</label>
+              <select id="empresaPlano">
+                <option value="basico">Básico</option>
+                <option value="premium">Premium</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões -->
+        <div class="form-actions" style="margin-top: 30px;">
+          <button type="button" class="btn btn-secondary" id="cancelarEmpresa">Cancelar</button>
+          <button type="button" class="btn btn-primary btn-large" id="salvarEmpresa">Salvar Empresa</button>
         </div>
       </form>
     </div>
