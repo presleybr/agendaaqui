@@ -416,7 +416,13 @@ class AdminPanel {
           </div>
           <div class="detail-row">
             <span class="detail-label">Data de Criação:</span>
-            <span class="detail-value">${format(new Date(appointment.created_at), 'dd/MM/yyyy HH:mm')}</span>
+            <span class="detail-value">${(() => {
+              try {
+                return format(new Date(appointment.created_at), 'dd/MM/yyyy HH:mm');
+              } catch {
+                return 'Data inválida';
+              }
+            })()}</span>
           </div>
         </div>
 
@@ -464,7 +470,15 @@ class AdminPanel {
           </div>
           <div class="detail-row">
             <span class="detail-label">Data:</span>
-            <span class="detail-value">${format(new Date(appointment.data + 'T00:00:00'), 'dd/MM/yyyy')}</span>
+            <span class="detail-value">${(() => {
+              try {
+                const dateStr = appointment.data.includes('T') ? appointment.data.split('T')[0] : appointment.data;
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return format(new Date(year, month - 1, day), 'dd/MM/yyyy');
+              } catch {
+                return 'Data inválida';
+              }
+            })()}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Horário:</span>

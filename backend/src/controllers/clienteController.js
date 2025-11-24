@@ -5,12 +5,12 @@ class ClienteController {
     try {
       const { limit, offset } = req.query;
 
-      const clientes = Cliente.findAll(
+      const clientes = await Cliente.findAll(
         limit ? parseInt(limit) : 100,
         offset ? parseInt(offset) : 0
       );
 
-      const total = Cliente.count();
+      const total = await Cliente.count();
 
       res.json({
         clientes,
