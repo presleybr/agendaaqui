@@ -1,5 +1,38 @@
 import { ScheduleForm } from './components/ScheduleForm.js';
 import { scheduleService } from './services/api.js';
+import tenantService from './services/tenant.js';
+
+// Multi-Tenant Configuration
+async function initTenantConfig() {
+  if (tenantService.isTenant()) {
+    try {
+      console.log('🏢 Sistema multi-tenant detectado');
+      const config = await tenantService.loadTenantConfig();
+
+      // Personalizar título da página
+      document.title = `${config.nome} - Agende sua Vistoria Online`;
+
+      // Atualizar nome da empresa nos elementos da página
+      const nomeEmpresa = document.querySelectorAll('.empresa-nome');
+      nomeEmpresa.forEach(el => {
+        el.textContent = config.nome;
+      });
+
+      console.log('✅ Configurações do tenant aplicadas:', config);
+    } catch (error) {
+      console.error('❌ Erro ao carregar configurações do tenant:', error);
+
+      // Mostrar mensagem de erro ao usuário
+      const errorDiv = document.createElement('div');
+      errorDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #f44336; color: white; padding: 15px; text-align: center; z-index: 9999;';
+      errorDiv.textContent = error.message;
+      document.body.insertBefore(errorDiv, document.body.firstChild);
+    }
+  }
+}
+
+// Inicializar configurações do tenant antes de tudo
+initTenantConfig();
 
 // YouTube Background Video - Loop sem tela preta
 let player;

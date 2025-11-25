@@ -20,6 +20,7 @@ const notificationsRoutes = require('./routes/notifications');
 const paymentRoutes = require('./routes/payment');
 const adminRoutes = require('./routes/admin');
 const empresasRoutes = require('./routes/empresas');
+const tenantRoutes = require('./routes/tenant');
 
 const app = express();
 
@@ -133,8 +134,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Tenant detection middleware (detecta subdomínio)
-// DESABILITADO: não estamos usando multi-tenancy
-// app.use(detectTenant);
+app.use(detectTenant);
 
 // Rate limiting mais flexível para desenvolvimento
 const limiter = rateLimit({
@@ -211,6 +211,9 @@ app.get('/api/health', async (req, res) => {
 // IMPORTANTE: Rotas mais específicas devem vir primeiro
 app.use('/api/admin/empresas', empresasRoutes);
 app.use('/api/admin', adminRoutes);
+
+// Tenant Routes (requer subdomínio válido)
+app.use('/api/tenant', tenantRoutes);
 
 // Public Routes (sistema de agendamento)
 app.use('/api/auth', authRoutes);

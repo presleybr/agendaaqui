@@ -113,8 +113,27 @@ export const scheduleService = {
     return await api.get(`/availability/check?data=${date}&horario=${time}`);
   },
 
-  // Get prices
+  // Get prices (usa preços do tenant se disponível)
   async getPrices() {
+    // Tentar importar tenantService dinamicamente
+    try {
+      const { default: tenantService } = await import('./tenant.js');
+
+      if (tenantService.isTenant() && tenantService.getConfig()) {
+        const precos = tenantService.getPrecos();
+        console.log('💰 Usando preços do tenant:', precos);
+        // Retornar no formato esperado pelo ScheduleForm
+        return {
+          cautelar: { valor: precos.cautelar },
+          transferencia: { valor: precos.transferencia },
+          outros: { valor: precos.outros }
+        };
+      }
+    } catch (error) {
+      console.log('⚠️ TenantService não disponível, usando preços padrão da API');
+    }
+
+    // Fallback para preços padrão da API
     return await api.get('/availability/prices');
   },
 
