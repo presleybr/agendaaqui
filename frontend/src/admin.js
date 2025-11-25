@@ -161,9 +161,8 @@ class AdminPanel {
       statusText.textContent = 'Verificando conexão...';
       statusType.textContent = '';
 
-      // Call health check endpoint
-      const response = await fetch('/api/health');
-      const data = await response.json();
+      // Call health check endpoint using api service
+      const data = await api.get('/health');
 
       // Update UI based on response
       if (data.database && data.database.connected) {
