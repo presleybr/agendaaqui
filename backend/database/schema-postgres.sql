@@ -255,8 +255,9 @@ CREATE TRIGGER update_transacoes_updated_at BEFORE UPDATE ON transacoes FOR EACH
 
 -- Inserir Super Admin padrão
 -- Senha: Admin123!@#
-INSERT INTO usuarios_admin (nome, email, senha_hash) VALUES
-('Super Admin', 'admin@vistoria.com', '$2a$10$Co5y0KW7QJSueX.pRjwhHO4vqcy73N/8OIiAUucMf6hiRfVEoGPy2');
+INSERT INTO usuarios_admin (nome, email, senha_hash, ativo) VALUES
+('Super Admin', 'admin@vistoria.com', '$2a$10$Co5y0KW7QJSueX.pRjwhHO4vqcy73N/8OIiAUucMf6hiRfVEoGPy2', true)
+ON CONFLICT (email) DO UPDATE SET ativo = true;
 
 -- Inserir Empresa Demo
 INSERT INTO empresas (nome, slug, email, telefone, chave_pix, status, plano) VALUES

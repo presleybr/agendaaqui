@@ -171,6 +171,23 @@ Após o reset e deploy, você terá:
 - Deploy + Migração: 3-5 minutos
 - **Total: ~5-7 minutos**
 
+## 🔧 Fix: Ativar Super Admin
+
+Se você receber erro "Usuário admin inativo" após o login, execute:
+
+### Via pgAdmin (mais rápido):
+```sql
+UPDATE usuarios_admin
+SET ativo = true
+WHERE email = 'admin@vistoria.com';
+```
+
+### Via Script Node.js (localmente):
+```bash
+cd backend
+node fix-admin-ativo.js
+```
+
 ## 🆘 Precisa de Ajuda?
 
 Se tiver problemas:
@@ -178,3 +195,4 @@ Se tiver problemas:
 2. Teste o health check endpoint
 3. Verifique se a DATABASE_URL está configurada
 4. Confirme que a região do DB e Web Service são as mesmas
+5. Se receber "admin inativo", execute o fix acima
