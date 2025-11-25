@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Debug Tenant</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #1e1e1e;
+      color: #00ff00;
+    }
+    .result {
+      margin: 10px 0;
+      padding: 10px;
+      background: #2d2d2d;
+      border-left: 3px solid #00ff00;
+    }
+    .error {
+      border-left-color: #ff0000;
+      color: #ff6b6b;
+    }
+    button {
+      background: #00ff00;
+      color: #000;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Debug Multi-Tenant</h1>
+
+  <div class="result">
+    <strong>URL Atual:</strong><br>
+    <span id="currentUrl"></span>
+  </div>
+
+  <div class="result">
+    <strong>Path:</strong> <span id="path"></span>
+  </div>
+
+  <div class="result">
+    <strong>Slug Extraído do Path:</strong> <span id="pathSlug"></span>
+  </div>
+
+  <div class="result">
+    <strong>É Tenant?</strong> <span id="isTenant"></span>
+  </div>
+
+  <hr>
+
+  <h2>Teste Manual</h2>
+  <p>Cole uma URL para testar:</p>
+  <input type="text" id="testUrl" style="width: 100%; padding: 10px; background: #2d2d2d; color: #00ff00; border: 1px solid #00ff00;"
+         placeholder="https://agendaaquivistorias.com.br/empresanova">
+  <br><br>
+  <button onclick="testarUrl()">Testar URL</button>
+  <button onclick="testarAPI()">Testar API</button>
+
+  <div id="testResult"></div>
+
+  <hr>
+
+  <h2>Instruções</h2>
+  <ol>
+    <li>Acesse: <code>https://agendaaquivistorias.com.br/empresanova</code></li>
+    <li>Veja se detecta o slug "empresanova"</li>
+    <li>Clique em "Testar API" para ver se busca os dados</li>
+  </ol>
+
+  <script>
+    // Simular extração de tenant do path
+    function extractTenantFromPath(pathname) {
+      const reserved = ['admin', 'api', 'login', 'super-admin', 'debug.html', 'test-tenant.html'];
+      const match = pathname.match(/^\/([^\/]+)/);
+
+      if (!match) return null;
+
+      const slug = match[1];
+
+      if (reserved.includes(slug) || slug.includes('.')) {
+        return null;
+      }
+
+      return slug;
+    }
+
+    // Mostrar info atual
+    const path = window.location.pathname;
+    const slug = extractTenantFromPath(path);
+    const isTenant = slug && slug !== 'www' && slug !== 'admin';
+
+    document.getElementById('currentUrl').textContent = window.location.href;
+    document.getElementById('path').textContent = path;
+    document.getElementById('pathSlug').textContent = slug || 'NENHUM';
+    document.getElementById('isTenant').textContent = isTenant ? '✅ SIM' : '❌ NÃO';
+
+    // Testar URL customizada
+    window.testarUrl = function() {
+      const url = document.getElementById('testUrl').value;
+      try {
+        const urlObj = new URL(url);
+        const testPath = urlObj.pathname;
+        const testSlug = extractTenantFromPath(testPath);
+
+        document.getElementById('testResult').innerHTML = `
+          <div class="result">
+            <strong>Path:</strong> ${testPath}<br>
+            <strong>Slug:</strong> ${testSlug || 'NENHUM'}<br>
+            <strong>É Tenant?:</strong> ${testSlug ? '✅ SIM' : '❌ NÃO'}
+          </div>
+        `;
+      } catch (e) {
+        document.getElementById('testResult').innerHTML = `
+          <div class="result error">
+            <strong>Erro:</strong> URL inválida
+          </div>
+        `;
+      }
+    };
+
+    // Testar API
+    window.testarAPI = async function() {
+      const slug = document.getElementById('pathSlug').textContent;
+
+      if (slug === 'NENHUM') {
+        document.getElementById('testResult').innerHTML = `
+          <div class="result error">
+            <strong>Erro:</strong> Nenhum slug detectado!<br>
+            Acesse uma URL tipo: /empresanova
+          </div>
+        `;
+        return;
+      }
+
+      document.getElementById('testResult').innerHTML = `
+        <div class="result">
+          <strong>Testando API...</strong><br>
+          Slug: ${slug}
+        </div>
+      `;
+
+      try {
+        const response = await fetch(`https://agendaaqui-backend.onrender.com/api/tenant/config?slug=${slug}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          document.getElementById('testResult').innerHTML = `
+            <div class="result">
+              <strong>✅ API Funcionando!</strong><br><br>
+              <strong>Nome:</strong> ${data.nome}<br>
+              <strong>Slug:</strong> ${data.slug}<br>
+              <strong>Status:</strong> ${data.status}<br>
+              <strong>Email:</strong> ${data.email}<br>
+              <strong>Preço Cautelar:</strong> R$ ${(data.precos.cautelar / 100).toFixed(2)}<br>
+              <strong>Horário:</strong> ${data.horarios.inicio} - ${data.horarios.fim}<br><br>
+              <strong>Dados completos:</strong><br>
+              <pre style="color: #00ff00; background: #000; padding: 10px; overflow-x: auto;">
+${JSON.stringify(data, null, 2)}
+              </pre>
+            </div>
+          `;
+        } else {
+          document.getElementById('testResult').innerHTML = `
+            <div class="result error">
+              <strong>❌ Erro ${response.status}</strong><br><br>
+              ${data.error || 'Erro desconhecido'}<br><br>
+              Verifique se a empresa foi cadastrada no admin!
+            </div>
+          `;
+        }
+      } catch (error) {
+        document.getElementById('testResult').innerHTML = `
+          <div class="result error">
+            <strong>❌ Erro de Conexão</strong><br><br>
+            ${error.message}
+          </div>
+        `;
+      }
+    };
+
+    // Auto-testar se tiver slug
+    if (slug && slug !== 'debug.html') {
+      console.log('🔍 Auto-testando slug:', slug);
+      setTimeout(testarAPI, 500);
+    }
+  </script>
+</body>
+</html>
