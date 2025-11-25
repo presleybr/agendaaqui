@@ -42,8 +42,10 @@ export class EmpresasManager {
         throw new Error(errorData.error || 'Erro ao carregar empresas');
       }
 
-      this.empresas = await response.json();
+      const data = await response.json();
+      this.empresas = data.empresas || data || [];
       console.log('✅ Empresas carregadas:', this.empresas.length);
+      console.log('📊 Dados das empresas:', this.empresas);
       this.renderLista();
     } catch (error) {
       console.error('❌ Erro ao carregar empresas:', error);

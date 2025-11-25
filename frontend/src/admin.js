@@ -291,6 +291,8 @@ class AdminPanel {
     try {
       console.log('📊 Loading empresas stats...');
       const token = localStorage.getItem('token');
+      console.log('🔐 Token:', token ? 'Present' : 'Missing');
+      console.log('🔗 API URL:', `${api.API_URL}/admin/empresas`);
 
       const response = await fetch(`${api.API_URL}/admin/empresas`, {
         headers: {
@@ -298,17 +300,27 @@ class AdminPanel {
         }
       });
 
+      console.log('📡 Response status:', response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Response error:', errorText);
         throw new Error('Erro ao carregar empresas');
       }
 
       const data = await response.json();
-      const empresas = data.empresas || [];
+      console.log('📦 Raw data received:', data);
+
+      const empresas = data.empresas || data || [];
       console.log('✅ Empresas loaded:', empresas.length);
+      console.log('📊 Empresas array:', empresas);
 
       // Calcular stats
       const totalEmpresas = empresas.length;
       const empresasAtivas = empresas.filter(e => e.status === 'ativo').length;
+
+      console.log('📊 Total empresas:', totalEmpresas);
+      console.log('📊 Empresas ativas:', empresasAtivas);
 
       // Calcular receita do mês (somando receita de todas as empresas)
       const hoje = new Date();
@@ -318,21 +330,35 @@ class AdminPanel {
       let receitaMes = 0;
       let comissoesPendentes = 0;
 
-      empresas.forEach(empresa => {
+      empresas.forEach((empresa, index) => {
+        console.log(`📊 Empresa ${index + 1}:`, {
+          nome: empresa.nome,
+          status: empresa.status,
+          data_inicio: empresa.data_inicio,
+          stats: empresa.stats
+        });
+
         // Calcular dias desde o cadastro
         const dataInicio = new Date(empresa.data_inicio);
         const diasCadastro = Math.floor((hoje - dataInicio) / (1000 * 60 * 60 * 24));
 
+        console.log(`   Dias cadastro: ${diasCadastro}`);
+
         // Se está nos primeiros 30 dias, tem comissão de R$ 5,00 por agendamento
         if (diasCadastro <= 30) {
           const agendamentos = empresa.stats?.total_agendamentos || 0;
+          console.log(`   Comissão pendente: ${agendamentos} agendamentos x R$ 5,00 = R$ ${agendamentos * 5},00`);
           comissoesPendentes += agendamentos * 5; // R$ 5,00 por agendamento
         }
 
         // Somar receita total (os valores já estão em centavos no banco)
         const valorTaxas = empresa.stats?.valor_taxas || 0;
+        console.log(`   Valor taxas: ${valorTaxas} centavos`);
         receitaMes += valorTaxas;
       });
+
+      console.log('💰 Receita total do mês:', receitaMes, 'centavos');
+      console.log('💰 Comissões pendentes:', comissoesPendentes * 100, 'centavos');
 
       // Atualizar DOM
       document.getElementById('statTotalEmpresas').textContent = totalEmpresas;
