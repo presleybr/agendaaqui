@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 const errorHandler = require('./middleware/errorHandler');
+const db = require('./config/database');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -115,13 +116,43 @@ const agendamentoLimiter = rateLimit({
 
 app.use('/api/', limiter);
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({
+// Health check com verificação de banco de dados
+app.get('/api/health', async (req, res) => {
+  const healthCheck = {
     status: 'ok',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+    uptime: process.uptime(),
+    database: {
+      connected: false,
+      type: process.env.DATABASE_URL ? 'postgresql' : 'sqlite',
+      message: ''
+    }
+  };
+
+  try {
+    // Testa a conexão com o banco de dados
+    const usePostgres = !!process.env.DATABASE_URL;
+
+    if (usePostgres) {
+      // PostgreSQL - testa com uma query simples
+      await db.query('SELECT 1');
+      healthCheck.database.connected = true;
+      healthCheck.database.message = 'Conexão PostgreSQL estabelecida';
+    } else {
+      // SQLite - testa com uma query simples
+      db.prepare('SELECT 1').get();
+      healthCheck.database.connected = true;
+      healthCheck.database.message = 'Conexão SQLite estabelecida';
+    }
+  } catch (error) {
+    healthCheck.status = 'error';
+    healthCheck.database.connected = false;
+    healthCheck.database.message = `Erro na conexão: ${error.message}`;
+  }
+
+  // Retorna status HTTP apropriado
+  const statusCode = healthCheck.database.connected ? 200 : 503;
+  res.status(statusCode).json(healthCheck);
 });
 
 // Routes

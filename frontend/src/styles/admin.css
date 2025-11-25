@@ -1,6 +1,151 @@
 @import url('theme.css');
 
 /* ============================================
+   DATABASE STATUS BAR
+============================================ */
+.db-status-bar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-sticky);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-light);
+  padding: var(--spacing-3) var(--spacing-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.db-status-bar.connected {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-bottom-color: #059669;
+}
+
+.db-status-bar.disconnected {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-bottom-color: #dc2626;
+}
+
+.db-status-bar.checking {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-bottom-color: #d97706;
+}
+
+.db-status-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.db-status-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.db-status-bar.connected .db-status-icon,
+.db-status-bar.disconnected .db-status-icon,
+.db-status-bar.checking .db-status-icon {
+  stroke: white;
+}
+
+.db-status-bar.checking .db-status-icon {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.db-status-text {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
+}
+
+.db-status-bar.connected .db-status-text,
+.db-status-bar.disconnected .db-status-text,
+.db-status-bar.checking .db-status-text {
+  color: white;
+}
+
+.db-status-type {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  transition: all 0.3s ease;
+}
+
+.db-status-bar.connected .db-status-type,
+.db-status-bar.disconnected .db-status-type,
+.db-status-bar.checking .db-status-type {
+  color: white;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.db-status-refresh {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  padding: var(--spacing-2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.db-status-refresh:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--border-default);
+}
+
+.db-status-bar.connected .db-status-refresh,
+.db-status-bar.disconnected .db-status-refresh,
+.db-status-bar.checking .db-status-refresh {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.db-status-bar.connected .db-status-refresh:hover,
+.db-status-bar.disconnected .db-status-refresh:hover,
+.db-status-bar.checking .db-status-refresh:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.db-status-refresh svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.5s ease;
+}
+
+.db-status-refresh.refreshing svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
    GLOBAL ADMIN STYLES
 ============================================ */
 .admin-body {

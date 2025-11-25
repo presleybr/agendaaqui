@@ -114,6 +114,66 @@ class AdminPanel {
 
     // Setup Notifications
     this.setupNotifications();
+
+    // Setup Database Status
+    this.setupDatabaseStatus();
+  }
+
+  setupDatabaseStatus() {
+    // Check database status immediately
+    this.checkDatabaseStatus();
+
+    // Set up periodic checks every 30 seconds
+    this.dbStatusInterval = setInterval(() => {
+      this.checkDatabaseStatus();
+    }, 30000);
+
+    // Set up refresh button
+    const refreshBtn = document.getElementById('dbStatusRefresh');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        refreshBtn.classList.add('refreshing');
+        this.checkDatabaseStatus().finally(() => {
+          setTimeout(() => {
+            refreshBtn.classList.remove('refreshing');
+          }, 500);
+        });
+      });
+    }
+  }
+
+  async checkDatabaseStatus() {
+    const statusBar = document.getElementById('dbStatusBar');
+    const statusText = document.getElementById('dbStatusText');
+    const statusType = document.getElementById('dbStatusType');
+
+    try {
+      // Update UI to checking state
+      statusBar.className = 'db-status-bar checking';
+      statusText.textContent = 'Verificando conexão...';
+      statusType.textContent = '';
+
+      // Call health check endpoint
+      const response = await fetch('/api/health');
+      const data = await response.json();
+
+      // Update UI based on response
+      if (data.database && data.database.connected) {
+        statusBar.className = 'db-status-bar connected';
+        statusText.textContent = 'Banco de dados conectado';
+        statusType.textContent = data.database.type.toUpperCase();
+      } else {
+        statusBar.className = 'db-status-bar disconnected';
+        statusText.textContent = data.database?.message || 'Erro na conexão com banco de dados';
+        statusType.textContent = data.database?.type?.toUpperCase() || 'DESCONHECIDO';
+      }
+    } catch (error) {
+      // Network error or server down
+      statusBar.className = 'db-status-bar disconnected';
+      statusText.textContent = 'Erro ao verificar conexão com servidor';
+      statusType.textContent = 'ERRO';
+      console.error('Database status check failed:', error);
+    }
   }
 
   setupNavigation() {
