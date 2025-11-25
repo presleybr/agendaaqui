@@ -40,6 +40,7 @@ const runMigration = async () => {
     console.log('   - pagamentos');
     console.log('   - transacoes');
     console.log('   - notificacoes');
+    console.log('   - horarios_bloqueados');
 
     console.log('\n👤 Usuário Admin criado:');
     console.log('   Email: admin@vistoria.com');

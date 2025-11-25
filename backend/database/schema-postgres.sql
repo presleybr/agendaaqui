@@ -4,6 +4,7 @@
 -- =============================================
 
 -- Limpar tabelas existentes (CUIDADO EM PRODUÇÃO!)
+DROP TABLE IF EXISTS horarios_bloqueados CASCADE;
 DROP TABLE IF EXISTS transacoes CASCADE;
 DROP TABLE IF EXISTS pagamentos CASCADE;
 DROP TABLE IF EXISTS notificacoes CASCADE;
