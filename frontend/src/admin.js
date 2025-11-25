@@ -290,25 +290,9 @@ class AdminPanel {
   async loadEmpresasStats() {
     try {
       console.log('📊 Loading empresas stats...');
-      const token = localStorage.getItem('token');
-      console.log('🔐 Token:', token ? 'Present' : 'Missing');
-      console.log('🔗 API URL:', `${api.API_URL}/admin/empresas`);
 
-      const response = await fetch(`${api.API_URL}/admin/empresas`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      console.log('📡 Response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Response error:', errorText);
-        throw new Error('Erro ao carregar empresas');
-      }
-
-      const data = await response.json();
+      // Usar api.get() que já adiciona o token automaticamente via interceptor
+      const data = await api.get('/admin/empresas');
       console.log('📦 Raw data received:', data);
 
       const empresas = data.empresas || data || [];
