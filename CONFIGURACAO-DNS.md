@@ -17,9 +17,62 @@
 - **Função:** API + Banco de Dados PostgreSQL
 
 ### Frontend (Site Principal)
-- **Hospedado em:** ?
-- **URL:** `https://agendaaquivistorias.com.br`
+- **Hospedado em:** Render
+- **URL:** `https://agendaaqui-frontend.onrender.com`
 - **Função:** Site principal de agendamento
+
+---
+
+## 🚀 Usando Subdomínios do Render (.onrender.com) TEMPORARIAMENTE
+
+**Enquanto seu DNS próprio não propaga**, você pode usar subdomínios do Render:
+
+### Como Funciona:
+
+```
+Empresas podem usar subdomínios temporários:
+├── https://vistoriaexpress.agendaaqui-frontend.onrender.com
+├── https://empresa2.agendaaqui-frontend.onrender.com
+└── https://empresa3.agendaaqui-frontend.onrender.com
+```
+
+### Configuração no Render:
+
+1. **Acesse seu serviço Frontend no Render Dashboard**
+   - https://dashboard.render.com
+
+2. **Vá em Settings → Custom Domains**
+   - Clique em "Add Custom Domain"
+   - Adicione os subdomínios que quiser:
+     ```
+     vistoriaexpress.agendaaqui-frontend.onrender.com
+     empresa2.agendaaqui-frontend.onrender.com
+     ```
+   - O Render automaticamente aceita esses subdomínios!
+
+3. **Configure o Backend para aceitar esses subdomínios**
+   - O código já está preparado para detectar subdominios `.onrender.com`
+   - Veja em: `backend/src/utils/tenantMiddleware.js`
+
+### ⚠️ IMPORTANTE:
+
+Os subdomínios `.onrender.com` funcionam **imediatamente** sem configuração DNS!
+
+**Mas lembre-se:**
+- São URLs temporárias
+- Use enquanto configura seu domínio próprio
+- Depois migre para: `empresa.agendaaquivistorias.com.br`
+
+### Como Cadastrar Empresa com Subdomínio Render:
+
+Ao criar uma empresa no painel admin:
+
+```
+Nome: Vistoria Express
+Slug: vistoriaexpress
+URL Temp: vistoriaexpress.agendaaqui-frontend.onrender.com
+URL Final: vistoriaexpress.agendaaquivistorias.com.br (quando DNS propagar)
+```
 
 ---
 
