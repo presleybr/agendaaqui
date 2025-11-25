@@ -6,8 +6,11 @@ import tenantService from './services/tenant.js';
 async function initTenantConfig() {
   console.log('🔍 Verificando se é tenant...');
   console.log('   Hostname:', window.location.hostname);
+  console.log('   Path:', window.location.pathname);
   console.log('   isTenant():', tenantService.isTenant());
   console.log('   Subdomain extracted:', tenantService.extractSubdomain());
+  console.log('   Path slug extracted:', tenantService.extractTenantFromPath());
+  console.log('   Final tenant slug:', tenantService.extractTenantSlug());
 
   if (tenantService.isTenant()) {
     try {

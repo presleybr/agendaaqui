@@ -10,6 +10,32 @@ class TenantService {
   }
 
   /**
+   * Extrai o slug do tenant do PATH (ex: /empresa1/... -> "empresa1")
+   */
+  extractTenantFromPath() {
+    const path = window.location.pathname;
+
+    // Ignorar rotas reservadas
+    const reserved = ['admin', 'api', 'login', 'super-admin'];
+
+    // Extrair primeira parte do path
+    // /empresa1/... -> "empresa1"
+    // /empresa1 -> "empresa1"
+    const match = path.match(/^\/([^\/]+)/);
+
+    if (!match) return null;
+
+    const slug = match[1];
+
+    // Ignorar rotas reservadas e arquivos estáticos
+    if (reserved.includes(slug) || slug.includes('.')) {
+      return null;
+    }
+
+    return slug;
+  }
+
+  /**
    * Extrai o subdomínio do URL atual
    */
   extractSubdomain() {
@@ -55,11 +81,25 @@ class TenantService {
   }
 
   /**
-   * Verifica se está em um subdomínio de tenant
+   * Extrai o slug do tenant (suporta subdomain OU path)
+   */
+  extractTenantSlug() {
+    // Prioridade: PATH > SUBDOMAIN
+    // Ex: domain.com/empresa1 OU empresa1.domain.com
+    const pathSlug = this.extractTenantFromPath();
+    if (pathSlug) {
+      return pathSlug;
+    }
+
+    return this.extractSubdomain();
+  }
+
+  /**
+   * Verifica se está em um contexto de tenant (subdomínio OU path)
    */
   isTenant() {
-    const subdomain = this.extractSubdomain();
-    return subdomain && subdomain !== 'www' && subdomain !== 'admin';
+    const slug = this.extractTenantSlug();
+    return slug && slug !== 'www' && slug !== 'admin';
   }
 
   /**
@@ -67,17 +107,19 @@ class TenantService {
    */
   async loadTenantConfig() {
     if (!this.isTenant()) {
-      console.log('📍 Não está em um subdomínio de tenant');
+      console.log('📍 Não está em um contexto de tenant');
       return null;
     }
 
     try {
-      const subdomain = this.extractSubdomain();
-      console.log(`🏢 Carregando configurações do tenant: ${subdomain}`);
+      const tenantSlug = this.extractTenantSlug();
+      console.log(`🏢 Carregando configurações do tenant: ${tenantSlug}`);
+      console.log(`   Método de detecção: ${this.extractTenantFromPath() ? 'PATH' : 'SUBDOMAIN'}`);
 
-      const response = await api.get('/tenant/config');
+      // Fazer requisição para API passando o slug
+      const response = await api.get(`/tenant/config?slug=${tenantSlug}`);
       this.config = response.data;
-      this.currentTenant = subdomain;
+      this.currentTenant = tenantSlug;
 
       console.log('✅ Configurações do tenant carregadas:', this.config);
       return this.config;
@@ -85,7 +127,7 @@ class TenantService {
       console.error('❌ Erro ao carregar configurações do tenant:', error);
 
       if (error.response?.status === 404) {
-        throw new Error('Empresa não encontrada. Verifique se o subdomínio está correto.');
+        throw new Error('Empresa não encontrada. Verifique se o slug está correto.');
       }
 
       if (error.response?.status === 403) {

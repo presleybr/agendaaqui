@@ -5,11 +5,38 @@ const { requireTenant } = require('../middleware/tenantMiddleware');
 /**
  * GET /api/tenant/config
  * Retorna as configurações públicas do tenant atual
- * Requer que a requisição seja feita através de um subdomínio válido
+ * Suporta: subdomínio OU query parameter ?slug=empresa1
  */
-router.get('/config', requireTenant, async (req, res) => {
+router.get('/config', async (req, res) => {
   try {
-    const empresa = req.tenant;
+    let empresa = req.tenant; // Do middleware (subdomínio)
+
+    // Se não tem tenant do subdomínio, tentar buscar por slug query parameter
+    if (!empresa && req.query.slug) {
+      const Empresa = require('../models/Empresa');
+      console.log('🔍 Buscando empresa pelo slug query:', req.query.slug);
+      empresa = await Empresa.findBySlug(req.query.slug);
+
+      if (!empresa) {
+        return res.status(404).json({
+          error: 'Empresa não encontrada',
+          slug: req.query.slug
+        });
+      }
+
+      if (empresa.status !== 'ativo') {
+        return res.status(403).json({
+          error: 'Empresa inativa ou suspensa'
+        });
+      }
+    }
+
+    // Se ainda não tem empresa, retornar erro
+    if (!empresa) {
+      return res.status(400).json({
+        error: 'Informe o slug da empresa via subdomínio ou query parameter ?slug=...'
+      });
+    }
 
     // Retornar apenas informações públicas (não sensíveis)
     const config = {
