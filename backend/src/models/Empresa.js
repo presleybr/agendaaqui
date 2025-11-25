@@ -4,23 +4,55 @@ const usePostgres = !!process.env.DATABASE_URL;
 
 class Empresa {
   static async create(data) {
-    const { nome, slug, razao_social, cnpj, email, telefone, pix_key, pix_type, logo_url } = data;
+    const {
+      nome,
+      slug,
+      cnpj,
+      email,
+      telefone,
+      chave_pix,
+      preco_cautelar,
+      preco_transferencia,
+      preco_outros,
+      horario_inicio,
+      horario_fim,
+      intervalo_minutos,
+      status,
+      plano
+    } = data;
 
     if (usePostgres) {
       const result = await db.query(
         `INSERT INTO empresas
-        (nome, slug, razao_social, cnpj, email, telefone, pix_key, pix_type, logo_url, status, data_inicio)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'ativo', CURRENT_DATE)
+        (nome, slug, cnpj, email, telefone, chave_pix, preco_cautelar, preco_transferencia,
+         preco_outros, horario_inicio, horario_fim, intervalo_minutos, status, plano)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING *`,
-        [nome, slug, razao_social, cnpj, email, telefone, pix_key, pix_type, logo_url]
+        [
+          nome,
+          slug,
+          cnpj,
+          email,
+          telefone,
+          chave_pix,
+          preco_cautelar || 15000,
+          preco_transferencia || 12000,
+          preco_outros || 10000,
+          horario_inicio || '08:00:00',
+          horario_fim || '18:00:00',
+          intervalo_minutos || 60,
+          status || 'ativo',
+          plano || 'basico'
+        ]
       );
       return result.rows[0];
     } else {
+      // SQLite version (legacy)
       const result = db.prepare(
         `INSERT INTO empresas
-        (nome, slug, razao_social, cnpj, email, telefone, pix_key, pix_type, logo_url, status, data_inicio)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ativo', date('now'))`
-      ).run(nome, slug, razao_social, cnpj, email, telefone, pix_key, pix_type, logo_url);
+        (nome, slug, cnpj, email, telefone, chave_pix, status)
+        VALUES (?, ?, ?, ?, ?, ?, 'ativo')`
+      ).run(nome, slug, cnpj, email, telefone, chave_pix);
 
       return this.findById(result.lastInsertRowid);
     }
@@ -145,6 +177,49 @@ class Empresa {
         WHERE a.empresa_id = ?
       `).get(empresaId);
     }
+  }
+
+  static async isSlugAvailable(slug) {
+    const empresa = await this.findBySlug(slug);
+    return !empresa;
+  }
+
+  static async getMetricas(empresaId, mes, ano) {
+    if (usePostgres) {
+      const result = await db.query(`
+        SELECT
+          COUNT(a.id) as total_agendamentos,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_total ELSE 0 END), 0) as total_receita,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_comissao ELSE 0 END), 0) as total_comissao_plataforma,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_empresa ELSE 0 END), 0) as total_repasses
+        FROM agendamentos a
+        LEFT JOIN pagamentos p ON a.id = p.agendamento_id
+        WHERE a.empresa_id = $1
+          AND EXTRACT(MONTH FROM a.data_hora) = $2
+          AND EXTRACT(YEAR FROM a.data_hora) = $3
+      `, [empresaId, mes, ano]);
+      return result.rows[0];
+    }
+    return null;
+  }
+
+  static async getSplitsPendentes() {
+    if (usePostgres) {
+      const result = await db.query(`
+        SELECT
+          p.*,
+          a.empresa_id,
+          e.nome as empresa_nome
+        FROM pagamentos p
+        JOIN agendamentos a ON p.agendamento_id = a.id
+        JOIN empresas e ON a.empresa_id = e.id
+        WHERE p.status = 'approved'
+          AND p.valor_empresa > 0
+        ORDER BY p.pago_em DESC
+      `);
+      return result.rows;
+    }
+    return [];
   }
 }
 

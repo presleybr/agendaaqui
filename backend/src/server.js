@@ -208,8 +208,9 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Admin Routes (protegidas por autenticação)
-app.use('/api/admin', adminRoutes);
+// IMPORTANTE: Rotas mais específicas devem vir primeiro
 app.use('/api/admin/empresas', empresasRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Public Routes (sistema de agendamento)
 app.use('/api/auth', authRoutes);

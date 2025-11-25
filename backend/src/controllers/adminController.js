@@ -136,19 +136,20 @@ class AdminController {
       const {
         nome,
         slug,
-        razao_social,
         cnpj,
         email,
         telefone,
-        pix_key,
-        pix_type,
-        logo_url
+        chave_pix,
+        preco_cautelar,
+        preco_transferencia,
+        preco_outros,
+        plano
       } = req.body;
 
       // Validações
-      if (!nome || !slug || !email || !pix_key || !pix_type) {
+      if (!nome || !slug || !email || !chave_pix) {
         return res.status(400).json({
-          error: 'Campos obrigatórios: nome, slug, email, pix_key, pix_type'
+          error: 'Campos obrigatórios: nome, slug, email, chave_pix'
         });
       }
 
@@ -169,13 +170,15 @@ class AdminController {
       const empresa = await Empresa.create({
         nome,
         slug,
-        razao_social,
         cnpj,
         email,
         telefone,
-        pix_key,
-        pix_type,
-        logo_url
+        chave_pix,
+        preco_cautelar,
+        preco_transferencia,
+        preco_outros,
+        status: 'ativo',
+        plano: plano || 'basico'
       });
 
       res.status(201).json({
