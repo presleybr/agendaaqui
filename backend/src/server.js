@@ -160,7 +160,7 @@ const agendamentoLimiter = rateLimit({
 
 app.use('/api/', limiter);
 
-// Health check com verificação de banco de dados
+// Health check com verificação de banco de dados PostgreSQL
 app.get('/api/health', async (req, res) => {
   const healthCheck = {
     status: 'ok',
@@ -168,26 +168,16 @@ app.get('/api/health', async (req, res) => {
     uptime: process.uptime(),
     database: {
       connected: false,
-      type: process.env.DATABASE_URL ? 'postgresql' : 'sqlite',
+      type: 'postgresql',
       message: ''
     }
   };
 
   try {
-    // Testa a conexão com o banco de dados
-    const usePostgres = !!process.env.DATABASE_URL;
-
-    if (usePostgres) {
-      // PostgreSQL - testa com uma query simples
-      await db.query('SELECT 1');
-      healthCheck.database.connected = true;
-      healthCheck.database.message = 'Conexão PostgreSQL estabelecida';
-    } else {
-      // SQLite - testa com uma query simples
-      db.prepare('SELECT 1').get();
-      healthCheck.database.connected = true;
-      healthCheck.database.message = 'Conexão SQLite estabelecida';
-    }
+    // Testa a conexão com PostgreSQL
+    await db.query('SELECT 1 as test');
+    healthCheck.database.connected = true;
+    healthCheck.database.message = 'Conexão PostgreSQL estabelecida';
   } catch (error) {
     healthCheck.status = 'error';
     healthCheck.database.connected = false;
