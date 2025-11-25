@@ -13,6 +13,7 @@
     "migrate:old": "node src/migrations/run-postgres.js",
     "seed": "node src/migrations/seed.js",
     "setup": "npm run migrate && npm run seed",
+    "setup:complete": "node setup-complete.js",
     "ensure-admin": "node ensure-admin.js",
     "fix:admin": "node fix-admin-ativo.js"
   },
