@@ -64,4 +64,7 @@ function generateToken(adminId) {
   });
 }
 
-module.exports = { authAdmin, generateToken, JWT_SECRET };
+// Alias para manter compatibilidade
+const requireSuperAdmin = authAdmin;
+
+module.exports = { authAdmin, requireSuperAdmin, generateToken, JWT_SECRET };
