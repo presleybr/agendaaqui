@@ -9,7 +9,8 @@
     "dev:tunnel": "cross-env ENABLE_TUNNEL=true nodemon src/server.js",
     "build": "cd ../frontend && npm install && npm run build",
     "migrate": "node src/migrations/run.js",
-    "migrate:postgres": "node src/migrations/run-postgres.js",
+    "migrate:postgres": "node migrate-postgres.js",
+    "migrate:old": "node src/migrations/run-postgres.js",
     "seed": "node src/migrations/seed.js",
     "setup": "npm run migrate && npm run seed",
     "ensure-admin": "node ensure-admin.js"
@@ -23,7 +24,6 @@
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^9.2.2",
     "cors": "^2.8.5",
     "date-fns": "^3.0.6",
     "dotenv": "^16.3.1",
