@@ -178,7 +178,7 @@ Se não tiver registro `@` ou `agendaaquivistorias.com.br`:
 
 Abra no navegador:
 ```
-https://api.agendaaquivistorias.com.br/api/health
+https://agendaaqui-backend.onrender.com/api/health
 ```
 
 **Deve retornar:**
@@ -213,7 +213,7 @@ https://teste123.agendaaquivistorias.com.br
 
 **Windows PowerShell:**
 ```powershell
-nslookup api.agendaaquivistorias.com.br
+nslookup agendaaqui-backend.onrender.com
 nslookup empresa1.agendaaquivistorias.com.br
 ```
 
@@ -232,7 +232,7 @@ nslookup empresa1.agendaaquivistorias.com.br
 https://agendaaqui-backend.onrender.com/api/health
 ```
 
-Se funcionar aqui mas não em `api.agendaaquivistorias.com.br`:
+Se funcionar aqui mas não em `agendaaqui-backend.onrender.com`:
 - DNS ainda não propagou
 - CNAME api está errado
 
@@ -297,7 +297,7 @@ Antes de testar, confirme:
 - [ ] CNAME `@` ou `agendaaquivistorias.com.br` existe
 - [ ] CNAME `www` existe
 - [ ] Aguardou 5-30 minutos para propagar
-- [ ] Testou `https://api.agendaaquivistorias.com.br/api/health`
+- [ ] Testou `https://agendaaqui-backend.onrender.com/api/health`
 - [ ] Testou `https://agendaaquivistorias.com.br`
 
 ---

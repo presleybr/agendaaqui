@@ -151,7 +151,7 @@ ERROR: duplicate key value violates unique constraint "empresas_slug_key"
 Após aplicar a migration, você pode criar empresas com TODOS os campos:
 
 ```bash
-curl -X POST https://api.agendaaquivistorias.com.br/api/admin/empresas \
+curl -X POST https://agendaaqui-backend.onrender.com/api/admin/empresas \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer SEU_TOKEN" \
   -d '{
@@ -200,9 +200,9 @@ curl -X POST https://api.agendaaquivistorias.com.br/api/admin/empresas \
 - Empresa (subdomain): https://criar.agendaaquivistorias.com.br
 
 **Backend (API):**
-- API Base: https://api.agendaaquivistorias.com.br/api
-- Tenant config: https://api.agendaaquivistorias.com.br/api/tenant/config?slug=criar
-- Admin empresas: https://api.agendaaquivistorias.com.br/api/admin/empresas
+- API Base: https://agendaaqui-backend.onrender.com/api
+- Tenant config: https://agendaaqui-backend.onrender.com/api/tenant/config?slug=criar
+- Admin empresas: https://agendaaqui-backend.onrender.com/api/admin/empresas
 
 ---
 
@@ -235,7 +235,7 @@ Deve retornar: `campos_novos: 6`
 
 **3. Teste o endpoint de tenant:**
 ```bash
-curl "https://api.agendaaquivistorias.com.br/api/tenant/config?slug=demo"
+curl "https://agendaaqui-backend.onrender.com/api/tenant/config?slug=demo"
 ```
 
 Se retornar 404 ou erro, a migration não foi aplicada corretamente.

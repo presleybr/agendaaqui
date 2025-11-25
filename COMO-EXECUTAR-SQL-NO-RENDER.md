@@ -141,7 +141,7 @@ Você verá:
 
 ### Teste 1: API do Tenant
 ```bash
-curl "https://api.agendaaquivistorias.com.br/api/tenant/config?slug=vistoriapremium"
+curl "https://agendaaqui-backend.onrender.com/api/tenant/config?slug=vistoriapremium"
 ```
 
 **Resposta esperada:**
@@ -235,12 +235,11 @@ Certifique-se de estar usando:
 - ✅ https://agendaaquivistorias.com.br/vistoriapremium
 
 **Backend (API):**
-- ✅ https://api.agendaaquivistorias.com.br/api
-- ✅ https://api.agendaaquivistorias.com.br/api/tenant/config?slug=X
-- ✅ https://api.agendaaquivistorias.com.br/api/admin/empresas
+- ✅ https://agendaaqui-backend.onrender.com/api
+- ✅ https://agendaaqui-backend.onrender.com/api/tenant/config?slug=X
+- ✅ https://agendaaqui-backend.onrender.com/api/admin/empresas
 
 **NÃO usar:**
-- ❌ agendaaqui-backend.onrender.com (URL antiga)
 - ❌ localhost (só desenvolvimento)
 
 ---

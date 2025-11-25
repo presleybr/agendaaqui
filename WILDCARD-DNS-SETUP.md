@@ -185,7 +185,7 @@ Estes NÃO funcionam como tenant (são reservados):
 
 - ❌ `www.agendaaquivistorias.com.br` → site principal
 - ❌ `admin.agendaaquivistorias.com.br` → painel admin
-- ❌ `api.agendaaquivistorias.com.br` → API (se configurar)
+- ❌ `agendaaqui-backend.onrender.com` → API (se configurar)
 - ❌ `app.agendaaquivistorias.com.br` → reservado
 
 **Qualquer outro** funciona como tenant! ✅

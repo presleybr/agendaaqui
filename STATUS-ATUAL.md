@@ -3,7 +3,7 @@
 **Data:** 25/11/2024
 **URLs Corretas:**
 - Frontend: https://agendaaquivistorias.com.br
-- API: https://api.agendaaquivistorias.com.br
+- Backend/API: https://agendaaqui-backend.onrender.com/api
 
 ---
 
@@ -242,8 +242,9 @@ A página em `https://agendaaquivistorias.com.br/express` terá:
 ### **URLs do Sistema**
 - Frontend: https://agendaaquivistorias.com.br
 - Admin: https://agendaaquivistorias.com.br/admin
-- API: https://api.agendaaquivistorias.com.br/api
-- Tenant Config: https://api.agendaaquivistorias.com.br/api/tenant/config?slug=X
+- Backend: https://agendaaqui-backend.onrender.com
+- API: https://agendaaqui-backend.onrender.com/api
+- Tenant Config: https://agendaaqui-backend.onrender.com/api/tenant/config?slug=X
 
 ### **Render Dashboard**
 - Web Services: https://dashboard.render.com/web

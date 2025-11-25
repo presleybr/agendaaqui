@@ -183,11 +183,11 @@ AND column_name IN ('logo_url', 'cor_primaria', 'titulo_hero');
 - Empresa (subdomain): https://{slug}.agendaaquivistorias.com.br
 
 ### Backend (API)
-- Base: https://api.agendaaquivistorias.com.br/api
-- Health: https://api.agendaaquivistorias.com.br/api/health
-- Tenant config: https://api.agendaaquivistorias.com.br/api/tenant/config?slug={slug}
-- Admin empresas: https://api.agendaaquivistorias.com.br/api/admin/empresas
-- Repasses: https://api.agendaaquivistorias.com.br/api/repasses/pendentes
+- Base: https://agendaaqui-backend.onrender.com/api
+- Health: https://agendaaqui-backend.onrender.com/api/health
+- Tenant config: https://agendaaqui-backend.onrender.com/api/tenant/config?slug={slug}
+- Admin empresas: https://agendaaqui-backend.onrender.com/api/admin/empresas
+- Repasses: https://agendaaqui-backend.onrender.com/api/repasses/pendentes
 
 ---
 
@@ -303,11 +303,11 @@ Ver:
 ```bash
 # Listar pendentes
 curl -H "Authorization: Bearer TOKEN" \
-  https://api.agendaaquivistorias.com.br/api/repasses/pendentes
+  https://agendaaqui-backend.onrender.com/api/repasses/pendentes
 
 # Processar todos
 curl -X POST -H "Authorization: Bearer TOKEN" \
-  https://api.agendaaquivistorias.com.br/api/repasses/processar
+  https://agendaaqui-backend.onrender.com/api/repasses/processar
 ```
 
 ---

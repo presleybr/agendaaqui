@@ -110,16 +110,16 @@ postgresql://agendamentos_user:Ir3BriZT5FvaolIk8vHty0NiXPcRXdxy@dpg-d4hoten5r7bs
 
 ### Para o Backend:
 
-Se quiser usar um subdomínio para a API (ex: `api.agendaaquivistorias.com.br`):
+Se quiser usar um subdomínio para a API (ex: `agendaaqui-backend.onrender.com`):
 
 1. Vá no serviço **`agendaaqui-backend`**
 2. Clique em **"Settings"** → **"Custom Domains"**
-3. Adicione: `api.agendaaquivistorias.com.br`
+3. Adicione: `agendaaqui-backend.onrender.com`
 4. Configure DNS:
    - **Tipo CNAME:** `agendaaqui-backend.onrender.com`
 5. **Atualize** a variável `VITE_API_URL` no frontend para:
    ```
-   https://api.agendaaquivistorias.com.br/api
+   https://agendaaqui-backend.onrender.com/api
    ```
 6. **Redeploy** o frontend para aplicar a mudança
 

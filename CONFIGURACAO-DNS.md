@@ -118,7 +118,7 @@ CNAME *                         →  [servidor do frontend]
 
 **Explicação:**
 - `agendaaquivistorias.com.br` → Site principal
-- `api.agendaaquivistorias.com.br` → Backend (API)
+- `agendaaqui-backend.onrender.com` → Backend (API)
 - `empresa1.agendaaquivistorias.com.br` → Frontend com configs da empresa1
 - `empresa2.agendaaquivistorias.com.br` → Frontend com configs da empresa2
 
@@ -226,16 +226,16 @@ Similar ao Vercel:
 ```bash
 # Linux/Mac
 dig empresa1.agendaaquivistorias.com.br
-dig api.agendaaquivistorias.com.br
+dig agendaaqui-backend.onrender.com
 
 # Windows (PowerShell)
 nslookup empresa1.agendaaquivistorias.com.br
-nslookup api.agendaaquivistorias.com.br
+nslookup agendaaqui-backend.onrender.com
 ```
 
 ### 2. Teste API
 ```bash
-curl https://api.agendaaquivistorias.com.br/api/health
+curl https://agendaaqui-backend.onrender.com/api/health
 ```
 
 Deve retornar:
@@ -251,7 +251,7 @@ Deve retornar:
 ### 3. Teste Tenant
 ```bash
 curl -H "Host: empresa1.agendaaquivistorias.com.br" \
-     https://api.agendaaquivistorias.com.br/api/tenant/config
+     https://agendaaqui-backend.onrender.com/api/tenant/config
 ```
 
 Deve retornar os dados da empresa ou erro 404 (se não existir).
