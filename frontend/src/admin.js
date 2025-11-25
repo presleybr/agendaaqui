@@ -212,7 +212,8 @@ class AdminPanel {
           'clientes': 'Clientes',
           'calendario': 'Calendário',
           'relatorios': 'Relatórios',
-          'configuracoes': 'Configurações'
+          'configuracoes': 'Configurações',
+          'empresas': 'Empresas'
         };
         pageTitle.textContent = titles[sectionId] || 'Dashboard';
 
@@ -233,6 +234,9 @@ class AdminPanel {
         } else if (sectionId === 'configuracoes') {
           console.log('Navigating to Configuracoes - loading settings...');
           await this.loadConfiguracoes();
+        } else if (sectionId === 'empresas') {
+          console.log('Navigating to Empresas - loading stats...');
+          await this.loadEmpresasStats();
         }
       });
     });
@@ -280,6 +284,71 @@ class AdminPanel {
       document.getElementById('statPending').textContent = '0';
       document.getElementById('statConfirmed').textContent = '0';
       document.getElementById('statRevenue').textContent = 'R$ 0,00';
+    }
+  }
+
+  async loadEmpresasStats() {
+    try {
+      console.log('📊 Loading empresas stats...');
+      const token = localStorage.getItem('token');
+
+      const response = await fetch(`${api.API_URL}/admin/empresas`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao carregar empresas');
+      }
+
+      const data = await response.json();
+      const empresas = data.empresas || [];
+      console.log('✅ Empresas loaded:', empresas.length);
+
+      // Calcular stats
+      const totalEmpresas = empresas.length;
+      const empresasAtivas = empresas.filter(e => e.status === 'ativo').length;
+
+      // Calcular receita do mês (somando receita de todas as empresas)
+      const hoje = new Date();
+      const mesAtual = hoje.getMonth();
+      const anoAtual = hoje.getFullYear();
+
+      let receitaMes = 0;
+      let comissoesPendentes = 0;
+
+      empresas.forEach(empresa => {
+        // Calcular dias desde o cadastro
+        const dataInicio = new Date(empresa.data_inicio);
+        const diasCadastro = Math.floor((hoje - dataInicio) / (1000 * 60 * 60 * 24));
+
+        // Se está nos primeiros 30 dias, tem comissão de R$ 5,00 por agendamento
+        if (diasCadastro <= 30) {
+          const agendamentos = empresa.stats?.total_agendamentos || 0;
+          comissoesPendentes += agendamentos * 5; // R$ 5,00 por agendamento
+        }
+
+        // Somar receita total (os valores já estão em centavos no banco)
+        const valorTaxas = empresa.stats?.valor_taxas || 0;
+        receitaMes += valorTaxas;
+      });
+
+      // Atualizar DOM
+      document.getElementById('statTotalEmpresas').textContent = totalEmpresas;
+      document.getElementById('statEmpresasAtivas').textContent = empresasAtivas;
+      document.getElementById('statReceitaMes').textContent = formatters.currency(receitaMes); // Já está em centavos
+      document.getElementById('statComissoesPendentes').textContent = formatters.currency(comissoesPendentes * 100); // Converter reais para centavos
+
+      console.log('✅ Empresas stats rendered to DOM');
+    } catch (error) {
+      console.error('❌ Error loading empresas stats:', error);
+
+      // Set fallback values
+      document.getElementById('statTotalEmpresas').textContent = '0';
+      document.getElementById('statEmpresasAtivas').textContent = '0';
+      document.getElementById('statReceitaMes').textContent = 'R$ 0,00';
+      document.getElementById('statComissoesPendentes').textContent = 'R$ 0,00';
     }
   }
 
