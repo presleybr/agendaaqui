@@ -79,9 +79,22 @@ function extractSubdomain(host) {
     return null;
   }
 
+  // Ignorar domínios de infraestrutura (Render, Vercel, etc)
+  const infraDomains = ['onrender.com', 'vercel.app', 'herokuapp.com', 'railway.app'];
+  for (const infraDomain of infraDomains) {
+    if (hostname.includes(infraDomain)) {
+      return null; // Não é um tenant, é o próprio backend
+    }
+  }
+
   // Para desenvolvimento local (*.localhost)
   if (hostname.includes('localhost')) {
     return parts.length > 1 ? parts[0] : null;
+  }
+
+  // Para agendaaquivistorias.com.br (domínio principal)
+  if (hostname === 'agendaaquivistorias.com.br' || hostname === 'www.agendaaquivistorias.com.br') {
+    return null; // Site principal, não é tenant
   }
 
   // Para domínios normais, retornar primeira parte se tiver mais de 2 partes
@@ -94,10 +107,24 @@ function extractSubdomain(host) {
 
     if (commonTLDs.includes(tld)) {
       // Para .com.br, precisa ter 4+ partes para ser subdomínio
-      return parts.length > 3 ? parts[0] : null;
+      // ex: empresa.agendaaquivistorias.com.br tem 4 partes
+      if (parts.length > 3) {
+        const subdomain = parts[0];
+        // Ignorar subdomínios reservados
+        if (['www', 'admin', 'api', 'app'].includes(subdomain)) {
+          return null;
+        }
+        return subdomain;
+      }
+      return null;
     }
 
-    return parts[0];
+    // Para domínios .com normais (ex: empresa.example.com)
+    const subdomain = parts[0];
+    if (['www', 'admin', 'api', 'app'].includes(subdomain)) {
+      return null;
+    }
+    return subdomain;
   }
 
   return null;
