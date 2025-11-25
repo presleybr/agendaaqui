@@ -21,6 +21,21 @@ class TenantService {
       return parts.length > 1 ? parts[0] : null;
     }
 
+    // Para Render (.onrender.com)
+    // Ex: empresa1.agendaaqui-frontend.onrender.com -> ['empresa1', 'agendaaqui-frontend', 'onrender', 'com']
+    if (hostname.includes('.onrender.com')) {
+      if (parts.length > 3) {
+        const subdomain = parts[0];
+        // Ignorar subdomínios reservados
+        if (subdomain === 'www' || subdomain === 'admin' || subdomain === 'api') {
+          return null;
+        }
+        return subdomain;
+      }
+      // agendaaqui-frontend.onrender.com -> sem subdomínio
+      return null;
+    }
+
     // Para agendaaquivistorias.com.br (domínio .com.br)
     if (hostname.includes('agendaaquivistorias.com.br')) {
       // agendavistorias.agendaaquivistorias.com.br -> ['agendavistorias', 'agendaaquivistorias', 'com', 'br']

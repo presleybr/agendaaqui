@@ -79,8 +79,25 @@ function extractSubdomain(host) {
     return null;
   }
 
-  // Ignorar domínios de infraestrutura (Render, Vercel, etc)
-  const infraDomains = ['onrender.com', 'vercel.app', 'herokuapp.com', 'railway.app'];
+  // Detectar subdomínios em plataformas de hospedagem (Render, Vercel, etc)
+  // Ex: empresa1.agendaaqui-frontend.onrender.com -> "empresa1"
+  if (hostname.includes('.onrender.com')) {
+    // Se tiver mais de 3 partes, é um subdomínio
+    // Ex: empresa1.agendaaqui-frontend.onrender.com = 4 partes
+    if (parts.length > 3) {
+      const subdomain = parts[0];
+      // Ignorar subdomínios reservados
+      if (['www', 'admin', 'api', 'app'].includes(subdomain)) {
+        return null;
+      }
+      return subdomain;
+    }
+    // agendaaqui-frontend.onrender.com = 3 partes, não é tenant
+    return null;
+  }
+
+  // Ignorar outros domínios de infraestrutura (Vercel, Heroku, Railway)
+  const infraDomains = ['vercel.app', 'herokuapp.com', 'railway.app'];
   for (const infraDomain of infraDomains) {
     if (hostname.includes(infraDomain)) {
       return null; // Não é um tenant, é o próprio backend
