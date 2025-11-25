@@ -34,7 +34,7 @@ async function authAdmin(req, res, next) {
       return res.status(401).json({ error: 'Usuário admin não encontrado' });
     }
 
-    if (admin.status !== 'ativo') {
+    if (!admin.ativo) {
       return res.status(401).json({ error: 'Usuário admin inativo' });
     }
 

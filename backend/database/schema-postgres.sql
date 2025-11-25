@@ -229,6 +229,21 @@ CREATE INDEX idx_notificacoes_empresa ON notificacoes(empresa_id);
 CREATE INDEX idx_notificacoes_lida ON notificacoes(lida);
 
 -- =============================================
+-- TABELA: horarios_bloqueados
+-- Bloqueio de horários ou dias inteiros
+-- =============================================
+CREATE TABLE horarios_bloqueados (
+  id SERIAL PRIMARY KEY,
+  data DATE NOT NULL,
+  horario_inicio TIME,
+  horario_fim TIME,
+  motivo TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_horarios_bloqueados_data ON horarios_bloqueados(data);
+
+-- =============================================
 -- FUNÇÃO: Atualizar updated_at automaticamente
 -- =============================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()

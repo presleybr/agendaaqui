@@ -7,7 +7,7 @@ class Configuracao {
   }
 
   static async getAll() {
-    const result = await db.query('SELECT chave, valor, descricao FROM configuracoes');
+    const result = await db.query('SELECT chave, valor FROM configuracoes');
     return result.rows.reduce((acc, config) => {
       acc[config.chave] = config.valor;
       return acc;

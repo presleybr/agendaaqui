@@ -115,11 +115,18 @@ const corsOptions = {
     const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
     return callback(new Error(msg), false);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // Cache preflight requests for 10 minutes
 };
 
 // Apply CORS only to API routes
 app.use('/api', cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('/api/*', cors(corsOptions));
 
 // Body parser
 app.use(express.json());
