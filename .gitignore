@@ -19,6 +19,7 @@ backend/database/*.db-wal
 # Build outputs
 frontend/dist/
 frontend/build/
+frontend/.vite/
 *.log
 
 # IDE
