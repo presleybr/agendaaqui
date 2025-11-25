@@ -8,19 +8,18 @@ class Agendamento {
     const result = await db.query(`
       INSERT INTO agendamentos (
         protocolo, cliente_id, veiculo_id, tipo_vistoria,
-        data, horario, endereco_vistoria, preco, status, observacoes, empresa_id
+        data_hora, endereco_vistoria, valor, status, observacoes, empresa_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING id
     `, [
       protocolo,
       data.cliente_id,
       data.veiculo_id,
       data.tipo_vistoria,
-      data.data,
-      data.horario,
+      data.data_hora || data.data, // Accept both data_hora and data for backward compatibility
       data.endereco_vistoria || null,
-      data.preco,
+      data.valor || data.preco, // Accept both valor and preco for backward compatibility
       data.status || 'pendente',
       data.observacoes || null,
       data.empresa_id || null
@@ -48,7 +47,7 @@ class Agendamento {
         v.modelo as veiculo_modelo,
         v.ano as veiculo_ano,
         p.status as pagamento_status,
-        p.tipo_pagamento as pagamento_tipo,
+        p.metodo_pagamento as pagamento_tipo,
         p.data_pagamento as pagamento_data
       FROM agendamentos a
       JOIN clientes c ON a.cliente_id = c.id
@@ -88,7 +87,7 @@ class Agendamento {
         v.marca as veiculo_marca,
         v.modelo as veiculo_modelo,
         p.status as pagamento_status,
-        p.tipo_pagamento as pagamento_tipo
+        p.metodo_pagamento as pagamento_tipo
       FROM agendamentos a
       JOIN clientes c ON a.cliente_id = c.id
       JOIN veiculos v ON a.veiculo_id = v.id
@@ -98,9 +97,9 @@ class Agendamento {
     const params = [];
     let paramIndex = 1;
 
-    if (filters.data) {
-      params.push(filters.data);
-      query += ` AND a.data = $${paramIndex++}`;
+    if (filters.data || filters.data_hora) {
+      params.push(filters.data || filters.data_hora);
+      query += ` AND DATE(a.data_hora) = $${paramIndex++}`;
     }
 
     if (filters.status) {
@@ -120,10 +119,10 @@ class Agendamento {
 
     if (filters.data_inicio && filters.data_fim) {
       params.push(filters.data_inicio, filters.data_fim);
-      query += ` AND a.data BETWEEN $${paramIndex++} AND $${paramIndex++}`;
+      query += ` AND DATE(a.data_hora) BETWEEN $${paramIndex++} AND $${paramIndex++}`;
     }
 
-    query += ' ORDER BY a.data DESC, a.horario DESC';
+    query += ' ORDER BY a.data_hora DESC';
 
     if (filters.limit) {
       params.push(filters.limit);
@@ -141,16 +140,20 @@ class Agendamento {
   static async findByDate(data) {
     const result = await db.query(`
       SELECT * FROM agendamentos
-      WHERE data = $1 AND status != 'cancelado'
-      ORDER BY horario
+      WHERE DATE(data_hora) = $1 AND status != 'cancelado'
+      ORDER BY data_hora
     `, [data]);
     return result.rows;
   }
 
   static async findByDateAndTime(data, horario) {
+    // Combine date and time into timestamp for comparison
     const result = await db.query(`
       SELECT COUNT(*) as count FROM agendamentos
-      WHERE data = $1 AND horario = $2 AND status != 'cancelado'
+      WHERE DATE(data_hora) = $1
+        AND EXTRACT(HOUR FROM data_hora) = EXTRACT(HOUR FROM $2::time)
+        AND EXTRACT(MINUTE FROM data_hora) = EXTRACT(MINUTE FROM $2::time)
+        AND status != 'cancelado'
     `, [data, horario]);
     return result.rows[0];
   }
@@ -208,7 +211,7 @@ class Agendamento {
 
     if (filters.data_inicio && filters.data_fim) {
       params.push(filters.data_inicio, filters.data_fim);
-      query += ` AND data BETWEEN $${paramIndex++} AND $${paramIndex++}`;
+      query += ` AND DATE(data_hora) BETWEEN $${paramIndex++} AND $${paramIndex++}`;
     }
 
     const result = await db.query(query, params);
@@ -223,10 +226,10 @@ class Agendamento {
         COUNT(CASE WHEN status = 'confirmado' THEN 1 END) as confirmados,
         COUNT(CASE WHEN status = 'realizado' THEN 1 END) as realizados,
         COUNT(CASE WHEN status = 'cancelado' THEN 1 END) as cancelados,
-        SUM(preco) as receita_total,
-        SUM(CASE WHEN status = 'realizado' THEN preco ELSE 0 END) as receita_realizada
+        SUM(valor) as receita_total,
+        SUM(CASE WHEN status = 'realizado' THEN valor ELSE 0 END) as receita_realizada
       FROM agendamentos
-      WHERE data BETWEEN $1 AND $2
+      WHERE DATE(data_hora) BETWEEN $1 AND $2
     `, [dataInicio, dataFim]);
     return result.rows[0];
   }

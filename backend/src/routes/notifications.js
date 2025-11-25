@@ -122,7 +122,7 @@ router.get('/counts', authenticateToken, async (req, res) => {
 
     // Agendamentos hoje
     const todayResult = await db.query(
-      "SELECT COUNT(*) as count FROM agendamentos WHERE DATE(data) = $1 AND status IN ('pendente', 'confirmado')",
+      "SELECT COUNT(*) as count FROM agendamentos WHERE DATE(data_hora) = $1 AND status IN ('pendente', 'confirmado')",
       [today]
     );
     counts.dashboard = parseInt(todayResult.rows[0].count) || 0;
@@ -144,7 +144,7 @@ router.get('/counts', authenticateToken, async (req, res) => {
     const threeDaysStr = threeDaysFromNow.toISOString().split('T')[0];
 
     const upcomingResult = await db.query(
-      "SELECT COUNT(*) as count FROM agendamentos WHERE DATE(data) BETWEEN $1 AND $2 AND status IN ('pendente', 'confirmado')",
+      "SELECT COUNT(*) as count FROM agendamentos WHERE DATE(data_hora) BETWEEN $1 AND $2 AND status IN ('pendente', 'confirmado')",
       [today, threeDaysStr]
     );
     counts.calendario = parseInt(upcomingResult.rows[0].count) || 0;
