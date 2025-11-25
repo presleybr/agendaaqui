@@ -4,55 +4,98 @@ const usePostgres = !!process.env.DATABASE_URL;
 
 class Empresa {
   static async create(data) {
-    const {
-      nome,
-      slug,
-      cnpj,
-      email,
-      telefone,
-      chave_pix,
-      preco_cautelar,
-      preco_transferencia,
-      preco_outros,
-      horario_inicio,
-      horario_fim,
-      intervalo_minutos,
-      status,
-      plano
-    } = data;
-
     if (usePostgres) {
-      const result = await db.query(
-        `INSERT INTO empresas
-        (nome, slug, cnpj, email, telefone, chave_pix, preco_cautelar, preco_transferencia,
-         preco_outros, horario_inicio, horario_fim, intervalo_minutos, status, plano)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-        RETURNING *`,
-        [
-          nome,
-          slug,
-          cnpj,
-          email,
-          telefone,
-          chave_pix,
-          preco_cautelar || 15000,
-          preco_transferencia || 12000,
-          preco_outros || 10000,
-          horario_inicio || '08:00:00',
-          horario_fim || '18:00:00',
-          intervalo_minutos || 60,
-          status || 'ativo',
-          plano || 'basico'
-        ]
-      );
+      // Lista de campos permitidos (todos os campos da tabela empresas)
+      const allowedFields = [
+        // Dados básicos
+        'nome', 'slug', 'cnpj', 'email', 'telefone',
+        'endereco', 'cidade', 'estado', 'cep', 'chave_pix',
+        // Preços
+        'preco_cautelar', 'preco_transferencia', 'preco_outros',
+        // Horários
+        'horario_inicio', 'horario_fim', 'intervalo_minutos', 'dias_trabalho',
+        // Sistema
+        'status', 'plano', 'percentual_plataforma', 'data_inicio',
+        // Personalização visual
+        'logo_url', 'banner_url', 'favicon_url',
+        'cor_primaria', 'cor_secundaria', 'cor_texto', 'cor_fundo', 'fonte_primaria',
+        // Textos
+        'titulo_hero', 'subtitulo_hero', 'texto_sobre',
+        // Contato
+        'whatsapp_numero', 'facebook_url', 'instagram_url', 'linkedin_url', 'website_url',
+        // Avaliações
+        'google_rating', 'google_reviews_count', 'mostrar_avaliacoes',
+        // Analytics
+        'meta_pixel_id', 'google_analytics_id',
+        // Features
+        'mostrar_whatsapp_float'
+      ];
+
+      // Construir query dinamicamente apenas com campos fornecidos
+      const fields = [];
+      const values = [];
+      let paramCount = 1;
+
+      allowedFields.forEach(field => {
+        if (data[field] !== undefined) {
+          fields.push(field);
+          values.push(data[field]);
+        }
+      });
+
+      // Adicionar valores padrão se não fornecidos
+      const defaults = {
+        preco_cautelar: 15000,
+        preco_transferencia: 12000,
+        preco_outros: 10000,
+        horario_inicio: '08:00:00',
+        horario_fim: '18:00:00',
+        intervalo_minutos: 60,
+        status: 'ativo',
+        plano: 'basico',
+        percentual_plataforma: 500,
+        cor_primaria: '#1976d2',
+        cor_secundaria: '#424242',
+        cor_texto: '#333333',
+        cor_fundo: '#ffffff',
+        google_rating: 5.0,
+        google_reviews_count: 0,
+        mostrar_avaliacoes: true,
+        mostrar_whatsapp_float: true
+      };
+
+      Object.keys(defaults).forEach(field => {
+        if (!fields.includes(field)) {
+          fields.push(field);
+          values.push(defaults[field]);
+        }
+      });
+
+      // Construir placeholders ($1, $2, $3...)
+      const placeholders = fields.map((_, i) => `$${i + 1}`).join(', ');
+
+      const query = `
+        INSERT INTO empresas (${fields.join(', ')})
+        VALUES (${placeholders})
+        RETURNING *
+      `;
+
+      const result = await db.query(query, values);
       return result.rows[0];
     } else {
-      // SQLite version (legacy)
+      // SQLite version (legacy - apenas campos básicos)
       const result = db.prepare(
         `INSERT INTO empresas
         (nome, slug, cnpj, email, telefone, chave_pix, status)
         VALUES (?, ?, ?, ?, ?, ?, 'ativo')`
-      ).run(nome, slug, cnpj, email, telefone, chave_pix);
+      ).run(
+        data.nome,
+        data.slug,
+        data.cnpj,
+        data.email,
+        data.telefone,
+        data.chave_pix
+      );
 
       return this.findById(result.lastInsertRowid);
     }

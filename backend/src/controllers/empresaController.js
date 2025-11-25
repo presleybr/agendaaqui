@@ -94,6 +94,7 @@ class EmpresaController {
       }
 
       const {
+        // Dados básicos
         nome,
         slug,
         cnpj,
@@ -104,15 +105,53 @@ class EmpresaController {
         estado,
         cep,
         chave_pix,
-        logo_url,
-        cor_primaria,
-        cor_secundaria,
+
+        // Preços
         preco_cautelar,
         preco_transferencia,
         preco_outros,
+
+        // Horários
         horario_inicio,
         horario_fim,
+        intervalo_minutos,
         dias_trabalho,
+
+        // Personalização visual
+        logo_url,
+        banner_url,
+        favicon_url,
+        cor_primaria,
+        cor_secundaria,
+        cor_texto,
+        cor_fundo,
+        fonte_primaria,
+
+        // Textos personalizados
+        titulo_hero,
+        subtitulo_hero,
+        texto_sobre,
+
+        // Contato e redes sociais
+        whatsapp_numero,
+        facebook_url,
+        instagram_url,
+        linkedin_url,
+        website_url,
+
+        // Avaliações Google
+        google_rating,
+        google_reviews_count,
+        mostrar_avaliacoes,
+
+        // Analytics
+        meta_pixel_id,
+        google_analytics_id,
+
+        // Configurações de exibição
+        mostrar_whatsapp_float,
+
+        // Plano
         plano
       } = req.body;
 
@@ -124,8 +163,9 @@ class EmpresaController {
         });
       }
 
-      // Criar empresa com comissão de R$ 5,00 apenas nos primeiros 30 dias
+      // Criar empresa com comissão fixa de R$ 5,00
       const empresa = await Empresa.create({
+        // Dados básicos
         nome,
         slug: slug.toLowerCase(),
         cnpj,
@@ -136,16 +176,54 @@ class EmpresaController {
         estado,
         cep,
         chave_pix,
-        percentual_plataforma: 500, // R$ 5,00 fixo nos primeiros 30 dias
-        logo_url,
-        cor_primaria,
-        cor_secundaria,
+
+        // Preços
         preco_cautelar,
         preco_transferencia,
         preco_outros,
+
+        // Horários
         horario_inicio,
         horario_fim,
+        intervalo_minutos,
         dias_trabalho,
+
+        // Personalização visual
+        logo_url,
+        banner_url,
+        favicon_url,
+        cor_primaria,
+        cor_secundaria,
+        cor_texto,
+        cor_fundo,
+        fonte_primaria,
+
+        // Textos personalizados
+        titulo_hero,
+        subtitulo_hero,
+        texto_sobre,
+
+        // Contato e redes sociais
+        whatsapp_numero,
+        facebook_url,
+        instagram_url,
+        linkedin_url,
+        website_url,
+
+        // Avaliações Google
+        google_rating,
+        google_reviews_count,
+        mostrar_avaliacoes,
+
+        // Analytics
+        meta_pixel_id,
+        google_analytics_id,
+
+        // Configurações de exibição
+        mostrar_whatsapp_float,
+
+        // Sistema
+        percentual_plataforma: 500, // R$ 5,00 fixo por transação
         status: 'ativo',
         plano: plano || 'basico'
       });
@@ -156,7 +234,8 @@ class EmpresaController {
       res.status(201).json({
         ...empresa,
         url: `https://${empresa.slug}.agendaaquivistorias.com.br`,
-        mensagem: 'Empresa criada com sucesso! Comissão de R$ 5,00 nos primeiros 30 dias.'
+        url_path: `https://agendaaquivistorias.com.br/${empresa.slug}`,
+        mensagem: 'Empresa criada com sucesso! Comissão fixa de R$ 5,00 por transação.'
       });
     } catch (error) {
       console.error('❌ Erro ao criar empresa:', error);
