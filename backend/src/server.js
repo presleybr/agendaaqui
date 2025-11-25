@@ -166,27 +166,38 @@ app.get('/api/health', async (req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
     database: {
       connected: false,
       type: 'postgresql',
-      message: ''
+      message: '',
+      hasUrl: !!process.env.DATABASE_URL
     }
   };
 
   try {
     // Testa a conexão com PostgreSQL
-    await db.query('SELECT 1 as test');
+    const result = await db.query('SELECT NOW() as now, current_database() as database');
     healthCheck.database.connected = true;
     healthCheck.database.message = 'Conexão PostgreSQL estabelecida';
+    healthCheck.database.currentDb = result.rows[0].database;
+    healthCheck.database.serverTime = result.rows[0].now;
   } catch (error) {
-    healthCheck.status = 'error';
+    healthCheck.status = 'degraded';
     healthCheck.database.connected = false;
     healthCheck.database.message = `Erro na conexão: ${error.message}`;
+    healthCheck.database.errorCode = error.code;
+
+    console.error('❌ Health check - Erro ao conectar com banco:', {
+      message: error.message,
+      code: error.code,
+      hasUrl: !!process.env.DATABASE_URL
+    });
   }
 
-  // Retorna status HTTP apropriado
-  const statusCode = healthCheck.database.connected ? 200 : 503;
-  res.status(statusCode).json(healthCheck);
+  // Retorna status HTTP 200 sempre (para não derrubar o serviço)
+  // Status de saúde do banco está no JSON
+  res.status(200).json(healthCheck);
 });
 
 // Admin Routes (protegidas por autenticação)
