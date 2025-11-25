@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste Tenant Detection</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .success { color: #22c55e; }
+    .error { color: #ef4444; }
+    .info { color: #3b82f6; }
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .status.yes { background: #dcfce7; color: #166534; }
+    .status.no { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Teste de Detecção de Tenant</h1>
+
+  <div class="card">
+    <h2>Informações da URL</h2>
+    <p><strong>Hostname:</strong> <span id="hostname"></span></p>
+    <p><strong>Path:</strong> <span id="path"></span></p>
+    <p><strong>Full URL:</strong> <span id="fullUrl"></span></p>
+  </div>
+
+  <div class="card">
+    <h2>Detecção de Tenant</h2>
+    <p>
+      <strong>É Tenant?</strong>
+      <span id="isTenant" class="status"></span>
+    </p>
+    <p><strong>Método:</strong> <span id="method"></span></p>
+    <p><strong>Slug Detectado:</strong> <span id="slug"></span></p>
+    <p><strong>Path Slug:</strong> <span id="pathSlug"></span></p>
+    <p><strong>Subdomain Slug:</strong> <span id="subdomainSlug"></span></p>
+  </div>
+
+  <div class="card">
+    <h2>Teste da API</h2>
+    <p><strong>Status:</strong> <span id="apiStatus"></span></p>
+    <p><strong>Empresa:</strong> <span id="empresaNome"></span></p>
+    <button onclick="testarAPI()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
+      Testar Conexão com API
+    </button>
+  </div>
+
+  <div class="card">
+    <h2>Debug Completo</h2>
+    <pre id="debug"></pre>
+  </div>
+
+  <script type="module">
+    import tenantService from './src/services/tenant.js';
+
+    const debug = {
+      hostname: window.location.hostname,
+      pathname: window.location.pathname,
+      fullUrl: window.location.href,
+      isTenant: tenantService.isTenant(),
+      pathSlug: tenantService.extractTenantFromPath(),
+      subdomainSlug: tenantService.extractSubdomain(),
+      finalSlug: tenantService.extractTenantSlug()
+    };
+
+    // Atualizar DOM
+    document.getElementById('hostname').textContent = debug.hostname;
+    document.getElementById('path').textContent = debug.pathname;
+    document.getElementById('fullUrl').textContent = debug.fullUrl;
+
+    const isTenantEl = document.getElementById('isTenant');
+    isTenantEl.textContent = debug.isTenant ? 'SIM' : 'NÃO';
+    isTenantEl.className = 'status ' + (debug.isTenant ? 'yes' : 'no');
+
+    document.getElementById('method').textContent = debug.pathSlug ? 'PATH (subdirectory)' : debug.subdomainSlug ? 'SUBDOMAIN' : 'NENHUM';
+    document.getElementById('slug').textContent = debug.finalSlug || 'Não detectado';
+    document.getElementById('pathSlug').textContent = debug.pathSlug || 'Não detectado';
+    document.getElementById('subdomainSlug').textContent = debug.subdomainSlug || 'Não detectado';
+
+    document.getElementById('debug').textContent = JSON.stringify(debug, null, 2);
+
+    // Expor função globalmente
+    window.testarAPI = async function() {
+      const statusEl = document.getElementById('apiStatus');
+      const nomeEl = document.getElementById('empresaNome');
+
+      statusEl.textContent = 'Carregando...';
+      statusEl.className = 'info';
+
+      try {
+        const slug = debug.finalSlug;
+        if (!slug) {
+          throw new Error('Nenhum slug detectado');
+        }
+
+        const response = await fetch(`https://agendaaqui-backend.onrender.com/api/tenant/config?slug=${slug}`);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        statusEl.textContent = '✅ Sucesso!';
+        statusEl.className = 'success';
+        nomeEl.textContent = data.nome || 'Sem nome';
+
+        console.log('📦 Dados da empresa:', data);
+      } catch (error) {
+        statusEl.textContent = `❌ Erro: ${error.message}`;
+        statusEl.className = 'error';
+        nomeEl.textContent = '-';
+        console.error('Erro ao testar API:', error);
+      }
+    };
+  </script>
+</body>
+</html>
