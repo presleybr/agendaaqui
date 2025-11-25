@@ -4,35 +4,71 @@ import tenantService from './services/tenant.js';
 
 // Multi-Tenant Configuration
 async function initTenantConfig() {
+  console.log('🔍 Verificando se é tenant...');
+  console.log('   Hostname:', window.location.hostname);
+  console.log('   isTenant():', tenantService.isTenant());
+  console.log('   Subdomain extracted:', tenantService.extractSubdomain());
+
   if (tenantService.isTenant()) {
     try {
-      console.log('🏢 Sistema multi-tenant detectado');
+      console.log('🏢 Sistema multi-tenant detectado!');
+      console.log('📡 Carregando configurações do tenant...');
+
       const config = await tenantService.loadTenantConfig();
+
+      console.log('📦 Configurações recebidas:', config);
+
+      if (!config) {
+        throw new Error('Configurações do tenant não foram carregadas');
+      }
 
       // Personalizar título da página
       document.title = `${config.nome} - Agende sua Vistoria Online`;
+      console.log('✅ Título atualizado:', document.title);
 
       // Atualizar nome da empresa nos elementos da página
       const nomeEmpresa = document.querySelectorAll('.empresa-nome');
+      console.log(`📝 Atualizando ${nomeEmpresa.length} elementos .empresa-nome`);
       nomeEmpresa.forEach(el => {
         el.textContent = config.nome;
       });
 
-      console.log('✅ Configurações do tenant aplicadas:', config);
+      // Atualizar meta description
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        metaDescription.content = `Agende sua vistoria veicular com ${config.nome} de forma rápida e fácil.`;
+      }
+
+      console.log('✅ Configurações do tenant aplicadas com sucesso!');
+      console.log('   Nome:', config.nome);
+      console.log('   Slug:', config.slug);
+      console.log('   Preços:', config.precos);
+      console.log('   Horários:', config.horarios);
+
+      return config;
     } catch (error) {
       console.error('❌ Erro ao carregar configurações do tenant:', error);
+      console.error('   Error details:', error.response?.data || error.message);
 
       // Mostrar mensagem de erro ao usuário
       const errorDiv = document.createElement('div');
-      errorDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #f44336; color: white; padding: 15px; text-align: center; z-index: 9999;';
-      errorDiv.textContent = error.message;
+      errorDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #f44336; color: white; padding: 15px; text-align: center; z-index: 9999; font-family: system-ui;';
+      errorDiv.innerHTML = `
+        <strong>⚠️ ${error.message}</strong><br>
+        <small>Verifique se a empresa está cadastrada no sistema.</small>
+      `;
       document.body.insertBefore(errorDiv, document.body.firstChild);
+
+      return null;
     }
+  } else {
+    console.log('🌐 Modo padrão (não é tenant)');
+    return null;
   }
 }
 
-// Inicializar configurações do tenant antes de tudo
-initTenantConfig();
+// Inicializar configurações do tenant antes de tudo (aguardar conclusão)
+const tenantConfigPromise = initTenantConfig();
 
 // YouTube Background Video - Loop sem tela preta
 let player;
@@ -127,10 +163,15 @@ window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 DOM Content Loaded - Initializing app...');
 
+  // IMPORTANTE: Aguardar configurações do tenant carregarem primeiro!
+  console.log('⏳ Aguardando configurações do tenant...');
+  await tenantConfigPromise;
+  console.log('✅ Configurações do tenant prontas (ou não é tenant)');
+
   // Initialize scheduling form
   new ScheduleForm('scheduleApp');
 
-  // Load pricing cards
+  // Load pricing cards (agora com configurações do tenant se houver)
   await loadPricingCards();
 
   // Initialize scroll reveal animations
