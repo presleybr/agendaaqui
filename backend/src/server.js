@@ -21,6 +21,7 @@ const paymentRoutes = require('./routes/payment');
 const adminRoutes = require('./routes/admin');
 const empresasRoutes = require('./routes/empresas');
 const tenantRoutes = require('./routes/tenant');
+const repassesRoutes = require('./routes/repasses');
 
 const app = express();
 
@@ -211,6 +212,9 @@ app.get('/api/health', async (req, res) => {
 // IMPORTANTE: Rotas mais específicas devem vir primeiro
 app.use('/api/admin/empresas', empresasRoutes);
 app.use('/api/admin', adminRoutes);
+
+// Repasses Routes (transferências PIX automáticas)
+app.use('/api/repasses', repassesRoutes);
 
 // Tenant Routes (requer subdomínio válido)
 app.use('/api/tenant', tenantRoutes);

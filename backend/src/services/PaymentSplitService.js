@@ -1,10 +1,10 @@
 const Empresa = require('../models/Empresa');
+const PixTransferService = require('./PixTransferService');
 
 class PaymentSplitService {
   /**
    * Calcular split de pagamento
-   * Regra: Primeiros 30 dias = R$ 5,00 para plataforma
-   *        Após 30 dias = R$ 0,00 para plataforma (tudo para empresa)
+   * Regra: SEMPRE R$ 5,00 fixo para plataforma em cada transação
    */
   static async calcularSplit(empresaId, valorTotal) {
     console.log(`💰 Calculando split para empresa ${empresaId}, valor: R$ ${valorTotal / 100}`);
@@ -15,36 +15,23 @@ class PaymentSplitService {
       throw new Error('Empresa não encontrada');
     }
 
-    // Verificar se está nos primeiros 30 dias
-    const dataInicio = new Date(empresa.data_inicio);
+    // Verificar dias desde início (para informação)
+    const dataInicio = new Date(empresa.data_inicio || empresa.created_at);
     const hoje = new Date();
     const diasDesdeInicio = Math.floor((hoje - dataInicio) / (1000 * 60 * 60 * 24));
 
-    let valorPlataforma = 0;
-    let valorEmpresa = valorTotal;
-    let motivo = '';
+    // SEMPRE R$ 5,00 fixo para plataforma
+    const valorPlataforma = empresa.percentual_plataforma || 500; // 500 = R$ 5,00
+    const valorEmpresa = valorTotal - valorPlataforma;
+    const motivo = 'Comissão fixa de R$ 5,00 por transação';
 
-    if (diasDesdeInicio <= 30) {
-      // Primeiros 30 dias: R$ 5,00 fixo para plataforma
-      valorPlataforma = empresa.percentual_plataforma || 500; // 500 = R$ 5,00
-      valorEmpresa = valorTotal - valorPlataforma;
-      motivo = `Período promocional (dia ${diasDesdeInicio}/30)`;
-
-      console.log(`✅ Split: R$ ${valorPlataforma / 100} plataforma + R$ ${valorEmpresa / 100} empresa (${motivo})`);
-    } else {
-      // Após 30 dias: 0% para plataforma
-      valorPlataforma = 0;
-      valorEmpresa = valorTotal;
-      motivo = 'Período promocional encerrado (0% comissão)';
-
-      // Atualizar empresa para zerar comissão (se ainda não foi feito)
-      if (empresa.percentual_plataforma !== 0) {
-        await Empresa.update(empresaId, { percentual_plataforma: 0 });
-        console.log(`✅ Comissão zerada para empresa ${empresa.slug}`);
-      }
-
-      console.log(`✅ Split: R$ 0,00 plataforma + R$ ${valorEmpresa / 100} empresa (${motivo})`);
+    // Validar que o valor total é suficiente
+    if (valorTotal < valorPlataforma) {
+      console.warn(`⚠️  Valor total (R$ ${valorTotal / 100}) é menor que a comissão (R$ ${valorPlataforma / 100})`);
     }
+
+    console.log(`✅ Split: R$ ${valorPlataforma / 100} plataforma + R$ ${valorEmpresa / 100} empresa (${motivo})`);
+    console.log(`   Empresa ativa há ${diasDesdeInicio} dias`);
 
     return {
       valor_total: valorTotal,
@@ -154,29 +141,44 @@ class PaymentSplitService {
   }
 
   /**
-   * Simular repasse PIX (para testes)
-   * TODO: Integrar com API PIX real (Mercado Pago, PagSeguro, etc)
+   * Processar repasse PIX para empresa
    */
-  static async simularRepasse(split) {
-    console.log(`\n🔄 SIMULANDO repasse PIX para ${split.empresa_nome}`);
+  static async processarRepasse(split) {
+    console.log(`\n🔄 Processando repasse PIX para ${split.empresa_nome}`);
     console.log(`   Chave PIX: ${split.chave_pix}`);
     console.log(`   Valor: R$ ${split.valor_empresa / 100}`);
 
-    // Em produção, aqui você faria:
-    // 1. Chamada à API PIX do Mercado Pago/PagSeguro
-    // 2. Aguardar confirmação
-    // 3. Retornar comprovante
+    try {
+      const pixService = new PixTransferService();
 
-    // Por enquanto, apenas simula sucesso
-    return {
-      sucesso: true,
-      comprovante: `PIX-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      mensagem: 'Repasse PIX simulado com sucesso'
-    };
+      // Validar chave PIX
+      if (!pixService.validarChavePix(split.chave_pix)) {
+        throw new Error(`Chave PIX inválida: ${split.chave_pix}`);
+      }
+
+      // Realizar transferência
+      const resultado = await pixService.transferirPix({
+        chave_pix: split.chave_pix,
+        valor: split.valor_empresa,
+        empresa_nome: split.empresa_nome,
+        empresa_id: split.empresa_id,
+        split_id: split.id
+      });
+
+      return resultado;
+
+    } catch (error) {
+      console.error('❌ Erro ao processar repasse:', error);
+      return {
+        sucesso: false,
+        mensagem: error.message,
+        erro: error
+      };
+    }
   }
 
   /**
-   * Processar todos os repasses pendentes (CRON job)
+   * Processar todos os repasses pendentes (CRON job ou chamada manual)
    */
   static async processarRepassesPendentes() {
     console.log('\n🚀 Iniciando processamento de repasses pendentes...');
@@ -185,32 +187,62 @@ class PaymentSplitService {
 
     if (splits.length === 0) {
       console.log('✅ Nenhum repasse pendente');
-      return;
+      return {
+        total: 0,
+        processados: 0,
+        sucesso: 0,
+        erros: 0
+      };
     }
+
+    let processados = 0;
+    let sucesso = 0;
+    let erros = 0;
 
     for (const split of splits) {
       try {
+        console.log(`\n📌 Processando split #${split.id}...`);
+
         // Marcar como processando
         await this.iniciarRepasse(split.id);
 
-        // Simular repasse (em produção, chamar API PIX real)
-        const resultado = await this.simularRepasse(split);
+        // Processar repasse PIX
+        const resultado = await this.processarRepasse(split);
 
         if (resultado.sucesso) {
           // Marcar como concluído
           await this.concluirRepasse(split.id, resultado.comprovante);
           console.log(`✅ Repasse ${split.id} concluído: ${resultado.comprovante}`);
+          sucesso++;
         } else {
           // Marcar como erro
           await this.erroRepasse(split.id, resultado.mensagem);
+          console.log(`❌ Repasse ${split.id} falhou: ${resultado.mensagem}`);
+          erros++;
         }
+
+        processados++;
       } catch (error) {
         console.error(`❌ Erro ao processar repasse ${split.id}:`, error);
         await this.erroRepasse(split.id, error.message);
+        erros++;
+        processados++;
       }
     }
 
-    console.log('✅ Processamento de repasses finalizado\n');
+    const resumo = {
+      total: splits.length,
+      processados,
+      sucesso,
+      erros
+    };
+
+    console.log('\n✅ Processamento de repasses finalizado');
+    console.log(`   Total: ${resumo.total}`);
+    console.log(`   Sucesso: ${resumo.sucesso}`);
+    console.log(`   Erros: ${resumo.erros}\n`);
+
+    return resumo;
   }
 
   /**

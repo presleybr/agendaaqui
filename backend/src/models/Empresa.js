@@ -207,19 +207,112 @@ class Empresa {
     if (usePostgres) {
       const result = await db.query(`
         SELECT
-          p.*,
-          a.empresa_id,
-          e.nome as empresa_nome
-        FROM pagamentos p
-        JOIN agendamentos a ON p.agendamento_id = a.id
-        JOIN empresas e ON a.empresa_id = e.id
-        WHERE p.status = 'approved'
-          AND p.valor_empresa > 0
-        ORDER BY p.pago_em DESC
+          ps.*,
+          e.nome as empresa_nome,
+          e.chave_pix
+        FROM pagamento_splits ps
+        JOIN empresas e ON ps.empresa_id = e.id
+        WHERE ps.status_repasse = 'pendente'
+        ORDER BY ps.created_at ASC
       `);
       return result.rows;
     }
     return [];
+  }
+
+  static async registrarSplit(pagamentoId, empresaId, splitData) {
+    if (usePostgres) {
+      // Buscar chave PIX da empresa
+      const empresa = await this.findById(empresaId);
+
+      if (!empresa || !empresa.chave_pix) {
+        throw new Error('Empresa não encontrada ou sem chave PIX configurada');
+      }
+
+      const result = await db.query(
+        `INSERT INTO pagamento_splits
+        (pagamento_id, empresa_id, valor_total, valor_plataforma, valor_empresa,
+         status_repasse, chave_pix_destino)
+        VALUES ($1, $2, $3, $4, $5, 'pendente', $6)
+        RETURNING *`,
+        [
+          pagamentoId,
+          empresaId,
+          splitData.valor_total,
+          splitData.valor_plataforma,
+          splitData.valor_empresa,
+          empresa.chave_pix
+        ]
+      );
+      return result.rows[0];
+    }
+    return null;
+  }
+
+  static async atualizarRepasse(splitId, status, comprovante = null, erro = null) {
+    if (usePostgres) {
+      const updates = ['status_repasse = $2'];
+      const params = [splitId, status];
+      let paramIndex = 3;
+
+      if (comprovante) {
+        updates.push(`comprovante_repasse = $${paramIndex}`);
+        params.push(comprovante);
+        paramIndex++;
+      }
+
+      if (erro) {
+        updates.push(`erro_repasse = $${paramIndex}`);
+        params.push(erro);
+        paramIndex++;
+      }
+
+      if (status === 'concluido' || status === 'processando') {
+        updates.push(`data_repasse = CURRENT_TIMESTAMP`);
+      }
+
+      const query = `
+        UPDATE pagamento_splits
+        SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+        RETURNING *
+      `;
+
+      const result = await db.query(query, params);
+      return result.rows[0];
+    }
+    return null;
+  }
+
+  static async updateMetricas(empresaId, mes, ano, dados) {
+    if (usePostgres) {
+      // Tentar inserir ou atualizar (UPSERT)
+      const result = await db.query(
+        `INSERT INTO empresa_metricas
+        (empresa_id, mes, ano, total_agendamentos, total_receita,
+         total_comissao_plataforma, total_repasses)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (empresa_id, mes, ano)
+        DO UPDATE SET
+          total_agendamentos = empresa_metricas.total_agendamentos + EXCLUDED.total_agendamentos,
+          total_receita = empresa_metricas.total_receita + EXCLUDED.total_receita,
+          total_comissao_plataforma = empresa_metricas.total_comissao_plataforma + EXCLUDED.total_comissao_plataforma,
+          total_repasses = empresa_metricas.total_repasses + EXCLUDED.total_repasses,
+          updated_at = CURRENT_TIMESTAMP
+        RETURNING *`,
+        [
+          empresaId,
+          mes,
+          ano,
+          dados.total_agendamentos || 0,
+          dados.total_receita || 0,
+          dados.total_comissao_plataforma || 0,
+          dados.total_repasses || 0
+        ]
+      );
+      return result.rows[0];
+    }
+    return null;
   }
 }
 

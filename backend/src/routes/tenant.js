@@ -67,6 +67,52 @@ router.get('/config', async (req, res) => {
       // URLs
       url: `https://${empresa.slug}.agendaaquivistorias.com.br`,
 
+      // Personalização Visual
+      visual: {
+        logo_url: empresa.logo_url || null,
+        banner_url: empresa.banner_url || '/bgnew.png',
+        favicon_url: empresa.favicon_url || '/favicon.svg',
+        cor_primaria: empresa.cor_primaria || '#1976d2',
+        cor_secundaria: empresa.cor_secundaria || '#424242',
+        cor_texto: empresa.cor_texto || '#333333',
+        cor_fundo: empresa.cor_fundo || '#ffffff',
+        fonte_primaria: empresa.fonte_primaria || 'Inter'
+      },
+
+      // Textos Personalizados
+      textos: {
+        titulo_hero: empresa.titulo_hero || 'Agende Sua Vistoria Veicular Online',
+        subtitulo_hero: empresa.subtitulo_hero || 'Rápido, fácil e com o melhor preço. Proteção e tranquilidade para seu veículo.',
+        texto_sobre: empresa.texto_sobre || null
+      },
+
+      // Redes Sociais e Contato
+      contato: {
+        whatsapp: empresa.whatsapp_numero || null,
+        facebook: empresa.facebook_url || null,
+        instagram: empresa.instagram_url || null,
+        linkedin: empresa.linkedin_url || null,
+        website: empresa.website_url || null
+      },
+
+      // Avaliações Google
+      avaliacoes: {
+        rating: empresa.google_rating || 5.0,
+        count: empresa.google_reviews_count || 0,
+        mostrar: empresa.mostrar_avaliacoes !== false
+      },
+
+      // Tracking/Analytics
+      analytics: {
+        meta_pixel_id: empresa.meta_pixel_id || null,
+        google_analytics_id: empresa.google_analytics_id || null
+      },
+
+      // Configurações de exibição
+      features: {
+        mostrar_whatsapp_float: empresa.mostrar_whatsapp_float !== false
+      },
+
       // Comissão (informação útil para calcular preços)
       tem_comissao: calcularTemComissao(empresa),
       dias_desde_cadastro: calcularDiasDesdeCadastro(empresa)

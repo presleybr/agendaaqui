@@ -2,6 +2,173 @@ import { ScheduleForm } from './components/ScheduleForm.js';
 import { scheduleService } from './services/api.js';
 import tenantService from './services/tenant.js';
 
+/**
+ * Aplica personalização visual da empresa na página
+ */
+function applyCustomization(config) {
+  if (!config) return;
+
+  console.log('🎨 Aplicando personalização visual...');
+
+  // 1. Aplicar cores via CSS Custom Properties
+  if (config.visual) {
+    const root = document.documentElement;
+
+    if (config.visual.cor_primaria) {
+      root.style.setProperty('--brand-primary', config.visual.cor_primaria);
+      console.log('   ✓ Cor primária:', config.visual.cor_primaria);
+    }
+
+    if (config.visual.cor_secundaria) {
+      root.style.setProperty('--brand-secondary', config.visual.cor_secundaria);
+      console.log('   ✓ Cor secundária:', config.visual.cor_secundaria);
+    }
+
+    if (config.visual.cor_texto) {
+      root.style.setProperty('--text-primary', config.visual.cor_texto);
+    }
+
+    if (config.visual.cor_fundo) {
+      root.style.setProperty('--bg-primary', config.visual.cor_fundo);
+    }
+
+    // 2. Atualizar logo
+    if (config.visual.logo_url) {
+      const logoElements = document.querySelectorAll('.logo-text, .logo h1');
+      logoElements.forEach(el => {
+        const img = document.createElement('img');
+        img.src = config.visual.logo_url;
+        img.alt = config.nome;
+        img.style.maxHeight = '50px';
+        img.style.height = 'auto';
+        el.replaceWith(img);
+      });
+      console.log('   ✓ Logo atualizado:', config.visual.logo_url);
+    }
+
+    // 3. Atualizar banner/background
+    if (config.visual.banner_url) {
+      const heroSection = document.querySelector('#hero, .hero-section');
+      if (heroSection) {
+        heroSection.style.backgroundImage = `url('${config.visual.banner_url}')`;
+        console.log('   ✓ Banner atualizado:', config.visual.banner_url);
+      }
+
+      // Aplicar também no footer se tiver background
+      const footer = document.querySelector('.footer');
+      if (footer && footer.style.backgroundImage) {
+        footer.style.backgroundImage = `url('${config.visual.banner_url}')`;
+      }
+
+      // Seção de agendamento
+      const scheduling = document.querySelector('.scheduling');
+      if (scheduling && scheduling.style.backgroundImage) {
+        scheduling.style.backgroundImage = `url('${config.visual.banner_url}')`;
+      }
+    }
+
+    // 4. Atualizar favicon
+    if (config.visual.favicon_url) {
+      const favicon = document.querySelector('link[rel="icon"]');
+      if (favicon) {
+        favicon.href = config.visual.favicon_url;
+        console.log('   ✓ Favicon atualizado:', config.visual.favicon_url);
+      }
+    }
+  }
+
+  // 5. Atualizar textos personalizados
+  if (config.textos) {
+    if (config.textos.titulo_hero) {
+      const heroTitle = document.querySelector('.hero-title, #hero h1');
+      if (heroTitle) {
+        heroTitle.textContent = config.textos.titulo_hero;
+        console.log('   ✓ Título hero atualizado');
+      }
+    }
+
+    if (config.textos.subtitulo_hero) {
+      const heroSubtitle = document.querySelector('.hero-subtitle, #hero p');
+      if (heroSubtitle) {
+        heroSubtitle.textContent = config.textos.subtitulo_hero;
+        console.log('   ✓ Subtítulo hero atualizado');
+      }
+    }
+  }
+
+  // 6. Atualizar WhatsApp
+  if (config.contato?.whatsapp) {
+    const whatsappFloat = document.querySelector('.whatsapp-float');
+    if (whatsappFloat) {
+      whatsappFloat.href = `https://wa.me/${config.contato.whatsapp}`;
+      console.log('   ✓ WhatsApp atualizado:', config.contato.whatsapp);
+    }
+
+    // Ocultar se configurado
+    if (config.features && config.features.mostrar_whatsapp_float === false) {
+      if (whatsappFloat) whatsappFloat.style.display = 'none';
+    }
+  }
+
+  // 7. Atualizar avaliações Google
+  if (config.avaliacoes && config.avaliacoes.mostrar) {
+    const ratingNumber = document.querySelector('.rating-number');
+    if (ratingNumber) {
+      ratingNumber.textContent = config.avaliacoes.rating.toFixed(1);
+    }
+
+    const ratingText = document.querySelector('.rating-text strong');
+    if (ratingText) {
+      ratingText.textContent = `${config.avaliacoes.count.toLocaleString('pt-BR')} avaliações`;
+      console.log('   ✓ Avaliações Google atualizadas');
+    }
+  } else if (config.avaliacoes && !config.avaliacoes.mostrar) {
+    // Ocultar seção de avaliações
+    const reviewsSection = document.querySelector('.google-reviews');
+    if (reviewsSection) reviewsSection.style.display = 'none';
+  }
+
+  // 8. Aplicar Meta Pixel (Facebook)
+  if (config.analytics?.meta_pixel_id) {
+    window.META_PIXEL_ID = config.analytics.meta_pixel_id;
+
+    // Re-inicializar o pixel se já estiver carregado
+    if (window.fbq) {
+      window.fbq('init', config.analytics.meta_pixel_id);
+      window.fbq('track', 'PageView');
+      console.log('   ✓ Meta Pixel configurado:', config.analytics.meta_pixel_id);
+    }
+  }
+
+  // 9. Aplicar Google Analytics
+  if (config.analytics?.google_analytics_id) {
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${config.analytics.google_analytics_id}`;
+    document.head.appendChild(script);
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', config.analytics.google_analytics_id);
+    console.log('   ✓ Google Analytics configurado:', config.analytics.google_analytics_id);
+  }
+
+  // 10. Atualizar nome da empresa em todos os lugares
+  const empresaNome = document.querySelectorAll('.empresa-nome');
+  empresaNome.forEach(el => {
+    el.textContent = config.nome;
+  });
+
+  // Atualizar no footer também
+  const footerTitle = document.querySelector('.footer-section h3');
+  if (footerTitle && footerTitle.textContent.includes('Vistoria Express')) {
+    footerTitle.innerHTML = `<span style="color: var(--brand-primary); font-size: var(--text-2xl); margin-bottom: 10px;">${config.nome}</span>`;
+  }
+
+  console.log('✅ Personalização visual aplicada com sucesso!');
+}
+
 // Multi-Tenant Configuration
 async function initTenantConfig() {
   console.log('🔍 Verificando se é tenant...');
@@ -41,6 +208,9 @@ async function initTenantConfig() {
       if (metaDescription) {
         metaDescription.content = `Agende sua vistoria veicular com ${config.nome} de forma rápida e fácil.`;
       }
+
+      // Aplicar personalização visual
+      applyCustomization(config);
 
       console.log('✅ Configurações do tenant aplicadas com sucesso!');
       console.log('   Nome:', config.nome);
