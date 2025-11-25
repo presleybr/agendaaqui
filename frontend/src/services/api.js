@@ -75,10 +75,29 @@ api.interceptors.response.use((response) => {
     console.error('🔍 Validation Errors:', error.response.data.errors);
   }
 
+  // Auto-logout on invalid token (401 Unauthorized)
+  if (error.response?.status === 401) {
+    const errorMessage = error.response?.data?.error || '';
+    if (errorMessage.includes('Token inválido') || errorMessage.includes('Token expirado') || errorMessage.includes('Token mal formatado')) {
+      console.warn('⚠️ Token inválido detectado. Fazendo logout automático...');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+      // Redirecionar para login apenas se não estiver já na tela de login
+      if (!window.location.pathname.includes('admin') || window.location.hash) {
+        window.location.href = '/admin';
+      } else {
+        window.location.reload();
+      }
+    }
+  }
+
   return Promise.reject(error);
 });
 
 export const scheduleService = {
+  API_URL: API_URL, // Expose API_URL for components
+
   // Get available dates
   async getAvailableDates(days = 30) {
     return await api.get(`/availability/dates?days=${days}`);

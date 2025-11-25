@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Administrativo - Vistoria Veicular</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="module" crossorigin src="/assets/admin-BTALkFSv.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/format-CGZL2wRF.js">
+  <link rel="stylesheet" crossorigin href="/assets/style-DzEkSqlR.css">
+</head>
+<body class="admin-body">
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <h1 style="height: auto; margin: 0 auto 30px; display: block; color: var(--brand-primary); font-size: 2.5rem; text-align: center;">Vistoria Express</h1>
+      <h2 style="margin-bottom: 20px; color: var(--neutral-700);">Painel Administrativo</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginEmail">E-mail</label>
+          <input type="email" id="loginEmail" required>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Senha</label>
+          <input type="password" id="loginPassword" required>
+        </div>
+        <div id="loginError" class="alert alert-error" style="display: none;"></div>
+        <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">Entrar</button>
+        <button type="button" id="demoLoginBtn" class="btn btn-success btn-large" style="width: 100%; margin-top: 10px;">
+          <svg style="width: 20px; height: 20px; margin-right: 8px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+          Entrar como Demo
+        </button>
+      </form>
+      <div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-radius: 5px; font-size: 0.9rem;">
+        <strong>
+          <svg style="width: 16px; height: 16px; margin-right: 6px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Credenciais Demo:
+        </strong><br>
+        Email: admin@vistoria.com<br>
+        Senha: Admin123!@#
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="adminDashboard" style="display: none;">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <h2 style="color: var(--brand-primary); font-size: 1.5rem; text-align: center; margin: 0; padding: 10px 0;">Vistoria Express</h2>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="dashboard">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span class="nav-text">Dashboard</span>
+          <span class="nav-badge" id="badge-dashboard" style="display: none;">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="agendamentos">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span class="nav-text">Agendamentos</span>
+          <span class="nav-badge" id="badge-agendamentos" style="display: none;">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="clientes">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span class="nav-text">Clientes</span>
+          <span class="nav-badge" id="badge-clientes" style="display: none;">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="calendario">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"></path>
+          </svg>
+          <span class="nav-text">Calendário</span>
+          <span class="nav-badge" id="badge-calendario" style="display: none;">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="relatorios">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="20" x2="12" y2="10"></line>
+            <line x1="18" y1="20" x2="18" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="16"></line>
+          </svg>
+          <span class="nav-text">Relatórios</span>
+          <span class="nav-badge" id="badge-relatorios" style="display: none;">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="configuracoes">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"></path>
+          </svg>
+          <span class="nav-text">Configurações</span>
+          <span class="nav-badge" id="badge-configuracoes" style="display: none;">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="empresas">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          <span class="nav-text">Empresas</span>
+          <span class="nav-badge" id="badge-empresas" style="display: none;">0</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Admin</div>
+            <div class="user-role">Administrador</div>
+          </div>
+        </div>
+        <button class="btn-logout" id="logoutBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Sair</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="content-header">
+        <div class="header-left">
+          <button class="btn-menu-toggle" id="menuToggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <div class="header-search">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input type="text" placeholder="Buscar..." id="globalSearch">
+          </div>
+          <div class="notifications-wrapper">
+            <button class="btn-notifications" id="notificationsBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+            </button>
+
+            <!-- Notifications Dropdown -->
+            <div class="notifications-dropdown" id="notificationsDropdown" style="display: none;">
+              <div class="notifications-header">
+                <h3>Notificações</h3>
+                <button class="btn-close-notifications" id="closeNotifications">✕</button>
+              </div>
+              <div class="notifications-list" id="notificationsList">
+                <div class="notifications-loading">
+                  <div class="spinner"></div>
+                  <p>Carregando notificações...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard Section -->
+      <section id="section-dashboard" class="content-section active">
+        <div class="container">
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card">
+            <div class="stat-label">Agendamentos Hoje</div>
+            <div class="stat-value" id="statToday">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Pendentes</div>
+            <div class="stat-value" id="statPending">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Confirmados</div>
+            <div class="stat-value" id="statConfirmed">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Receita Mensal</div>
+            <div class="stat-value" id="statRevenue">-</div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; margin-bottom: 32px;">
+          <!-- Revenue Chart Card -->
+          <div class="chart-card" onclick="adminPanel.showChartDetail('revenue')">
+            <div class="chart-header">
+              <div>
+                <h3>Receita Mensal</h3>
+                <div class="chart-subtitle">Últimos 6 meses - Clique para detalhes</div>
+              </div>
+              <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); adminPanel.exportChart('revenue')" title="Exportar PDF">
+                <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="chart-container" style="position: relative; height: 300px;">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Status Distribution Chart Card -->
+          <div class="chart-card" onclick="adminPanel.showChartDetail('status')">
+            <div class="chart-header">
+              <div>
+                <h3>Status dos Agendamentos</h3>
+                <div class="chart-subtitle">Distribuição atual - Clique para detalhes</div>
+              </div>
+              <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); adminPanel.exportChart('status')" title="Exportar PDF">
+                <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="chart-container" style="position: relative; height: 300px;">
+              <canvas id="statusChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="filterDate">Data</label>
+              <input type="date" id="filterDate">
+            </div>
+            <div class="form-group">
+              <label for="filterStatus">Status</label>
+              <select id="filterStatus">
+                <option value="">Todos</option>
+                <option value="pendente">Pendente</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="realizado">Realizado</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="filterType">Tipo</label>
+              <select id="filterType">
+                <option value="">Todos</option>
+                <option value="cautelar">Cautelar</option>
+                <option value="transferencia">Transferência</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <button class="btn btn-primary" id="filterBtn" style="margin-top: 25px;">Filtrar</button>
+              <button class="btn btn-secondary" id="clearFilterBtn" style="margin-top: 25px;">Limpar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Appointments Table -->
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Protocolo</th>
+                <th>Cliente</th>
+                <th>Veículo</th>
+                <th>Data/Hora</th>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Pagamento</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="dashboardAppointmentsTable">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 40px;">
+                  <div class="spinner"></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Agendamentos Section -->
+      <section id="section-agendamentos" class="content-section">
+        <div class="section-header">
+          <h2>Gerenciar Agendamentos</h2>
+          <button class="btn btn-primary" id="btnNovoAgendamento">+ Novo Agendamento</button>
+        </div>
+
+        <div class="filters-bar">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="filterDate">Data</label>
+              <input type="date" id="filterDate">
+            </div>
+            <div class="form-group">
+              <label for="filterStatus">Status</label>
+              <select id="filterStatus">
+                <option value="">Todos</option>
+                <option value="pendente">Pendente</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="realizado">Realizado</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="filterType">Tipo</label>
+              <select id="filterType">
+                <option value="">Todos</option>
+                <option value="cautelar">Cautelar</option>
+                <option value="transferencia">Transferência</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <button class="btn btn-primary" id="filterBtn" style="margin-top: 25px;">Filtrar</button>
+              <button class="btn btn-secondary" id="clearFilterBtn" style="margin-top: 25px;">Limpar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Protocolo</th>
+                <th>Cliente</th>
+                <th>Veículo</th>
+                <th>Data/Hora</th>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Pagamento</th>
+                <th style="min-width: 150px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="agendamentosAppointmentsTable">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 40px;">
+                  <div class="spinner"></div>
+                  <p style="margin-top: 10px; color: #666;">Carregando agendamentos...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Clientes Section -->
+      <section id="section-clientes" class="content-section">
+        <div class="section-header">
+          <h2>Clientes</h2>
+          <button class="btn btn-primary" id="btnNovoCliente">+ Novo Cliente</button>
+        </div>
+
+        <!-- Clientes Table -->
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Telefone</th>
+                <th>E-mail</th>
+                <th>Cadastrado em</th>
+                <th style="min-width: 150px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="clientesTable">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 40px;">
+                  <div class="spinner"></div>
+                  <p style="margin-top: 10px; color: #666;">Carregando clientes...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Calendário Section -->
+      <section id="section-calendario" class="content-section">
+        <div class="section-header">
+          <h2>Calendário</h2>
+          <div class="calendar-controls">
+            <button class="btn btn-secondary" id="prevMonthBtn">
+              <svg style="width: 16px; height: 16px; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              Anterior
+            </button>
+            <span class="current-month" id="currentMonthLabel">Janeiro 2025</span>
+            <button class="btn btn-secondary" id="nextMonthBtn">
+              Próximo
+              <svg style="width: 16px; height: 16px; margin-left: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="calendar-container">
+          <div class="calendar-grid" id="calendarGrid">
+            <!-- Calendar day headers -->
+            <div class="calendar-day-header">Dom</div>
+            <div class="calendar-day-header">Seg</div>
+            <div class="calendar-day-header">Ter</div>
+            <div class="calendar-day-header">Qua</div>
+            <div class="calendar-day-header">Qui</div>
+            <div class="calendar-day-header">Sex</div>
+            <div class="calendar-day-header">Sáb</div>
+            <!-- Calendar days will be dynamically inserted here -->
+          </div>
+
+          <!-- Legend -->
+          <div class="calendar-legend">
+            <div class="legend-item">
+              <div class="legend-color today"></div>
+              <span>Hoje</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color pendente"></div>
+              <span>Pendente</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color confirmado"></div>
+              <span>Confirmado</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color realizado"></div>
+              <span>Realizado</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color cancelado"></div>
+              <span>Cancelado</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Relatórios Section -->
+      <section id="section-relatorios" class="content-section">
+        <div class="section-header">
+          <h2>📊 Relatórios e Dashboards</h2>
+          <button class="btn btn-primary" id="exportReportPDF">
+            <svg style="width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Exportar PDF
+          </button>
+        </div>
+
+        <!-- Period Selector -->
+        <div class="filters-bar" style="margin-bottom: 30px;">
+          <div class="form-row" style="align-items: flex-end;">
+            <div class="form-group">
+              <label for="reportStartDate">Data Inicial</label>
+              <input type="date" id="reportStartDate">
+            </div>
+            <div class="form-group">
+              <label for="reportEndDate">Data Final</label>
+              <input type="date" id="reportEndDate">
+            </div>
+            <div class="form-group" style="display: flex; gap: 10px;">
+              <button class="btn btn-primary" id="generateReportBtn">
+                <svg style="width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+                Gerar Relatório
+              </button>
+              <button class="btn btn-secondary" id="setCurrentMonthBtn">Mês Atual</button>
+              <button class="btn btn-secondary" id="setLastMonthBtn">Mês Anterior</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Content -->
+        <div id="reportContent">
+          <!-- Stats Cards -->
+          <div class="stats-grid" style="margin-bottom: 30px;">
+            <div class="stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Total de Agendamentos</div>
+                <div class="stat-value" id="reportTotalAppointments">-</div>
+                <div class="stat-change" id="reportAppointmentsChange"></div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Receita Total</div>
+                <div class="stat-value" id="reportTotalRevenue">-</div>
+                <div class="stat-change" id="reportRevenueChange"></div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Novos Clientes</div>
+                <div class="stat-value" id="reportNewClients">-</div>
+                <div class="stat-change" id="reportClientsChange"></div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Taxa de Confirmação</div>
+                <div class="stat-value" id="reportConfirmationRate">-</div>
+                <div class="stat-change" id="reportConfirmationChange"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; margin-bottom: 32px;">
+            <!-- Revenue Trend Chart -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <h3>📈 Evolução da Receita</h3>
+                  <div class="chart-subtitle">Receita diária no período selecionado</div>
+                </div>
+              </div>
+              <div class="chart-container" style="position: relative; height: 350px;">
+                <canvas id="reportRevenueChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Status Distribution Chart -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <h3>📊 Distribuição por Status</h3>
+                  <div class="chart-subtitle">Status dos agendamentos no período</div>
+                </div>
+              </div>
+              <div class="chart-container" style="position: relative; height: 350px;">
+                <canvas id="reportStatusChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Service Types Chart -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <h3>🔧 Tipos de Serviços</h3>
+                  <div class="chart-subtitle">Distribuição por tipo de vistoria</div>
+                </div>
+              </div>
+              <div class="chart-container" style="position: relative; height: 350px;">
+                <canvas id="reportServicesChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Hourly Distribution Chart -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <h3>⏰ Distribuição por Horário</h3>
+                  <div class="chart-subtitle">Agendamentos por hora do dia</div>
+                </div>
+              </div>
+              <div class="chart-container" style="position: relative; height: 350px;">
+                <canvas id="reportHourlyChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Services Table -->
+          <div class="chart-card" style="margin-bottom: 24px;">
+            <div class="chart-header">
+              <h3>🏆 Top 5 Serviços Mais Solicitados</h3>
+            </div>
+            <div class="table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Posição</th>
+                    <th>Tipo de Serviço</th>
+                    <th>Quantidade</th>
+                    <th>Receita Total</th>
+                    <th>Ticket Médio</th>
+                  </tr>
+                </thead>
+                <tbody id="topServicesTable">
+                  <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #666;">
+                      Selecione um período e clique em "Gerar Relatório"
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Configurações Section -->
+      <section id="section-configuracoes" class="content-section">
+        <div class="section-header">
+          <h2>Configurações</h2>
+        </div>
+
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>
+              <svg style="width: 20px; height: 20px; margin-right: 8px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Horários de Funcionamento
+            </h3>
+            <div class="form-group">
+              <label>Horário de Início</label>
+              <input type="time" id="horarioInicio" value="08:00">
+            </div>
+            <div class="form-group">
+              <label>Horário de Término</label>
+              <input type="time" id="horarioFim" value="18:00">
+            </div>
+            <button class="btn btn-primary" id="btnSalvarHorarios">Salvar</button>
+          </div>
+
+          <div class="settings-card">
+            <h3>
+              <svg style="width: 20px; height: 20px; margin-right: 8px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                <line x1="2" y1="10" x2="22" y2="10"></line>
+              </svg>
+              Preços
+            </h3>
+            <div class="form-group">
+              <label>Vistoria Cautelar</label>
+              <input type="number" id="precoCautelar" value="150" placeholder="R$" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+              <label>Vistoria Transferência</label>
+              <input type="number" id="precoTransferencia" value="120" placeholder="R$" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+              <label>Outros Serviços</label>
+              <input type="number" id="precoOutros" value="100" placeholder="R$" step="0.01" min="0">
+            </div>
+            <button class="btn btn-primary" id="btnSalvarPrecos">Salvar</button>
+          </div>
+
+          <div class="settings-card">
+            <h3>
+              <svg style="width: 20px; height: 20px; margin-right: 8px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              Notificações
+            </h3>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="notifEmailConfirmacao" checked>
+                <span>Email de Confirmação</span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="notifLembrete24h" checked>
+                <span>Lembrete 24h Antes</span>
+              </label>
+            </div>
+            <button class="btn btn-primary" id="btnSalvarNotificacoes">Salvar</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Seção Empresas (SaaS Multi-Tenant) -->
+      <section id="section-empresas" class="content-section">
+        <div class="section-header">
+          <h2>🏢 Empresas Clientes</h2>
+          <button class="btn btn-primary" id="btnNovaEmpresa">+ Nova Empresa</button>
+        </div>
+
+        <!-- Resumo -->
+        <div class="stats-grid" style="margin-bottom: 30px;">
+          <div class="stat-card">
+            <div class="stat-label">Total de Empresas</div>
+            <div class="stat-value" id="statTotalEmpresas">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Empresas Ativas</div>
+            <div class="stat-value" id="statEmpresasAtivas">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Receita do Mês</div>
+            <div class="stat-value" id="statReceitaMes">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Comissões Pendentes</div>
+            <div class="stat-value" id="statComissoesPendentes">-</div>
+          </div>
+        </div>
+
+        <!-- Tabela de Empresas -->
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Empresa / Subdomínio</th>
+                <th>Email</th>
+                <th>Telefone</th>
+                <th>Chave PIX</th>
+                <th>Comissão</th>
+                <th>Status</th>
+                <th>Métricas</th>
+                <th style="min-width: 150px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="empresasTableBody">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 40px;">
+                  <div class="spinner"></div>
+                  <p style="margin-top: 10px; color: #666;">Carregando empresas...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Revenue Detail Section -->
+      <section id="section-revenue-detail" class="content-section">
+        <div class="section-header">
+          <h2>📊 Análise de Receita Detalhada</h2>
+          <div>
+            <button class="btn btn-secondary" onclick="adminPanel.exportChartDetail('revenue')" style="margin-right: 10px;">
+              <svg style="width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Exportar PDF
+            </button>
+            <button class="btn btn-primary" onclick="adminPanel.showSection('dashboard')">← Voltar</button>
+          </div>
+        </div>
+
+        <div id="revenueDetailContent" style="display: grid; gap: 24px;">
+          <!-- Charts will be rendered here -->
+        </div>
+      </section>
+
+      <!-- Status Detail Section -->
+      <section id="section-status-detail" class="content-section">
+        <div class="section-header">
+          <h2>📈 Análise de Status Detalhada</h2>
+          <div>
+            <button class="btn btn-secondary" onclick="adminPanel.exportChartDetail('status')" style="margin-right: 10px;">
+              <svg style="width: 16px; height: 16px; margin-right: 5px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Exportar PDF
+            </button>
+            <button class="btn btn-primary" onclick="adminPanel.showSection('dashboard')">← Voltar</button>
+          </div>
+        </div>
+
+        <div id="statusDetailContent" style="display: grid; gap: 24px;">
+          <!-- Charts will be rendered here -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal for Appointment Details -->
+  <div id="appointmentModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div id="appointmentDetails"></div>
+    </div>
+  </div>
+
+  <!-- Modal for Edit Appointment -->
+  <div id="editAppointmentModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeEditAppointment">&times;</span>
+      <h2 style="margin-bottom: 30px; color: var(--brand-primary);">Editar Agendamento</h2>
+
+      <form id="editAppointmentForm">
+        <input type="hidden" id="editAppointmentId">
+
+        <!-- Status -->
+        <div class="detail-section">
+          <h3>Status do Agendamento</h3>
+          <div class="form-group">
+            <label for="editStatus">Status *</label>
+            <select id="editStatus" required>
+              <option value="pendente">Pendente</option>
+              <option value="confirmado">Confirmado</option>
+              <option value="realizado">Realizado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Dados do Cliente -->
+        <div class="detail-section">
+          <h3>Dados do Cliente</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editAgendamentoClienteNome">Nome Completo *</label>
+              <input type="text" id="editAgendamentoClienteNome" required>
+            </div>
+            <div class="form-group">
+              <label for="editAgendamentoClienteCPF">CPF *</label>
+              <input type="text" id="editAgendamentoClienteCPF" required maxlength="14" placeholder="000.000.000-00">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editAgendamentoClienteEmail">E-mail *</label>
+              <input type="email" id="editAgendamentoClienteEmail" required>
+            </div>
+            <div class="form-group">
+              <label for="editAgendamentoClienteTelefone">Telefone *</label>
+              <input type="tel" id="editAgendamentoClienteTelefone" required placeholder="(00) 00000-0000">
+            </div>
+          </div>
+        </div>
+
+        <!-- Dados do Veículo -->
+        <div class="detail-section">
+          <h3>Dados do Veículo</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editVeiculoPlaca">Placa *</label>
+              <input type="text" id="editVeiculoPlaca" required maxlength="8" placeholder="ABC-1234">
+            </div>
+            <div class="form-group">
+              <label for="editVeiculoMarca">Marca *</label>
+              <input type="text" id="editVeiculoMarca" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editVeiculoModelo">Modelo *</label>
+              <input type="text" id="editVeiculoModelo" required>
+            </div>
+            <div class="form-group">
+              <label for="editVeiculoAno">Ano *</label>
+              <input type="number" id="editVeiculoAno" required min="1900" max="2099" placeholder="2024">
+            </div>
+          </div>
+        </div>
+
+        <!-- Dados do Agendamento -->
+        <div class="detail-section">
+          <h3>Dados do Agendamento</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editTipoVistoria">Tipo de Vistoria *</label>
+              <select id="editTipoVistoria" required>
+                <option value="cautelar">Cautelar - R$ 150,00</option>
+                <option value="transferencia">Transferência - R$ 120,00</option>
+                <option value="outros">Outros - R$ 100,00</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editDataAgendamento">Data *</label>
+              <input type="date" id="editDataAgendamento" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editHorarioAgendamento">Horário *</label>
+              <input type="time" id="editHorarioAgendamento" required>
+            </div>
+            <div class="form-group">
+              <label for="editPreco">Valor (R$) *</label>
+              <input type="number" id="editPreco" required min="0" step="0.01">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="editEnderecoVistoria">Endereço da Vistoria</label>
+            <input type="text" id="editEnderecoVistoria" placeholder="Opcional - deixe em branco para vistoria no local">
+          </div>
+          <div class="form-group">
+            <label for="editObservacoes">Observações</label>
+            <textarea id="editObservacoes" rows="3" placeholder="Informações adicionais..."></textarea>
+          </div>
+        </div>
+
+        <div class="alert alert-error" id="editAppointmentError" style="display: none;"></div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancelEditAppointment">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="submitEditAppointment">
+            <span id="editSubmitText">Salvar Alterações</span>
+            <span id="editSubmitLoading" style="display: none;">
+              <div class="spinner" style="width: 20px; height: 20px; margin: 0;"></div>
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for New Appointment -->
+  <div id="newAppointmentModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeNewAppointment">&times;</span>
+      <h2 style="margin-bottom: 30px; color: var(--brand-primary);">Novo Agendamento</h2>
+
+      <form id="newAppointmentForm">
+        <!-- Dados do Cliente -->
+        <div class="detail-section">
+          <h3>Dados do Cliente</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="clienteNome">Nome Completo *</label>
+              <input type="text" id="clienteNome" required>
+            </div>
+            <div class="form-group">
+              <label for="clienteCPF">CPF *</label>
+              <input type="text" id="clienteCPF" required maxlength="14" placeholder="000.000.000-00">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="clienteEmail">E-mail *</label>
+              <input type="email" id="clienteEmail" required>
+            </div>
+            <div class="form-group">
+              <label for="clienteTelefone">Telefone *</label>
+              <input type="tel" id="clienteTelefone" required placeholder="(00) 00000-0000">
+            </div>
+          </div>
+        </div>
+
+        <!-- Dados do Veículo -->
+        <div class="detail-section">
+          <h3>Dados do Veículo</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="veiculoPlaca">Placa *</label>
+              <input type="text" id="veiculoPlaca" required maxlength="8" placeholder="ABC-1234">
+            </div>
+            <div class="form-group">
+              <label for="veiculoMarca">Marca *</label>
+              <input type="text" id="veiculoMarca" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="veiculoModelo">Modelo *</label>
+              <input type="text" id="veiculoModelo" required>
+            </div>
+            <div class="form-group">
+              <label for="veiculoAno">Ano *</label>
+              <input type="number" id="veiculoAno" required min="1900" max="2099" placeholder="2024">
+            </div>
+          </div>
+        </div>
+
+        <!-- Dados do Agendamento -->
+        <div class="detail-section">
+          <h3>Dados do Agendamento</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipoVistoria">Tipo de Vistoria *</label>
+              <select id="tipoVistoria" required>
+                <option value="">Selecione...</option>
+                <option value="cautelar">Cautelar - R$ 150,00</option>
+                <option value="transferencia">Transferência - R$ 120,00</option>
+                <option value="outros">Outros - R$ 100,00</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="dataAgendamento">Data *</label>
+              <input type="date" id="dataAgendamento" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="horarioAgendamento">Horário *</label>
+              <select id="horarioAgendamento" required>
+                <option value="">Selecione primeiro a data...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="enderecoVistoria">Endereço da Vistoria</label>
+              <input type="text" id="enderecoVistoria" placeholder="Opcional - deixe em branco para vistoria no local">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="observacoes">Observações</label>
+            <textarea id="observacoes" rows="3" placeholder="Informações adicionais..."></textarea>
+          </div>
+        </div>
+
+        <div class="alert alert-error" id="newAppointmentError" style="display: none;"></div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancelNewAppointment">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="submitNewAppointment">
+            <span id="submitText">Criar Agendamento</span>
+            <span id="submitLoading" style="display: none;">
+              <div class="spinner" style="width: 20px; height: 20px; margin: 0;"></div>
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Novo Cliente -->
+  <div id="newClienteModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeNewCliente">&times;</span>
+      <h2>Novo Cliente</h2>
+
+      <form id="newClienteForm">
+        <div class="form-section">
+          <h3>Dados do Cliente</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newClienteNome">Nome Completo *</label>
+              <input type="text" id="newClienteNome" required placeholder="João da Silva">
+            </div>
+            <div class="form-group">
+              <label for="newClienteCPF">CPF *</label>
+              <input type="text" id="newClienteCPF" required placeholder="000.000.000-00">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newClienteTelefone">Telefone *</label>
+              <input type="tel" id="newClienteTelefone" required placeholder="(00) 00000-0000">
+            </div>
+            <div class="form-group">
+              <label for="newClienteEmail">E-mail</label>
+              <input type="email" id="newClienteEmail" placeholder="email@exemplo.com">
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-error" id="newClienteError" style="display: none;"></div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancelNewCliente">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="submitNewCliente">
+            <span id="newClienteSubmitText">Salvar Cliente</span>
+            <span id="newClienteSubmitLoading" style="display: none;">
+              <div class="spinner" style="width: 20px; height: 20px; margin: 0;"></div>
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Editar Cliente -->
+  <div id="editClienteModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeEditCliente">&times;</span>
+      <h2>Editar Cliente</h2>
+
+      <form id="editClienteForm">
+        <input type="hidden" id="editClienteId">
+
+        <div class="form-section">
+          <h3>Dados do Cliente</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editClienteNome">Nome Completo *</label>
+              <input type="text" id="editClienteNome" required placeholder="João da Silva">
+            </div>
+            <div class="form-group">
+              <label for="editClienteCPF">CPF</label>
+              <input type="text" id="editClienteCPF" disabled style="background: #f0f0f0; cursor: not-allowed;">
+              <small style="color: #666;">O CPF não pode ser alterado</small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editClienteTelefone">Telefone *</label>
+              <input type="tel" id="editClienteTelefone" required placeholder="(00) 00000-0000">
+            </div>
+            <div class="form-group">
+              <label for="editClienteEmail">E-mail</label>
+              <input type="email" id="editClienteEmail" placeholder="email@exemplo.com">
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-error" id="editClienteError" style="display: none;"></div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancelEditCliente">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="submitEditCliente">
+            <span id="editClienteSubmitText">Salvar Alterações</span>
+            <span id="editClienteSubmitLoading" style="display: none;">
+              <div class="spinner" style="width: 20px; height: 20px; margin: 0;"></div>
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Nova/Editar Empresa -->
+  <div id="modalEmpresa" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px;">
+      <span class="close" id="fecharModalEmpresa">&times;</span>
+      <h2 id="modalEmpresaTitle" style="margin-bottom: 30px; color: var(--brand-primary);">Nova Empresa</h2>
+
+      <form id="formEmpresa">
+        <!-- Dados Básicos -->
+        <div class="detail-section">
+          <h3>📋 Dados Básicos</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="empresaNome">Nome da Empresa *</label>
+              <input type="text" id="empresaNome" required placeholder="Ex: Vistoria Express SP">
+            </div>
+            <div class="form-group">
+              <label for="empresaSlug">Subdomínio *</label>
+              <input type="text" id="empresaSlug" required placeholder="Ex: vistoria-sp">
+              <small style="color: #666;">
+                Será: <strong><span id="previewSlug">...</span>.agendaaquivistorias.com.br</strong>
+              </small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="empresaEmail">Email *</label>
+              <input type="email" id="empresaEmail" required placeholder="contato@empresa.com">
+            </div>
+            <div class="form-group">
+              <label for="empresaTelefone">Telefone</label>
+              <input type="tel" id="empresaTelefone" placeholder="(67) 99999-9999">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="empresaCNPJ">CNPJ (opcional)</label>
+            <input type="text" id="empresaCNPJ" placeholder="00.000.000/0000-00">
+          </div>
+        </div>
+
+        <!-- Pagamento -->
+        <div class="detail-section">
+          <h3>💰 Configurações de Pagamento</h3>
+          <div class="form-group">
+            <label for="empresaChavePix">Chave PIX (para receber repasses) *</label>
+            <input type="text" id="empresaChavePix" required placeholder="email@empresa.com, telefone ou chave aleatória">
+            <small style="color: #666;">
+              ⚠️ Os repasses serão enviados para esta chave PIX após os primeiros 30 dias.
+            </small>
+          </div>
+
+          <div class="alert alert-info" style="margin-top: 15px;">
+            <strong>ℹ️ Regra de Comissão:</strong><br>
+            • Primeiros 30 dias: <strong>R$ 5,00 fixo</strong> para a plataforma por transação<br>
+            • Após 30 dias: <strong>0% de comissão</strong> (todo valor vai para o cliente)
+          </div>
+        </div>
+
+        <!-- Preços e Horários -->
+        <div class="detail-section">
+          <h3>⚙️ Configurações do Negócio</h3>
+
+          <h4 style="margin-top: 20px;">Preços (em Reais)</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="empresaPrecoCautelar">Vistoria Cautelar</label>
+              <input type="number" id="empresaPrecoCautelar" step="0.01" min="0" value="150.00" placeholder="150.00">
+            </div>
+            <div class="form-group">
+              <label for="empresaPrecoTransferencia">Vistoria Transferência</label>
+              <input type="number" id="empresaPrecoTransferencia" step="0.01" min="0" value="120.00" placeholder="120.00">
+            </div>
+            <div class="form-group">
+              <label for="empresaPrecoOutros">Outros Serviços</label>
+              <input type="number" id="empresaPrecoOutros" step="0.01" min="0" value="100.00" placeholder="100.00">
+            </div>
+          </div>
+
+          <h4 style="margin-top: 20px;">Horário de Funcionamento</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="empresaHorarioInicio">Abertura</label>
+              <input type="time" id="empresaHorarioInicio" value="08:00">
+            </div>
+            <div class="form-group">
+              <label for="empresaHorarioFim">Fechamento</label>
+              <input type="time" id="empresaHorarioFim" value="18:00">
+            </div>
+          </div>
+        </div>
+
+        <!-- Status e Plano -->
+        <div class="detail-section">
+          <h3>📊 Status e Plano</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="empresaStatus">Status</label>
+              <select id="empresaStatus">
+                <option value="ativo">Ativo</option>
+                <option value="trial">Trial (Teste)</option>
+                <option value="inativo">Inativo</option>
+                <option value="suspenso">Suspenso</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="empresaPlano">Plano</label>
+              <select id="empresaPlano">
+                <option value="basico">Básico</option>
+                <option value="premium">Premium</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões -->
+        <div class="form-actions" style="margin-top: 30px;">
+          <button type="button" class="btn btn-secondary" id="cancelarEmpresa">Cancelar</button>
+          <button type="button" class="btn btn-primary btn-large" id="salvarEmpresa">Salvar Empresa</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

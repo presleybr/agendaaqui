@@ -5,7 +5,7 @@ class AvailabilityController {
   static async getAvailableDates(req, res) {
     try {
       const { days = 30 } = req.query;
-      const dates = AvailabilityService.getAvailableDates(parseInt(days));
+      const dates = await AvailabilityService.getAvailableDates(parseInt(days));
       res.json(dates);
     } catch (error) {
       console.error('Erro ao buscar datas disponíveis:', error);
@@ -21,7 +21,7 @@ class AvailabilityController {
         return res.status(400).json({ error: 'Data é obrigatória' });
       }
 
-      const slots = AvailabilityService.getAvailableSlots(data);
+      const slots = await AvailabilityService.getAvailableSlots(data);
       res.json(slots);
     } catch (error) {
       console.error('Erro ao buscar horários disponíveis:', error);
@@ -47,7 +47,7 @@ class AvailabilityController {
 
   static async getPrices(req, res) {
     try {
-      const precos = Configuracao.getPrices();
+      const precos = await Configuracao.getPrices();
 
       res.json({
         cautelar: {
@@ -64,6 +64,7 @@ class AvailabilityController {
         }
       });
     } catch (error) {
+      console.error('Erro ao buscar preços:', error);
       res.status(500).json({ error: 'Erro ao buscar preços' });
     }
   }

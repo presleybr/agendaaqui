@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
   server: {
@@ -32,8 +33,17 @@ export default defineConfig({
     // Disable CSS code splitting to ensure all CSS loads together
     cssCodeSplit: false,
     // Clear output dir before build
-    emptyOutDir: true
+    emptyOutDir: true,
+    // Multi-page build configuration
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        admin: resolve(__dirname, 'admin.html')
+      }
+    }
   },
+  // Copy public files to dist
+  publicDir: 'public',
   // Disable CSS minification in dev to ensure proper loading
   css: {
     devSourcemap: true

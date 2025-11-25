@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const db = require('../config/database');
 
 // Get all notifications
-router.get('/', authMiddleware, (req, res) => {
+router.get('/', authenticateToken, (req, res) => {
   try {
     const notifications = [];
 
@@ -101,7 +101,7 @@ router.get('/', authMiddleware, (req, res) => {
 });
 
 // Get notification counts by section
-router.get('/counts', authMiddleware, (req, res) => {
+router.get('/counts', authenticateToken, async (req, res) => {
   try {
     const counts = {
       dashboard: 0,
@@ -112,41 +112,42 @@ router.get('/counts', authMiddleware, (req, res) => {
       configuracoes: 0
     };
 
+    const today = new Date().toISOString().split('T')[0];
+
     // Agendamentos pendentes
-    const pendingCount = db.prepare(`
-      SELECT COUNT(*) as count FROM agendamentos WHERE status = 'pendente'
-    `).get();
-    counts.agendamentos = pendingCount.count;
+    const pendingResult = await db.query(
+      "SELECT COUNT(*) as count FROM agendamentos WHERE status = 'pendente'"
+    );
+    counts.agendamentos = parseInt(pendingResult.rows[0].count) || 0;
 
     // Agendamentos hoje
-    const today = new Date().toISOString().split('T')[0];
-    const todayCount = db.prepare(`
-      SELECT COUNT(*) as count FROM agendamentos
-      WHERE date(data) = date(?) AND status IN ('pendente', 'confirmado')
-    `).get(today);
-    counts.dashboard = todayCount.count;
+    const todayResult = await db.query(
+      "SELECT COUNT(*) as count FROM agendamentos WHERE DATE(data) = $1 AND status IN ('pendente', 'confirmado')",
+      [today]
+    );
+    counts.dashboard = parseInt(todayResult.rows[0].count) || 0;
 
     // Novos clientes (últimos 7 dias)
     const lastWeek = new Date();
     lastWeek.setDate(lastWeek.getDate() - 7);
     const lastWeekStr = lastWeek.toISOString().split('T')[0];
 
-    const newClientsCount = db.prepare(`
-      SELECT COUNT(*) as count FROM clientes WHERE date(created_at) >= date(?)
-    `).get(lastWeekStr);
-    counts.clientes = newClientsCount.count;
+    const newClientsResult = await db.query(
+      "SELECT COUNT(*) as count FROM clientes WHERE DATE(created_at) >= $1",
+      [lastWeekStr]
+    );
+    counts.clientes = parseInt(newClientsResult.rows[0].count) || 0;
 
     // Agendamentos próximos (próximos 3 dias)
     const threeDaysFromNow = new Date();
     threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
     const threeDaysStr = threeDaysFromNow.toISOString().split('T')[0];
 
-    const upcomingCount = db.prepare(`
-      SELECT COUNT(*) as count FROM agendamentos
-      WHERE date(data) BETWEEN date(?) AND date(?)
-      AND status IN ('pendente', 'confirmado')
-    `).all(today, threeDaysStr);
-    counts.calendario = upcomingCount[0]?.count || 0;
+    const upcomingResult = await db.query(
+      "SELECT COUNT(*) as count FROM agendamentos WHERE DATE(data) BETWEEN $1 AND $2 AND status IN ('pendente', 'confirmado')",
+      [today, threeDaysStr]
+    );
+    counts.calendario = parseInt(upcomingResult.rows[0].count) || 0;
 
     res.json(counts);
 

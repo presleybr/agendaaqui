@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const ClienteController = require('../controllers/clienteController');
-const authMiddleware = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 // Todas as rotas requerem autenticação
-router.use(authMiddleware);
+router.use(authenticateToken);
 
 // GET /api/clientes - Listar todos os clientes
 router.get('/', ClienteController.getAll);

@@ -1,0 +1,46 @@
+# ============================================================================
+# VARIÁVEIS DE AMBIENTE PARA RENDER.COM
+# Copie e cole estas variáveis no painel do Render.com
+# ============================================================================
+
+# ============ DATABASE (Internal PostgreSQL URL) ============
+DATABASE_URL=postgresql://agendamentos_9udt_user:izmIfyl9S6WJhLCdyqT52j6idIMm44yM@dpg-d451beq4d50c73esktm0-a/agendamentos_9udt
+
+# ============ AMBIENTE ============
+NODE_ENV=production
+
+# ============ ADMIN ============
+JWT_SECRET=1657victOr@@_
+JWT_SECRET_ADMIN=1657victOr@@_
+ADMIN_EMAIL=automacoesvon@gmail.com
+ADMIN_PASSWORD=1657victOr@
+ADMIN_NAME=Victor
+
+# ============ MERCADO PAGO ============
+MP_ACCESS_TOKEN=TEST-727307920606410-110100-b65a7008e2bd0221e134d9b2ec1abc9a-17728094
+MP_PUBLIC_KEY=TEST-62c37382-077f-4b94-80c7-cd027cce815a
+
+# ============ FRONTEND ============
+FRONTEND_URL=https://agendaaquivistorias.com.br
+
+# ============================================================================
+# COMANDOS PARA CONFIGURAR NO RENDER.COM
+# ============================================================================
+
+BUILD COMMAND:
+cd frontend && npm install && npm run build && cd ../backend && npm install && node src/setup.js && node src/create-admin.js
+
+START COMMAND:
+cd backend && node src/server.js
+
+# ============================================================================
+# APÓS O DEPLOY, CONFIGURE O WEBHOOK DO MERCADO PAGO
+# ============================================================================
+
+URL do Webhook:
+https://agendaaquivistorias.com.br/api/webhook/mercadopago
+
+Eventos a selecionar:
+✅ payment (Pagamentos)
+
+# ============================================================================

@@ -1,13 +1,13 @@
 services:
   # Backend API
   - type: web
-    name: agendamentos-backend
+    name: agendaaqui-backend
     env: node
     region: oregon
     plan: free
+    rootDir: backend
     buildCommand: npm install && npm run migrate:postgres
     startCommand: npm start
-    rootDir: backend
     envVars:
       - key: NODE_ENV
         value: production
@@ -19,16 +19,24 @@ services:
         generateValue: true
       - key: PORT
         value: 10000
+      - key: FRONTEND_URL
+        value: https://agendaaquivistorias.com.br
 
   # Frontend Static Site
   - type: web
-    name: agendamentos-frontend
+    name: agendaaqui-frontend
     env: static
     region: oregon
     plan: free
+    rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
-    rootDir: frontend
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: agendaaqui-backend
+          envVarKey: RENDER_EXTERNAL_URL
     routes:
       - type: rewrite
         source: /*

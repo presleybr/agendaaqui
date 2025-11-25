@@ -8,6 +8,7 @@ const path = require('path');
 
 const errorHandler = require('./middleware/errorHandler');
 const db = require('./config/database');
+const { detectTenant } = require('./middleware/tenantMiddleware');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -17,8 +18,14 @@ const configRoutes = require('./routes/config');
 const clientesRoutes = require('./routes/clientes');
 const notificationsRoutes = require('./routes/notifications');
 const paymentRoutes = require('./routes/payment');
+const adminRoutes = require('./routes/admin');
+const empresasRoutes = require('./routes/empresas');
 
 const app = express();
+
+// Trust proxy - necessário para Render, Heroku, etc (proxies reversos)
+// Isso permite que o rate limiting funcione corretamente
+app.set('trust proxy', 1);
 
 // Security middleware
 app.use(helmet({
@@ -26,22 +33,42 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
+// Serve public folder for static assets (admin panel, etc.)
+const publicPath = path.join(__dirname, '../public');
+app.use(express.static(publicPath, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    } else if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
+
 // Serve static files from frontend build in production BEFORE any other middleware
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');
-  console.log("Serving static files from:", frontendPath);
+  const fs = require('fs');
 
-  // Serve static files with proper MIME types
-  app.use(express.static(frontendPath, {
-    setHeaders: (res, filePath) => {
-      // Set correct MIME types for assets
-      if (filePath.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-      } else if (filePath.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
+  // Verificar se o diretório do frontend existe
+  if (fs.existsSync(frontendPath)) {
+    console.log("✅ Serving static files from:", frontendPath);
+
+    // Serve static files with proper MIME types
+    app.use(express.static(frontendPath, {
+      setHeaders: (res, filePath) => {
+        // Set correct MIME types for assets
+        if (filePath.endsWith('.css')) {
+          res.setHeader('Content-Type', 'text/css');
+        } else if (filePath.endsWith('.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        }
       }
-    }
-  }));
+    }));
+  } else {
+    console.log("⚠️  Frontend dist not found at:", frontendPath);
+    console.log("📌 API-only mode: Frontend should be served separately");
+  }
 }
 
 // CORS - Allow both common Vite ports and LocalTunnel
@@ -49,7 +76,9 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:3000',
-  process.env.FRONTEND_URL
+  process.env.FRONTEND_URL,
+  'https://agendaaquivistorias.com.br',
+  'http://agendaaquivistorias.com.br'
 ].filter(Boolean);
 
 const corsOptions = {
@@ -59,6 +88,11 @@ const corsOptions = {
 
     // Allow localhost origins
     if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+
+    // Allow subdomains of main domain (for multi-tenant)
+    if (origin && origin.match(/https?:\/\/.*\.agendaaquivistorias\.com\.br$/)) {
       return callback(null, true);
     }
 
@@ -72,6 +106,12 @@ const corsOptions = {
       return callback(null, true);
     }
 
+    // In production, if serving frontend from same domain, allow it
+    if (process.env.NODE_ENV === 'production') {
+      return callback(null, true);
+    }
+
+    console.log('⚠️  CORS blocked origin:', origin);
     const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
     return callback(new Error(msg), false);
   },
@@ -84,6 +124,10 @@ app.use('/api', cors(corsOptions));
 // Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Tenant detection middleware (detecta subdomínio)
+// DESABILITADO: não estamos usando multi-tenancy
+// app.use(detectTenant);
 
 // Rate limiting mais flexível para desenvolvimento
 const limiter = rateLimit({
@@ -155,7 +199,11 @@ app.get('/api/health', async (req, res) => {
   res.status(statusCode).json(healthCheck);
 });
 
-// Routes
+// Admin Routes (protegidas por autenticação)
+app.use('/api/admin', adminRoutes);
+app.use('/api/admin/empresas', empresasRoutes);
+
+// Public Routes (sistema de agendamento)
 app.use('/api/auth', authRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/availability', availabilityRoutes);
@@ -167,9 +215,24 @@ app.use('/api/payment', paymentRoutes);
 // Apply stricter rate limit to agendamento creation
 app.post('/api/agendamentos', agendamentoLimiter);
 
+// Serve Super Admin Panel at /admin route
+app.get('/admin', (req, res) => {
+  const adminPath = path.join(__dirname, '../../frontend/super-admin.html');
+  const fs = require('fs');
+
+  if (fs.existsSync(adminPath)) {
+    res.sendFile(adminPath);
+  } else {
+    res.status(404).send('Super Admin panel not found');
+  }
+});
+
 // Handle client-side routing in production - serve index.html for all non-API routes
 if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../../frontend/dist');
+  const fs = require('fs');
+  const indexPath = path.join(frontendPath, 'index.html');
+  const frontendExists = fs.existsSync(indexPath);
 
   // Handle client-side routing - serve index.html for all non-API, non-asset routes
   app.get('*', (req, res) => {
@@ -192,8 +255,16 @@ if (process.env.NODE_ENV === 'production') {
       return;
     }
 
-    // For all other routes, serve the SPA index.html
-    res.sendFile(path.join(frontendPath, 'index.html'));
+    // For all other routes, serve the SPA index.html if it exists
+    if (frontendExists) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(200).json({
+        message: 'API Server Running',
+        note: 'Frontend should be served separately',
+        api_docs: '/api/health'
+      });
+    }
   });
 } else {
   // 404 handler for development

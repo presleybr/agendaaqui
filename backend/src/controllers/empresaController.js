@@ -1,0 +1,346 @@
+const Empresa = require('../models/Empresa');
+const { validationResult } = require('express-validator');
+
+class EmpresaController {
+  /**
+   * Listar todas as empresas (Super Admin)
+   */
+  static async list(req, res) {
+    try {
+      const { status, plano } = req.query;
+
+      const empresas = await Empresa.findAll({ status, plano });
+
+      // Para cada empresa, buscar métricas do mês atual
+      const now = new Date();
+      const mes = now.getMonth() + 1;
+      const ano = now.getFullYear();
+
+      const empresasComMetricas = await Promise.all(
+        empresas.map(async (empresa) => {
+          const metricas = await Empresa.getMetricas(empresa.id, mes, ano);
+          return {
+            ...empresa,
+            metricas: metricas || {
+              total_agendamentos: 0,
+              total_receita: 0,
+              total_comissao_plataforma: 0,
+              total_repasses: 0
+            }
+          };
+        })
+      );
+
+      res.json(empresasComMetricas);
+    } catch (error) {
+      console.error('❌ Erro ao listar empresas:', error);
+      res.status(500).json({ error: 'Erro ao listar empresas' });
+    }
+  }
+
+  /**
+   * Buscar empresa por ID
+   */
+  static async getById(req, res) {
+    try {
+      const { id } = req.params;
+
+      const empresa = await Empresa.findById(id);
+
+      if (!empresa) {
+        return res.status(404).json({ error: 'Empresa não encontrada' });
+      }
+
+      // Buscar métricas dos últimos 6 meses
+      const metricas = [];
+      const now = new Date();
+
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const mes = date.getMonth() + 1;
+        const ano = date.getFullYear();
+
+        const metrica = await Empresa.getMetricas(empresa.id, mes, ano);
+        metricas.push({
+          mes,
+          ano,
+          ...(metrica || {
+            total_agendamentos: 0,
+            total_receita: 0,
+            total_comissao_plataforma: 0,
+            total_repasses: 0
+          })
+        });
+      }
+
+      res.json({
+        ...empresa,
+        metricas
+      });
+    } catch (error) {
+      console.error('❌ Erro ao buscar empresa:', error);
+      res.status(500).json({ error: 'Erro ao buscar empresa' });
+    }
+  }
+
+  /**
+   * Criar nova empresa
+   */
+  static async create(req, res) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const {
+        nome,
+        slug,
+        cnpj,
+        email,
+        telefone,
+        endereco,
+        cidade,
+        estado,
+        cep,
+        chave_pix,
+        logo_url,
+        cor_primaria,
+        cor_secundaria,
+        preco_cautelar,
+        preco_transferencia,
+        preco_outros,
+        horario_inicio,
+        horario_fim,
+        dias_trabalho,
+        plano
+      } = req.body;
+
+      // Verificar se slug está disponível
+      const slugDisponivel = await Empresa.isSlugAvailable(slug);
+      if (!slugDisponivel) {
+        return res.status(400).json({
+          error: 'Este subdomínio já está em uso. Escolha outro.'
+        });
+      }
+
+      // Criar empresa com comissão de R$ 5,00 apenas nos primeiros 30 dias
+      const empresa = await Empresa.create({
+        nome,
+        slug: slug.toLowerCase(),
+        cnpj,
+        email,
+        telefone,
+        endereco,
+        cidade,
+        estado,
+        cep,
+        chave_pix,
+        percentual_plataforma: 500, // R$ 5,00 fixo nos primeiros 30 dias
+        logo_url,
+        cor_primaria,
+        cor_secundaria,
+        preco_cautelar,
+        preco_transferencia,
+        preco_outros,
+        horario_inicio,
+        horario_fim,
+        dias_trabalho,
+        status: 'ativo',
+        plano: plano || 'basico'
+      });
+
+      console.log('✅ Empresa criada:', empresa.slug);
+      console.log(`🌐 Disponível em: https://${empresa.slug}.agendaaquivistorias.com.br`);
+
+      res.status(201).json({
+        ...empresa,
+        url: `https://${empresa.slug}.agendaaquivistorias.com.br`,
+        mensagem: 'Empresa criada com sucesso! Comissão de R$ 5,00 nos primeiros 30 dias.'
+      });
+    } catch (error) {
+      console.error('❌ Erro ao criar empresa:', error);
+      res.status(500).json({
+        error: 'Erro ao criar empresa',
+        details: error.message
+      });
+    }
+  }
+
+  /**
+   * Atualizar empresa
+   */
+  static async update(req, res) {
+    try {
+      const { id } = req.params;
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const empresa = await Empresa.findById(id);
+      if (!empresa) {
+        return res.status(404).json({ error: 'Empresa não encontrada' });
+      }
+
+      const empresaAtualizada = await Empresa.update(id, req.body);
+
+      res.json({
+        ...empresaAtualizada,
+        mensagem: 'Empresa atualizada com sucesso'
+      });
+    } catch (error) {
+      console.error('❌ Erro ao atualizar empresa:', error);
+      res.status(500).json({
+        error: 'Erro ao atualizar empresa',
+        details: error.message
+      });
+    }
+  }
+
+  /**
+   * Deletar empresa
+   */
+  static async delete(req, res) {
+    try {
+      const { id } = req.params;
+
+      const empresa = await Empresa.findById(id);
+      if (!empresa) {
+        return res.status(404).json({ error: 'Empresa não encontrada' });
+      }
+
+      await Empresa.delete(id);
+
+      console.log('🗑️ Empresa deletada:', empresa.slug);
+
+      res.json({
+        mensagem: 'Empresa deletada com sucesso',
+        slug: empresa.slug
+      });
+    } catch (error) {
+      console.error('❌ Erro ao deletar empresa:', error);
+      res.status(500).json({
+        error: 'Erro ao deletar empresa',
+        details: error.message
+      });
+    }
+  }
+
+  /**
+   * Alterar status da empresa
+   */
+  static async toggleStatus(req, res) {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!['ativo', 'inativo', 'suspenso', 'trial'].includes(status)) {
+        return res.status(400).json({
+          error: 'Status inválido. Use: ativo, inativo, suspenso ou trial'
+        });
+      }
+
+      const empresa = await Empresa.update(id, { status });
+
+      res.json({
+        ...empresa,
+        mensagem: `Status alterado para: ${status}`
+      });
+    } catch (error) {
+      console.error('❌ Erro ao alterar status:', error);
+      res.status(500).json({ error: 'Erro ao alterar status' });
+    }
+  }
+
+  /**
+   * Verificar se empresa passou dos 30 dias e ajustar comissão
+   */
+  static async verificarPeriodoComissao(req, res) {
+    try {
+      const { id } = req.params;
+
+      const empresa = await Empresa.findById(id);
+      if (!empresa) {
+        return res.status(404).json({ error: 'Empresa não encontrada' });
+      }
+
+      const dataInicio = new Date(empresa.data_inicio);
+      const hoje = new Date();
+      const diasDesdeInicio = Math.floor((hoje - dataInicio) / (1000 * 60 * 60 * 24));
+
+      let percentualAtual = empresa.percentual_plataforma;
+      let mensagem = '';
+
+      if (diasDesdeInicio > 30 && empresa.percentual_plataforma === 500) {
+        // Passou dos 30 dias, zerar comissão
+        await Empresa.update(id, { percentual_plataforma: 0 });
+        percentualAtual = 0;
+        mensagem = 'Período promocional de 30 dias encerrado. Comissão zerada.';
+        console.log(`✅ Empresa ${empresa.slug}: Comissão zerada após 30 dias`);
+      } else if (diasDesdeInicio <= 30) {
+        const diasRestantes = 30 - diasDesdeInicio;
+        mensagem = `Período promocional: ${diasRestantes} dias restantes com comissão de R$ 5,00`;
+      } else {
+        mensagem = 'Sem comissão (período promocional encerrado)';
+      }
+
+      res.json({
+        empresa_id: empresa.id,
+        slug: empresa.slug,
+        data_inicio: empresa.data_inicio,
+        dias_desde_inicio: diasDesdeInicio,
+        percentual_plataforma: percentualAtual,
+        mensagem
+      });
+    } catch (error) {
+      console.error('❌ Erro ao verificar período:', error);
+      res.status(500).json({ error: 'Erro ao verificar período de comissão' });
+    }
+  }
+
+  /**
+   * Dashboard de métricas consolidadas
+   */
+  static async dashboard(req, res) {
+    try {
+      const empresas = await Empresa.findAll({ status: 'ativo' });
+
+      const now = new Date();
+      const mes = now.getMonth() + 1;
+      const ano = now.getFullYear();
+
+      let totais = {
+        empresas_ativas: empresas.length,
+        agendamentos_mes: 0,
+        receita_mes: 0,
+        comissao_mes: 0,
+        repasses_pendentes: 0
+      };
+
+      for (const empresa of empresas) {
+        const metricas = await Empresa.getMetricas(empresa.id, mes, ano);
+        if (metricas) {
+          totais.agendamentos_mes += metricas.total_agendamentos || 0;
+          totais.receita_mes += metricas.total_receita || 0;
+          totais.comissao_mes += metricas.total_comissao_plataforma || 0;
+        }
+      }
+
+      // Buscar splits pendentes
+      const splitsPendentes = await Empresa.getSplitsPendentes();
+      totais.repasses_pendentes = splitsPendentes.reduce(
+        (sum, split) => sum + split.valor_empresa,
+        0
+      );
+
+      res.json(totais);
+    } catch (error) {
+      console.error('❌ Erro ao buscar dashboard:', error);
+      res.status(500).json({ error: 'Erro ao buscar dashboard' });
+    }
+  }
+}
+
+module.exports = EmpresaController;

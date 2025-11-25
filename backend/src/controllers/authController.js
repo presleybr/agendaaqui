@@ -6,19 +6,24 @@ class AuthController {
     try {
       const { email, senha } = req.body;
 
-      const usuario = Usuario.findByEmail(email);
+      console.log('🔐 Tentativa de login:', email);
+
+      const usuario = await Usuario.findByEmail(email);
 
       if (!usuario) {
+        console.log('❌ Usuário não encontrado:', email);
         return res.status(401).json({ error: 'Credenciais inválidas' });
       }
 
       if (!usuario.ativo) {
+        console.log('❌ Usuário inativo:', email);
         return res.status(401).json({ error: 'Usuário inativo' });
       }
 
       const senhaValida = await Usuario.verifyPassword(senha, usuario.senha_hash);
 
       if (!senhaValida) {
+        console.log('❌ Senha inválida para:', email);
         return res.status(401).json({ error: 'Credenciais inválidas' });
       }
 
@@ -27,6 +32,8 @@ class AuthController {
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
+
+      console.log('✅ Login bem-sucedido:', email);
 
       res.json({
         token,
@@ -37,16 +44,21 @@ class AuthController {
         }
       });
     } catch (error) {
-      console.error('Erro no login:', error);
-      res.status(500).json({ error: 'Erro ao fazer login' });
+      console.error('❌ Erro no login:', error);
+      console.error('Stack:', error.stack);
+      res.status(500).json({
+        error: 'Erro ao fazer login',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   }
 
   static async me(req, res) {
     try {
-      const usuario = Usuario.findById(req.userId);
+      const usuario = await Usuario.findById(req.userId);
       res.json(usuario);
     } catch (error) {
+      console.error('❌ Erro ao buscar usuário:', error);
       res.status(500).json({ error: 'Erro ao buscar usuário' });
     }
   }
@@ -55,7 +67,7 @@ class AuthController {
     try {
       const { senhaAtual, novaSenha } = req.body;
 
-      const usuario = Usuario.findByEmail(req.userEmail);
+      const usuario = await Usuario.findByEmail(req.userEmail);
       const senhaValida = await Usuario.verifyPassword(senhaAtual, usuario.senha_hash);
 
       if (!senhaValida) {
@@ -66,6 +78,7 @@ class AuthController {
 
       res.json({ message: 'Senha alterada com sucesso' });
     } catch (error) {
+      console.error('❌ Erro ao alterar senha:', error);
       res.status(500).json({ error: 'Erro ao alterar senha' });
     }
   }

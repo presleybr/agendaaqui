@@ -22,6 +22,15 @@ export class ScheduleForm {
   async init() {
     try {
       console.log('🔄 Initializing schedule form...');
+
+      // Check if a service was pre-selected from pricing table
+      const selectedService = sessionStorage.getItem('selectedService');
+      if (selectedService) {
+        this.formData.tipo_vistoria = selectedService;
+        console.log('📌 Pre-selected service:', selectedService);
+        sessionStorage.removeItem('selectedService'); // Clear after using
+      }
+
       this.prices = await scheduleService.getPrices();
       console.log('✅ Prices loaded:', this.prices);
       this.render();
@@ -372,9 +381,16 @@ export class ScheduleForm {
     container.innerHTML = '<div class="spinner"></div>';
 
     try {
-      const slots = await scheduleService.getAvailableSlots(date);
+      const response = await scheduleService.getAvailableSlots(date);
+      console.log('📅 Response from getAvailableSlots:', response);
+      console.log('📅 Response type:', typeof response);
+      console.log('📅 Is Array?:', Array.isArray(response));
 
-      if (slots.length === 0) {
+      // Handle both array response and object with slots property
+      const slots = Array.isArray(response) ? response : (response.slots || []);
+      console.log('📅 Slots after normalization:', slots);
+
+      if (!Array.isArray(slots) || slots.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #666;">Nenhum horário disponível para esta data</p>';
         return;
       }

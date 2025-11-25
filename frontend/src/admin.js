@@ -3,6 +3,7 @@ import api from './services/api.js';
 import { formatters } from './utils/validators.js';
 import { format } from 'date-fns';
 import { ReportsManager } from './components/ReportsManager.js';
+import { EmpresasManager } from './components/EmpresasManager.js';
 
 class AdminPanel {
   constructor() {
@@ -10,6 +11,7 @@ class AdminPanel {
     this.appointments = [];
     this.currentCalendarDate = new Date();
     this.reportsManager = null; // Será inicializado após login
+    this.empresasManager = null; // Será inicializado após login
     this.init();
   }
 
@@ -72,6 +74,12 @@ class AdminPanel {
 
     // Initialize reports manager
     this.reportsManager = new ReportsManager();
+
+    // Initialize empresas manager
+    this.empresasManager = new EmpresasManager();
+
+    // Setup empresas modal controls
+    this.setupEmpresasModal();
 
     // Setup navigation
     this.setupNavigation();
@@ -361,7 +369,13 @@ class AdminPanel {
     console.log(`🎨 Rendering ${this.appointments.length} appointments`);
 
     try {
-      const tableHTML = this.appointments.map(appointment => `
+      const tableHTML = this.appointments.map(appointment => {
+        // Parse date safely - handle both YYYY-MM-DD and full ISO formats
+        const dateStr = appointment.data.includes('T') ? appointment.data.split('T')[0] : appointment.data;
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const appointmentDate = new Date(year, month - 1, day);
+
+        return `
       <tr>
         <td><strong>${appointment.protocolo}</strong></td>
         <td>
@@ -373,7 +387,7 @@ class AdminPanel {
           <small style="color: #666;">${appointment.veiculo_placa}</small>
         </td>
         <td>
-          ${format(new Date(appointment.data + 'T00:00:00'), 'dd/MM/yyyy')}<br>
+          ${format(appointmentDate, 'dd/MM/yyyy')}<br>
           <small style="color: #666;">${appointment.horario}</small>
         </td>
         <td>${this.getTipoLabel(appointment.tipo_vistoria)}</td>
@@ -409,7 +423,8 @@ class AdminPanel {
           </div>
         </td>
       </tr>
-    `).join('');
+    `;
+      }).join('');
 
       // Render in both tables
       if (dashboardTbody) dashboardTbody.innerHTML = tableHTML;
@@ -461,7 +476,13 @@ class AdminPanel {
           </div>
           <div class="detail-row">
             <span class="detail-label">Data de Criação:</span>
-            <span class="detail-value">${format(new Date(appointment.created_at), 'dd/MM/yyyy HH:mm')}</span>
+            <span class="detail-value">${(() => {
+              try {
+                return format(new Date(appointment.created_at), 'dd/MM/yyyy HH:mm');
+              } catch {
+                return 'Data inválida';
+              }
+            })()}</span>
           </div>
         </div>
 
@@ -509,7 +530,15 @@ class AdminPanel {
           </div>
           <div class="detail-row">
             <span class="detail-label">Data:</span>
-            <span class="detail-value">${format(new Date(appointment.data + 'T00:00:00'), 'dd/MM/yyyy')}</span>
+            <span class="detail-value">${(() => {
+              try {
+                const dateStr = appointment.data.includes('T') ? appointment.data.split('T')[0] : appointment.data;
+                const [year, month, day] = dateStr.split('-').map(Number);
+                return format(new Date(year, month - 1, day), 'dd/MM/yyyy');
+              } catch {
+                return 'Data inválida';
+              }
+            })()}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Horário:</span>
@@ -1505,18 +1534,18 @@ class AdminPanel {
       this.calendarSetup = true;
     }
 
-    // Load appointments for the month if needed
-    if (!this.appointments || this.appointments.length === 0) {
-      const firstDay = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth(), 1);
-      const lastDay = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth() + 1, 0);
+    // Always reload appointments for the calendar month
+    const firstDay = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth(), 1);
+    const lastDay = new Date(this.currentCalendarDate.getFullYear(), this.currentCalendarDate.getMonth() + 1, 0);
 
-      try {
-        const response = await api.get(`/agendamentos?data_inicio=${format(firstDay, 'yyyy-MM-dd')}&data_fim=${format(lastDay, 'yyyy-MM-dd')}`);
-        this.appointments = response.data.agendamentos || [];
-      } catch (error) {
-        console.error('Error loading appointments for calendar:', error);
-        this.appointments = [];
-      }
+    try {
+      console.log(`📅 Loading appointments for calendar: ${format(firstDay, 'yyyy-MM-dd')} to ${format(lastDay, 'yyyy-MM-dd')}`);
+      const response = await api.get(`/agendamentos?data_inicio=${format(firstDay, 'yyyy-MM-dd')}&data_fim=${format(lastDay, 'yyyy-MM-dd')}`);
+      this.appointments = response.agendamentos || [];
+      console.log(`📅 Calendar loaded ${this.appointments.length} appointments`);
+    } catch (error) {
+      console.error('Error loading appointments for calendar:', error);
+      this.appointments = [];
     }
 
     // Update month label
@@ -1597,7 +1626,11 @@ class AdminPanel {
 
     // Get appointments for this day
     const dateStr = format(date, 'yyyy-MM-dd');
-    const dayAppointments = this.appointments.filter(apt => apt.data === dateStr);
+    const dayAppointments = this.appointments.filter(apt => {
+      // Handle both 'YYYY-MM-DD' and 'YYYY-MM-DDTHH:MM:SS' formats
+      const aptDateStr = apt.data.includes('T') ? apt.data.split('T')[0] : apt.data;
+      return aptDateStr === dateStr;
+    });
 
     if (dayAppointments.length > 0 && !isOtherMonth) {
       dayElement.classList.add('has-appointments');
@@ -2779,7 +2812,54 @@ class AdminPanel {
       alert('Erro ao exportar relatório. Tente novamente.');
     }
   }
+
+  setupEmpresasModal() {
+    // Preview do slug
+    const empresaSlugInput = document.getElementById('empresaSlug');
+    const previewSlug = document.getElementById('previewSlug');
+
+    if (empresaSlugInput && previewSlug) {
+      empresaSlugInput.addEventListener('input', (e) => {
+        previewSlug.textContent = e.target.value || '...';
+      });
+    }
+
+    // Cancelar modal
+    const cancelarBtn = document.getElementById('cancelarEmpresa');
+    if (cancelarBtn) {
+      cancelarBtn.addEventListener('click', () => {
+        const modal = document.getElementById('modalEmpresa');
+        if (modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+
+    // Fechar modal com X
+    const fecharBtn = document.getElementById('fecharModalEmpresa');
+    if (fecharBtn) {
+      fecharBtn.addEventListener('click', () => {
+        const modal = document.getElementById('modalEmpresa');
+        if (modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+
+    // Fechar modal clicando fora
+    const modal = document.getElementById('modalEmpresa');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+  }
 }
 
 // Initialize admin panel
 window.adminPanel = new AdminPanel();
+
+// Make empresasManager globally accessible for onclick handlers
+window.empresasManager = window.adminPanel.empresasManager;

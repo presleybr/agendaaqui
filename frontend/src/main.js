@@ -465,7 +465,7 @@ async function loadPricingCards() {
           <li style="padding: 8px 0;">✓ Proteção contra multas</li>
           <li style="padding: 8px 0;">✓ Atendimento em 24h</li>
         </ul>
-        <a href="#agendamento" class="btn btn-primary" style="width: 100%;">Agendar</a>
+        <a href="#agendamento" class="btn btn-primary btn-select-service" data-service="cautelar" style="width: 100%;">Agendar</a>
       </div>
 
       <div class="pricing-card stagger-item">
@@ -478,7 +478,7 @@ async function loadPricingCards() {
           <li style="padding: 8px 0;">✓ Reconhecido DETRAN</li>
           <li style="padding: 8px 0;">✓ Processo rápido</li>
         </ul>
-        <a href="#agendamento" class="btn btn-secondary" style="width: 100%;">Agendar</a>
+        <a href="#agendamento" class="btn btn-secondary btn-select-service" data-service="transferencia" style="width: 100%;">Agendar</a>
       </div>
 
       <div class="pricing-card stagger-item">
@@ -491,9 +491,37 @@ async function loadPricingCards() {
           <li style="padding: 8px 0;">✓ Laudo para seguro</li>
           <li style="padding: 8px 0;">✓ Outros laudos</li>
         </ul>
-        <a href="#agendamento" class="btn btn-secondary" style="width: 100%;">Agendar</a>
+        <a href="#agendamento" class="btn btn-secondary btn-select-service" data-service="outros" style="width: 100%;">Agendar</a>
       </div>
     `;
+
+    // Add event listeners to service selection buttons
+    setTimeout(() => {
+      document.querySelectorAll('.btn-select-service').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const serviceType = btn.dataset.service;
+
+          // Store selected service in sessionStorage so the form can pick it up
+          sessionStorage.setItem('selectedService', serviceType);
+
+          // Try to set it directly if the select element exists
+          const selectElement = document.getElementById('tipo_vistoria');
+          if (selectElement) {
+            selectElement.value = serviceType;
+
+            // Trigger change event to update any listeners
+            selectElement.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+
+          // Scroll to form
+          const agendamentoSection = document.getElementById('agendamento');
+          if (agendamentoSection) {
+            agendamentoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+    }, 150);
 
     // Re-init scroll reveal for dynamically added cards
     setTimeout(initScrollReveal, 100);
