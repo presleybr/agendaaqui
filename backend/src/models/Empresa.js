@@ -319,10 +319,10 @@ class Empresa {
       const result = await db.query(`
         SELECT
           COUNT(DISTINCT a.id) as total_agendamentos,
-          COUNT(DISTINCT CASE WHEN p.status = 'aprovado' THEN p.id END) as pagamentos_aprovados,
-          SUM(CASE WHEN p.status = 'aprovado' THEN p.valor ELSE 0 END) as valor_total,
-          SUM(CASE WHEN p.status = 'aprovado' THEN p.valor_empresa ELSE 0 END) as valor_recebido,
-          SUM(CASE WHEN p.status = 'aprovado' THEN p.valor_taxa ELSE 0 END) as valor_taxas
+          COUNT(DISTINCT CASE WHEN p.status = 'approved' THEN p.id END) as pagamentos_aprovados,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_total ELSE 0 END), 0) as valor_total,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_empresa ELSE 0 END), 0) as valor_recebido,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_comissao ELSE 0 END), 0) as valor_taxas
         FROM agendamentos a
         LEFT JOIN pagamentos p ON a.id = p.agendamento_id
         WHERE a.empresa_id = $1
@@ -332,10 +332,10 @@ class Empresa {
       return db.prepare(`
         SELECT
           COUNT(DISTINCT a.id) as total_agendamentos,
-          COUNT(DISTINCT CASE WHEN p.status = 'aprovado' THEN p.id END) as pagamentos_aprovados,
-          SUM(CASE WHEN p.status = 'aprovado' THEN p.valor ELSE 0 END) as valor_total,
-          SUM(CASE WHEN p.status = 'aprovado' THEN p.valor_empresa ELSE 0 END) as valor_recebido,
-          SUM(CASE WHEN p.status = 'aprovado' THEN p.valor_taxa ELSE 0 END) as valor_taxas
+          COUNT(DISTINCT CASE WHEN p.status = 'approved' THEN p.id END) as pagamentos_aprovados,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_total ELSE 0 END), 0) as valor_total,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_empresa ELSE 0 END), 0) as valor_recebido,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_comissao ELSE 0 END), 0) as valor_taxas
         FROM agendamentos a
         LEFT JOIN pagamentos p ON a.id = p.agendamento_id
         WHERE a.empresa_id = ?

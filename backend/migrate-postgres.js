@@ -19,7 +19,7 @@ const runMigration = async () => {
   try {
     console.log('🚀 Iniciando migração para PostgreSQL...\n');
 
-    // Ler o arquivo SQL
+    // Ler o arquivo SQL principal
     const sqlPath = path.join(__dirname, 'database', 'schema-postgres.sql');
     const sql = fs.readFileSync(sqlPath, 'utf8');
 
@@ -29,10 +29,29 @@ const runMigration = async () => {
     // Executar o SQL
     await pool.query(sql);
 
-    console.log('✅ Migração concluída com sucesso!');
-    console.log('\n📊 Tabelas criadas:');
+    console.log('✅ Migração principal concluída!');
+
+    // Executar migrations adicionais (se existirem)
+    const migrationsDir = path.join(__dirname, 'migrations');
+    if (fs.existsSync(migrationsDir)) {
+      const migrationFiles = fs.readdirSync(migrationsDir)
+        .filter(f => f.endsWith('.sql'))
+        .sort();
+
+      for (const file of migrationFiles) {
+        const migrationPath = path.join(migrationsDir, file);
+        console.log(`\n📄 Executando migration: ${file}`);
+        const migrationSql = fs.readFileSync(migrationPath, 'utf8');
+        await pool.query(migrationSql);
+        console.log(`✅ Migration ${file} concluída!`);
+      }
+    }
+
+    console.log('\n📊 Tabelas criadas/atualizadas:');
     console.log('   - usuarios_admin');
-    console.log('   - empresas');
+    console.log('   - empresas (com campos de personalização)');
+    console.log('   - empresa_carrossel');
+    console.log('   - templates');
     console.log('   - configuracoes');
     console.log('   - clientes');
     console.log('   - veiculos');
