@@ -531,8 +531,17 @@ class AdminPanel {
 
   async viewDetails(id) {
     try {
+      console.log('🔍 Buscando detalhes do agendamento ID:', id);
+
       const response = await api.get(`/agendamentos/${id}`);
+      console.log('📊 Resposta da API:', response);
+
       const appointment = response.data;
+      console.log('📋 Dados do agendamento:', appointment);
+
+      if (!appointment) {
+        throw new Error('Agendamento não encontrado');
+      }
 
       const modal = document.getElementById('appointmentModal');
       const detailsDiv = document.getElementById('appointmentDetails');
@@ -544,18 +553,19 @@ class AdminPanel {
           <h3>Informações Gerais</h3>
           <div class="detail-row">
             <span class="detail-label">Protocolo:</span>
-            <span class="detail-value"><strong>${appointment.protocolo}</strong></span>
+            <span class="detail-value"><strong>${appointment.protocolo || 'N/A'}</strong></span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Status:</span>
             <span class="detail-value">
-              <span class="status-badge ${appointment.status}">${this.getStatusLabel(appointment.status)}</span>
+              <span class="status-badge ${appointment.status || 'pendente'}">${this.getStatusLabel(appointment.status)}</span>
             </span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Data de Criação:</span>
             <span class="detail-value">${(() => {
               try {
+                if (!appointment.created_at) return 'N/A';
                 return format(new Date(appointment.created_at), 'dd/MM/yyyy HH:mm');
               } catch {
                 return 'Data inválida';
@@ -568,19 +578,19 @@ class AdminPanel {
           <h3>Cliente</h3>
           <div class="detail-row">
             <span class="detail-label">Nome:</span>
-            <span class="detail-value">${appointment.cliente_nome}</span>
+            <span class="detail-value">${appointment.cliente_nome || 'N/A'}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">CPF:</span>
-            <span class="detail-value">${appointment.cliente_cpf}</span>
+            <span class="detail-value">${appointment.cliente_cpf || 'N/A'}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Telefone:</span>
-            <span class="detail-value">${appointment.cliente_telefone}</span>
+            <span class="detail-value">${appointment.cliente_telefone || 'N/A'}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">E-mail:</span>
-            <span class="detail-value">${appointment.cliente_email}</span>
+            <span class="detail-value">${appointment.cliente_email || 'N/A'}</span>
           </div>
         </div>
 
@@ -588,15 +598,15 @@ class AdminPanel {
           <h3>Veículo</h3>
           <div class="detail-row">
             <span class="detail-label">Placa:</span>
-            <span class="detail-value">${appointment.veiculo_placa}</span>
+            <span class="detail-value">${appointment.veiculo_placa || 'N/A'}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Marca/Modelo:</span>
-            <span class="detail-value">${appointment.veiculo_marca} ${appointment.veiculo_modelo}</span>
+            <span class="detail-value">${(appointment.veiculo_marca || '') + ' ' + (appointment.veiculo_modelo || '') || 'N/A'}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Ano:</span>
-            <span class="detail-value">${appointment.veiculo_ano}</span>
+            <span class="detail-value">${appointment.veiculo_ano || 'N/A'}</span>
           </div>
         </div>
 
@@ -610,6 +620,7 @@ class AdminPanel {
             <span class="detail-label">Data:</span>
             <span class="detail-value">${(() => {
               try {
+                if (!appointment.data) return 'N/A';
                 const dateStr = appointment.data.includes('T') ? appointment.data.split('T')[0] : appointment.data;
                 const [year, month, day] = dateStr.split('-').map(Number);
                 return format(new Date(year, month - 1, day), 'dd/MM/yyyy');
@@ -620,7 +631,7 @@ class AdminPanel {
           </div>
           <div class="detail-row">
             <span class="detail-label">Horário:</span>
-            <span class="detail-value">${appointment.horario}</span>
+            <span class="detail-value">${appointment.horario || 'N/A'}</span>
           </div>
           ${appointment.endereco_vistoria ? `
             <div class="detail-row">
@@ -630,7 +641,7 @@ class AdminPanel {
           ` : ''}
           <div class="detail-row">
             <span class="detail-label">Valor:</span>
-            <span class="detail-value"><strong>${formatters.currency(appointment.preco)}</strong></span>
+            <span class="detail-value"><strong>${appointment.preco ? formatters.currency(appointment.preco) : 'N/A'}</strong></span>
           </div>
         </div>
 
@@ -663,8 +674,9 @@ class AdminPanel {
 
       modal.style.display = 'block';
     } catch (error) {
-      console.error('Error loading appointment details:', error);
-      alert('Erro ao carregar detalhes do agendamento');
+      console.error('❌ Erro ao carregar detalhes do agendamento:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Erro desconhecido';
+      alert(`Erro ao carregar detalhes do agendamento:\n${errorMessage}\n\nVerifique o console do navegador para mais detalhes.`);
     }
   }
 

@@ -254,17 +254,32 @@ export class EmpresasManager {
     const formData = {
       nome: document.getElementById('empresaNome').value,
       slug: document.getElementById('empresaSlug').value,
+      razao_social: document.getElementById('empresaRazaoSocial')?.value || '',
       email: document.getElementById('empresaEmail').value,
       telefone: document.getElementById('empresaTelefone').value,
       cnpj: document.getElementById('empresaCNPJ').value,
       chave_pix: document.getElementById('empresaChavePix').value,
+      tipo_pix: document.getElementById('empresaTipoPix')?.value || 'cpf',
+      descricao: document.getElementById('empresaDescricao')?.value || '',
+      endereco: document.getElementById('empresaEndereco')?.value || '',
+      cidade: document.getElementById('empresaCidade')?.value || '',
+      estado: document.getElementById('empresaEstado')?.value || '',
+      cep: document.getElementById('empresaCep')?.value || '',
+      latitude: document.getElementById('empresaLatitude')?.value || null,
+      longitude: document.getElementById('empresaLongitude')?.value || null,
+      template_id: document.getElementById('empresaTemplate')?.value || 'default',
+      cor_primaria: document.getElementById('empresaCorPrimaria')?.value || '#2563eb',
+      cor_secundaria: document.getElementById('empresaCorSecundaria')?.value || '#1e40af',
+      whatsapp: document.getElementById('empresaWhatsapp')?.value || '',
+      facebook_url: document.getElementById('empresaFacebook')?.value || '',
+      instagram_url: document.getElementById('empresaInstagram')?.value || '',
+      site_url: document.getElementById('empresaSite')?.value || '',
+      horario_funcionamento: document.getElementById('empresaHorarioFuncionamento')?.value || '',
       status: document.getElementById('empresaStatus').value,
       plano: document.getElementById('empresaPlano').value,
       preco_cautelar: Math.round(parseFloat(document.getElementById('empresaPrecoCautelar').value) * 100),
       preco_transferencia: Math.round(parseFloat(document.getElementById('empresaPrecoTransferencia').value) * 100),
-      preco_outros: Math.round(parseFloat(document.getElementById('empresaPrecoOutros').value) * 100),
-      horario_inicio: document.getElementById('empresaHorarioInicio').value,
-      horario_fim: document.getElementById('empresaHorarioFim').value
+      preco_outros: Math.round(parseFloat(document.getElementById('empresaPrecoOutros').value) * 100)
     };
 
     try {

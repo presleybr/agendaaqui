@@ -3,6 +3,52 @@ const { validationResult } = require('express-validator');
 
 class EmpresaController {
   /**
+   * Buscar empresa por slug (público)
+   */
+  static async getBySlug(req, res) {
+    try {
+      const { slug } = req.params;
+
+      const empresa = await Empresa.findBySlug(slug);
+
+      if (!empresa) {
+        return res.status(404).json({ error: 'Empresa não encontrada' });
+      }
+
+      // Verificar se empresa está ativa
+      if (empresa.status !== 'ativo') {
+        return res.status(403).json({ error: 'Empresa temporariamente indisponível' });
+      }
+
+      // Remover dados sensíveis
+      delete empresa.pix_key;
+      delete empresa.pix_type;
+      delete empresa.percentual_plataforma;
+
+      res.json(empresa);
+    } catch (error) {
+      console.error('Erro ao buscar empresa:', error);
+      res.status(500).json({ error: 'Erro ao buscar empresa' });
+    }
+  }
+
+  /**
+   * Listar imagens do carrossel (público)
+   */
+  static async getCarrosselImages(req, res) {
+    try {
+      const { id } = req.params;
+
+      const imagens = await Empresa.getCarouselImages(id);
+
+      res.json(imagens);
+    } catch (error) {
+      console.error('Erro ao buscar imagens:', error);
+      res.status(500).json({ error: 'Erro ao buscar imagens do carrossel' });
+    }
+  }
+
+  /**
    * Listar todas as empresas (Super Admin)
    */
   static async list(req, res) {
@@ -97,6 +143,7 @@ class EmpresaController {
         // Dados básicos
         nome,
         slug,
+        razao_social,
         cnpj,
         email,
         telefone,
@@ -105,6 +152,7 @@ class EmpresaController {
         estado,
         cep,
         chave_pix,
+        tipo_pix,
 
         // Preços
         preco_cautelar,
@@ -116,28 +164,39 @@ class EmpresaController {
         horario_fim,
         intervalo_minutos,
         dias_trabalho,
+        horario_funcionamento,
 
         // Personalização visual
         logo_url,
         banner_url,
         favicon_url,
+        foto_capa_url,
+        foto_perfil_url,
         cor_primaria,
         cor_secundaria,
         cor_texto,
         cor_fundo,
         fonte_primaria,
+        template_id,
 
         // Textos personalizados
         titulo_hero,
         subtitulo_hero,
         texto_sobre,
+        descricao,
 
         // Contato e redes sociais
         whatsapp_numero,
+        whatsapp,
         facebook_url,
         instagram_url,
         linkedin_url,
         website_url,
+        site_url,
+
+        // Localização
+        latitude,
+        longitude,
 
         // Avaliações Google
         google_rating,
@@ -168,6 +227,7 @@ class EmpresaController {
         // Dados básicos
         nome,
         slug: slug.toLowerCase(),
+        razao_social,
         cnpj,
         email,
         telefone,
@@ -176,39 +236,52 @@ class EmpresaController {
         estado,
         cep,
         chave_pix,
+        pix_key: chave_pix,
+        pix_type: tipo_pix || 'cpf',
 
         // Preços
-        preco_cautelar,
-        preco_transferencia,
-        preco_outros,
+        preco_cautelar: preco_cautelar || 0,
+        preco_transferencia: preco_transferencia || 0,
+        preco_outros: preco_outros || 0,
 
         // Horários
         horario_inicio,
         horario_fim,
         intervalo_minutos,
         dias_trabalho,
+        horario_funcionamento,
 
         // Personalização visual
         logo_url,
         banner_url,
         favicon_url,
-        cor_primaria,
-        cor_secundaria,
+        foto_capa_url,
+        foto_perfil_url,
+        cor_primaria: cor_primaria || '#2563eb',
+        cor_secundaria: cor_secundaria || '#1e40af',
         cor_texto,
         cor_fundo,
         fonte_primaria,
+        template_id: template_id || 'default',
 
         // Textos personalizados
         titulo_hero,
         subtitulo_hero,
         texto_sobre,
+        descricao,
 
         // Contato e redes sociais
         whatsapp_numero,
+        whatsapp: whatsapp || whatsapp_numero,
         facebook_url,
         instagram_url,
         linkedin_url,
         website_url,
+        site_url: site_url || website_url,
+
+        // Localização
+        latitude,
+        longitude,
 
         // Avaliações Google
         google_rating,

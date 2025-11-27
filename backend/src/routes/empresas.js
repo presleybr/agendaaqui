@@ -4,34 +4,55 @@ const EmpresaController = require('../controllers/empresaController');
 const { body } = require('express-validator');
 const { authenticateToken, requireSuperAdmin } = require('../middleware/auth');
 
-// Todas as rotas requerem autenticação de Super Admin
-router.use(authenticateToken);
-router.use(requireSuperAdmin);
+/**
+ * Rotas públicas (sem autenticação)
+ */
+
+/**
+ * GET /api/empresas/:slug
+ * Buscar empresa por slug (público)
+ */
+router.get('/:slug', EmpresaController.getBySlug);
+
+/**
+ * GET /api/empresas/:id/carrossel
+ * Listar imagens do carrossel (público)
+ */
+router.get('/:id/carrossel', EmpresaController.getCarrosselImages);
+
+/**
+ * Rotas administrativas (requerem autenticação)
+ */
+
+// Aplicar autenticação para rotas admin
+const adminRouter = express.Router();
+adminRouter.use(authenticateToken);
+adminRouter.use(requireSuperAdmin);
 
 /**
  * GET /api/admin/empresas/dashboard
  * Dashboard consolidado de todas as empresas
  */
-router.get('/dashboard', EmpresaController.dashboard);
+adminRouter.get('/dashboard', EmpresaController.dashboard);
 
 /**
  * GET /api/admin/empresas
  * Listar todas as empresas
  * Query params: ?status=ativo&plano=basico
  */
-router.get('/', EmpresaController.list);
+adminRouter.get('/', EmpresaController.list);
 
 /**
  * GET /api/admin/empresas/:id
  * Buscar empresa por ID com métricas dos últimos 6 meses
  */
-router.get('/:id', EmpresaController.getById);
+adminRouter.get('/:id', EmpresaController.getById);
 
 /**
  * POST /api/admin/empresas
  * Criar nova empresa cliente
  */
-router.post('/', [
+adminRouter.post('/', [
   body('nome').notEmpty().withMessage('Nome é obrigatório'),
   body('slug')
     .notEmpty().withMessage('Slug é obrigatório')
@@ -47,7 +68,7 @@ router.post('/', [
  * PUT /api/admin/empresas/:id
  * Atualizar empresa
  */
-router.put('/:id', [
+adminRouter.put('/:id', [
   body('nome').optional().notEmpty().withMessage('Nome não pode ser vazio'),
   body('email').optional().isEmail().withMessage('E-mail inválido'),
   body('chave_pix').optional().notEmpty().withMessage('Chave PIX não pode ser vazia')
@@ -57,7 +78,7 @@ router.put('/:id', [
  * PATCH /api/admin/empresas/:id/status
  * Alterar status da empresa
  */
-router.patch('/:id/status', [
+adminRouter.patch('/:id/status', [
   body('status')
     .isIn(['ativo', 'inativo', 'suspenso', 'trial'])
     .withMessage('Status inválido')
@@ -67,12 +88,15 @@ router.patch('/:id/status', [
  * GET /api/admin/empresas/:id/comissao
  * Verificar período de comissão (30 dias)
  */
-router.get('/:id/comissao', EmpresaController.verificarPeriodoComissao);
+adminRouter.get('/:id/comissao', EmpresaController.verificarPeriodoComissao);
 
 /**
  * DELETE /api/admin/empresas/:id
  * Deletar empresa (cascata: deleta todos os dados relacionados)
  */
-router.delete('/:id', EmpresaController.delete);
+adminRouter.delete('/:id', EmpresaController.delete);
+
+// Montar rotas admin em /admin
+router.use('/admin', adminRouter);
 
 module.exports = router;

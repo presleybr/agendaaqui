@@ -35,6 +35,8 @@ class Agendamento {
   }
 
   static async findById(id) {
+    console.log('📍 Model: Buscando agendamento com ID:', id);
+
     const result = await db.query(`
       SELECT
         a.*,
@@ -55,6 +57,13 @@ class Agendamento {
       LEFT JOIN pagamentos p ON a.id = p.agendamento_id
       WHERE a.id = $1
     `, [id]);
+
+    console.log('📊 Model: Resultado da query:', {
+      rowCount: result.rowCount,
+      hasData: result.rows.length > 0,
+      data: result.rows[0]
+    });
+
     return result.rows[0];
   }
 

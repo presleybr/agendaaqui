@@ -103,15 +103,20 @@ class AgendamentoController {
   static async getById(req, res) {
     try {
       const { id } = req.params;
+      console.log('🔍 Buscando agendamento com ID:', id);
+
       const agendamento = await Agendamento.findById(id);
+      console.log('📊 Agendamento encontrado:', agendamento);
 
       if (!agendamento) {
+        console.log('❌ Agendamento não encontrado para ID:', id);
         return res.status(404).json({ error: 'Agendamento não encontrado' });
       }
 
       res.json(agendamento);
     } catch (error) {
-      res.status(500).json({ error: 'Erro ao buscar agendamento' });
+      console.error('❌ Erro ao buscar agendamento:', error);
+      res.status(500).json({ error: 'Erro ao buscar agendamento', details: error.message });
     }
   }
 

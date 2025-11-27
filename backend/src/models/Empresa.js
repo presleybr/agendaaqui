@@ -8,21 +8,24 @@ class Empresa {
       // Lista de campos permitidos (todos os campos da tabela empresas)
       const allowedFields = [
         // Dados básicos
-        'nome', 'slug', 'cnpj', 'email', 'telefone',
-        'endereco', 'cidade', 'estado', 'cep', 'chave_pix',
+        'nome', 'slug', 'razao_social', 'cnpj', 'email', 'telefone',
+        'endereco', 'cidade', 'estado', 'cep', 'chave_pix', 'pix_key', 'pix_type',
         // Preços
         'preco_cautelar', 'preco_transferencia', 'preco_outros',
         // Horários
-        'horario_inicio', 'horario_fim', 'intervalo_minutos', 'dias_trabalho',
+        'horario_inicio', 'horario_fim', 'intervalo_minutos', 'dias_trabalho', 'horario_funcionamento',
         // Sistema
         'status', 'plano', 'percentual_plataforma', 'data_inicio',
         // Personalização visual
-        'logo_url', 'banner_url', 'favicon_url',
+        'logo_url', 'banner_url', 'favicon_url', 'foto_capa_url', 'foto_perfil_url',
         'cor_primaria', 'cor_secundaria', 'cor_texto', 'cor_fundo', 'fonte_primaria',
+        'template_id', 'descricao',
         // Textos
         'titulo_hero', 'subtitulo_hero', 'texto_sobre',
         // Contato
-        'whatsapp_numero', 'facebook_url', 'instagram_url', 'linkedin_url', 'website_url',
+        'whatsapp_numero', 'whatsapp', 'facebook_url', 'instagram_url', 'linkedin_url', 'website_url', 'site_url',
+        // Localização
+        'latitude', 'longitude',
         // Avaliações
         'google_rating', 'google_reviews_count', 'mostrar_avaliacoes',
         // Analytics
@@ -34,7 +37,6 @@ class Empresa {
       // Construir query dinamicamente apenas com campos fornecidos
       const fields = [];
       const values = [];
-      let paramCount = 1;
 
       allowedFields.forEach(field => {
         if (data[field] !== undefined) {
@@ -54,10 +56,11 @@ class Empresa {
         status: 'ativo',
         plano: 'basico',
         percentual_plataforma: 500,
-        cor_primaria: '#1976d2',
-        cor_secundaria: '#424242',
+        cor_primaria: '#2563eb',
+        cor_secundaria: '#1e40af',
         cor_texto: '#333333',
         cor_fundo: '#ffffff',
+        template_id: 'default',
         google_rating: 5.0,
         google_reviews_count: 0,
         mostrar_avaliacoes: true,
@@ -86,19 +89,136 @@ class Empresa {
       // SQLite version (legacy - apenas campos básicos)
       const result = db.prepare(
         `INSERT INTO empresas
-        (nome, slug, cnpj, email, telefone, chave_pix, status)
-        VALUES (?, ?, ?, ?, ?, ?, 'ativo')`
+        (nome, slug, cnpj, email, telefone, pix_key, pix_type, logo_url,
+         cor_primaria, cor_secundaria, preco_cautelar, preco_transferencia, preco_outros, status, data_inicio)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ativo', date('now'))`
       ).run(
         data.nome,
         data.slug,
         data.cnpj,
         data.email,
         data.telefone,
-        data.chave_pix
+        data.pix_key || data.chave_pix,
+        data.pix_type || 'cpf',
+        data.logo_url,
+        data.cor_primaria || '#2563eb',
+        data.cor_secundaria || '#1e40af',
+        data.preco_cautelar || 0,
+        data.preco_transferencia || 0,
+        data.preco_outros || 0
       );
 
       return this.findById(result.lastInsertRowid);
     }
+  }
+
+  static async isSlugAvailable(slug, excludeId = null) {
+    if (usePostgres) {
+      const query = excludeId
+        ? 'SELECT COUNT(*) as count FROM empresas WHERE slug = $1 AND id != $2'
+        : 'SELECT COUNT(*) as count FROM empresas WHERE slug = $1';
+      const params = excludeId ? [slug, excludeId] : [slug];
+      const result = await db.query(query, params);
+      return parseInt(result.rows[0].count) === 0;
+    } else {
+      const query = excludeId
+        ? 'SELECT COUNT(*) as count FROM empresas WHERE slug = ? AND id != ?'
+        : 'SELECT COUNT(*) as count FROM empresas WHERE slug = ?';
+      const result = excludeId
+        ? db.prepare(query).get(slug, excludeId)
+        : db.prepare(query).get(slug);
+      return result.count === 0;
+    }
+  }
+
+  static async addCarouselImage(empresaId, imageUrl, ordem = 0) {
+    if (usePostgres) {
+      const result = await db.query(
+        `INSERT INTO empresa_carrossel (empresa_id, imagem_url, ordem)
+         VALUES ($1, $2, $3)
+         RETURNING *`,
+        [empresaId, imageUrl, ordem]
+      );
+      return result.rows[0];
+    } else {
+      const result = db.prepare(
+        `INSERT INTO empresa_carrossel (empresa_id, imagem_url, ordem)
+         VALUES (?, ?, ?)`
+      ).run(empresaId, imageUrl, ordem);
+      return this.getCarouselImages(empresaId);
+    }
+  }
+
+  static async getCarouselImages(empresaId) {
+    if (usePostgres) {
+      const result = await db.query(
+        `SELECT * FROM empresa_carrossel
+         WHERE empresa_id = $1
+         ORDER BY ordem ASC`,
+        [empresaId]
+      );
+      return result.rows;
+    } else {
+      return db.prepare(
+        `SELECT * FROM empresa_carrossel
+         WHERE empresa_id = ?
+         ORDER BY ordem ASC`
+      ).all(empresaId);
+    }
+  }
+
+  static async deleteCarouselImage(id) {
+    if (usePostgres) {
+      await db.query('DELETE FROM empresa_carrossel WHERE id = $1', [id]);
+    } else {
+      db.prepare('DELETE FROM empresa_carrossel WHERE id = ?').run(id);
+    }
+  }
+
+  static async getMetricas(empresaId, mes, ano) {
+    if (usePostgres) {
+      const result = await db.query(`
+        SELECT
+          COUNT(a.id) as total_agendamentos,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_total ELSE 0 END), 0) as total_receita,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_comissao ELSE 0 END), 0) as total_comissao_plataforma,
+          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_empresa ELSE 0 END), 0) as total_repasses
+        FROM agendamentos a
+        LEFT JOIN pagamentos p ON a.id = p.agendamento_id
+        WHERE a.empresa_id = $1
+          AND EXTRACT(MONTH FROM a.data_hora) = $2
+          AND EXTRACT(YEAR FROM a.data_hora) = $3
+      `, [empresaId, mes, ano]);
+      return result.rows[0];
+    } else {
+      return db.prepare(
+        `SELECT
+          COUNT(*) as total_agendamentos,
+          SUM(preco) as total_receita,
+          COUNT(CASE WHEN status = 'realizado' THEN 1 END) as agendamentos_realizados
+         FROM agendamentos
+         WHERE empresa_id = ?
+         AND strftime('%m', data) = ?
+         AND strftime('%Y', data) = ?`
+      ).get(empresaId, mes.toString().padStart(2, '0'), ano.toString());
+    }
+  }
+
+  static async getSplitsPendentes() {
+    if (usePostgres) {
+      const result = await db.query(`
+        SELECT
+          ps.*,
+          e.nome as empresa_nome,
+          e.chave_pix
+        FROM pagamento_splits ps
+        JOIN empresas e ON ps.empresa_id = e.id
+        WHERE ps.status_repasse = 'pendente'
+        ORDER BY ps.created_at ASC
+      `);
+      return result.rows;
+    }
+    return [];
   }
 
   static async findById(id) {
@@ -220,47 +340,6 @@ class Empresa {
         WHERE a.empresa_id = ?
       `).get(empresaId);
     }
-  }
-
-  static async isSlugAvailable(slug) {
-    const empresa = await this.findBySlug(slug);
-    return !empresa;
-  }
-
-  static async getMetricas(empresaId, mes, ano) {
-    if (usePostgres) {
-      const result = await db.query(`
-        SELECT
-          COUNT(a.id) as total_agendamentos,
-          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_total ELSE 0 END), 0) as total_receita,
-          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_comissao ELSE 0 END), 0) as total_comissao_plataforma,
-          COALESCE(SUM(CASE WHEN p.status = 'approved' THEN p.valor_empresa ELSE 0 END), 0) as total_repasses
-        FROM agendamentos a
-        LEFT JOIN pagamentos p ON a.id = p.agendamento_id
-        WHERE a.empresa_id = $1
-          AND EXTRACT(MONTH FROM a.data_hora) = $2
-          AND EXTRACT(YEAR FROM a.data_hora) = $3
-      `, [empresaId, mes, ano]);
-      return result.rows[0];
-    }
-    return null;
-  }
-
-  static async getSplitsPendentes() {
-    if (usePostgres) {
-      const result = await db.query(`
-        SELECT
-          ps.*,
-          e.nome as empresa_nome,
-          e.chave_pix
-        FROM pagamento_splits ps
-        JOIN empresas e ON ps.empresa_id = e.id
-        WHERE ps.status_repasse = 'pendente'
-        ORDER BY ps.created_at ASC
-      `);
-      return result.rows;
-    }
-    return [];
   }
 
   static async registrarSplit(pagamentoId, empresaId, splitData) {
