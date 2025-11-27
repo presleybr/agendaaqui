@@ -9,10 +9,27 @@ const { authenticateToken, requireSuperAdmin } = require('../middleware/auth');
  */
 
 /**
- * GET /api/empresas/:slug
- * Buscar empresa por slug (público)
+ * GET /api/empresas/public/:slug
+ * Buscar empresa por slug - rota explícita com /public/
  */
-router.get('/:slug', EmpresaController.getBySlug);
+router.get('/public/:slug', EmpresaController.getBySlug);
+
+/**
+ * GET /api/empresas/:slug
+ * Buscar empresa por slug (público) - rota direta
+ * NOTA: Esta rota deve vir DEPOIS de rotas mais específicas como /public/:slug
+ */
+router.get('/:slug', (req, res, next) => {
+  const { slug } = req.params;
+
+  // Se for um ID numérico ou rota conhecida, passa para próximo handler
+  if (!isNaN(slug) || ['public', 'admin', 'dashboard'].includes(slug)) {
+    return next();
+  }
+
+  // Caso contrário, trata como slug de empresa
+  EmpresaController.getBySlug(req, res, next);
+});
 
 /**
  * GET /api/empresas/:id/carrossel
