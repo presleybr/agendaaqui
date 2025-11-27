@@ -94,7 +94,9 @@ export class EmpresasManager {
         <tr>
           <td>
             <strong>${empresa.nome}</strong><br>
-            <small style="color: #666;">${empresa.slug}.agendaaquivistorias.com.br</small>
+            <a href="https://agendaaquivistorias.com.br/${empresa.slug}" target="_blank" style="color: #3b82f6; text-decoration: none;">
+              agendaaquivistorias.com.br/${empresa.slug}
+            </a>
           </td>
           <td>${empresa.email}</td>
           <td>${empresa.telefone || '-'}</td>
@@ -360,27 +362,14 @@ export class EmpresasManager {
     document.getElementById('modalEmpresa').style.display = 'flex';
   }
 
-  async visualizar(id) {
-    try {
-      const response = await fetch(`${scheduleService.API_URL}/admin/empresas/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao carregar empresa');
-      }
-
-      const empresa = await response.json();
-
-      // Abrir página da empresa em nova aba
-      const url = `/${empresa.slug}` || `/empresa.html?empresa=${empresa.slug}`;
-      window.open(url, '_blank');
-
-    } catch (error) {
-      console.error('Erro:', error);
-      alert('Erro ao visualizar empresa');
+  visualizar(id) {
+    // Encontrar empresa na lista carregada
+    const empresa = this.empresas.find(e => e.id === id);
+    if (empresa) {
+      // Abrir página da empresa em nova aba com URL completa
+      window.open(`https://agendaaquivistorias.com.br/${empresa.slug}`, '_blank');
+    } else {
+      alert('Empresa não encontrada');
     }
   }
 
