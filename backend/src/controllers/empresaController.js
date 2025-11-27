@@ -1,5 +1,7 @@
 const Empresa = require('../models/Empresa');
 const { validationResult } = require('express-validator');
+const bcrypt = require('bcryptjs');
+const db = require('../config/database');
 
 class EmpresaController {
   /**
@@ -315,14 +317,54 @@ class EmpresaController {
       });
 
       console.log('✅ Empresa criada:', empresa.slug);
-      console.log(`🌐 Disponível em: https://${empresa.slug}.agendaaquivistorias.com.br`);
+      console.log(`🌐 Disponível em: https://agendaaquivistorias.com.br/${empresa.slug}`);
 
-      res.status(201).json({
+      // ============================================
+      // CRIAR USUÁRIO ADMIN PARA A EMPRESA
+      // ============================================
+      let senhaTemporaria = null;
+      let usuarioCriado = null;
+
+      try {
+        // Gerar senha temporária segura
+        senhaTemporaria = Math.random().toString(36).slice(-6).toUpperCase() +
+                          Math.random().toString(36).slice(-2) + '!';
+
+        const senhaHash = await bcrypt.hash(senhaTemporaria, 10);
+
+        // Criar usuário admin
+        const resultUsuario = await db.query(`
+          INSERT INTO usuarios_empresa (empresa_id, nome, email, senha_hash, role, ativo, primeiro_acesso)
+          VALUES ($1, $2, $3, $4, 'admin', true, true)
+          RETURNING id, nome, email, role
+        `, [empresa.id, nome, email, senhaHash]);
+
+        usuarioCriado = resultUsuario.rows[0];
+        console.log(`👤 Usuário admin criado para ${empresa.slug}: ${email}`);
+      } catch (errUsuario) {
+        // Se falhar ao criar usuário, loga mas não impede a criação da empresa
+        console.error('⚠️ Erro ao criar usuário da empresa (tabela pode não existir):', errUsuario.message);
+      }
+
+      // Resposta com dados da empresa e credenciais
+      const resposta = {
         ...empresa,
-        url: `https://${empresa.slug}.agendaaquivistorias.com.br`,
-        url_path: `https://agendaaquivistorias.com.br/${empresa.slug}`,
-        mensagem: 'Empresa criada com sucesso! Comissão fixa de R$ 5,00 por transação.'
-      });
+        url: `https://agendaaquivistorias.com.br/${empresa.slug}`,
+        painel_url: `https://agendaaquivistorias.com.br/painel`,
+        mensagem: 'Empresa criada com sucesso! Comissão fixa de R$ 5,00 por transação nos primeiros 30 dias.'
+      };
+
+      // Incluir credenciais apenas se usuário foi criado
+      if (usuarioCriado && senhaTemporaria) {
+        resposta.credenciais = {
+          email: email,
+          senha_temporaria: senhaTemporaria,
+          aviso: 'IMPORTANTE: Envie estas credenciais ao cliente. A senha deve ser alterada no primeiro acesso.',
+          url_login: 'https://agendaaquivistorias.com.br/painel'
+        };
+      }
+
+      res.status(201).json(resposta);
     } catch (error) {
       console.error('❌ Erro ao criar empresa:', error);
       res.status(500).json({

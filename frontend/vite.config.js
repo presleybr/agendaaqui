@@ -39,7 +39,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         admin: resolve(__dirname, 'admin.html'),
-        empresa: resolve(__dirname, 'empresa.html')
+        empresa: resolve(__dirname, 'empresa.html'),
+        painelEmpresa: resolve(__dirname, 'painel-empresa.html')
       }
     }
   },

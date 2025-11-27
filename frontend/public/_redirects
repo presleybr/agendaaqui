@@ -4,6 +4,8 @@
 # Páginas específicas
 /admin    /admin.html    200
 /admin/*  /admin.html    200
+/painel   /painel-empresa.html    200
+/painel/* /painel-empresa.html    200
 
 # Arquivos estáticos (não reescrever)
 /assets/* /assets/:splat 200

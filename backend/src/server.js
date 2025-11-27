@@ -24,6 +24,10 @@ const tenantRoutes = require('./routes/tenant');
 const repassesRoutes = require('./routes/repasses');
 const uploadRoutes = require('./routes/upload');
 
+// Rotas do Painel CRM da Empresa
+const authEmpresaRoutes = require('./routes/authEmpresa');
+const painelEmpresaRoutes = require('./routes/painelEmpresa');
+
 const app = express();
 
 // Trust proxy - necessário para Render, Heroku, etc (proxies reversos)
@@ -223,6 +227,10 @@ app.use('/api/upload', uploadRoutes);
 // Rotas públicas de empresas (para página de agendamento)
 app.use('/api/empresas', empresasRoutes);
 
+// Rotas do Painel CRM da Empresa (autenticação própria)
+app.use('/api/empresa/auth', authEmpresaRoutes);
+app.use('/api/empresa/painel', painelEmpresaRoutes);
+
 // Repasses Routes (transferências PIX automáticas)
 app.use('/api/repasses', repassesRoutes);
 
@@ -258,7 +266,7 @@ app.get('/admin', (req, res) => {
 // Exemplos: /vistoriapremium, /vistoria-express-sp
 app.get('/:slug([a-z0-9-]+)', (req, res, next) => {
   const fs = require('fs');
-  const empresaPath = path.join(__dirname, '../../frontend/empresa.html');
+  const slug = req.params.slug;
 
   // Lista de rotas reservadas que NÃO são slugs de empresas
   const reservedRoutes = [
@@ -271,21 +279,39 @@ app.get('/:slug([a-z0-9-]+)', (req, res, next) => {
     'health',
     'favicon',
     'robots',
-    'sitemap'
+    'sitemap',
+    'index'
   ];
 
-  // Se for uma rota reservada, passa para o próximo handler
-  if (reservedRoutes.includes(req.params.slug)) {
+  // Se for uma rota reservada ou tiver extensão de arquivo, passa para o próximo handler
+  if (reservedRoutes.includes(slug) || slug.includes('.')) {
     return next();
   }
 
-  // Verificar se o arquivo empresa.html existe
+  console.log(`🏢 Tentando carregar empresa com slug: ${slug}`);
+
+  // Em produção, o arquivo está em frontend/dist/empresa.html
+  // Em desenvolvimento, está em frontend/empresa.html
+  const prodPath = path.join(__dirname, '../../frontend/dist/empresa.html');
+  const devPath = path.join(__dirname, '../../frontend/empresa.html');
+
+  let empresaPath = process.env.NODE_ENV === 'production' ? prodPath : devPath;
+
+  // Fallback: tenta ambos os caminhos
+  if (!fs.existsSync(empresaPath)) {
+    empresaPath = fs.existsSync(prodPath) ? prodPath : devPath;
+  }
+
+  console.log(`📁 Buscando arquivo em: ${empresaPath}`);
+  console.log(`📁 Arquivo existe: ${fs.existsSync(empresaPath)}`);
+
   if (fs.existsSync(empresaPath)) {
-    console.log(`📄 Servindo página de empresa para slug: ${req.params.slug}`);
+    console.log(`✅ Servindo empresa.html para slug: ${slug}`);
     res.sendFile(empresaPath);
   } else {
-    // Se empresa.html não existir, deixa o próximo handler cuidar
-    console.warn('⚠️ empresa.html não encontrado em:', empresaPath);
+    console.warn('❌ empresa.html não encontrado em nenhum caminho');
+    console.warn('   Tentou:', prodPath);
+    console.warn('   Tentou:', devPath);
     next();
   }
 });

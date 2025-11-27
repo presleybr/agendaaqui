@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel da Empresa - AgendaAqui Vistorias</title>
+  <meta name="description" content="Gerencie seus agendamentos, clientes e configurações">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <style>
+    :root {
+      --primary: #f97316;
+      --primary-dark: #ea580c;
+      --secondary: #1e40af;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-500: #6b7280;
+      --gray-700: #374151;
+      --gray-900: #111827;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+
+    /* ============ LOGIN ============ */
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      padding: 1rem;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-logo h1 {
+      color: var(--primary);
+      font-size: 1.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .login-logo p {
+      color: var(--gray-500);
+      font-size: 0.9rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--gray-700);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      width: 100%;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:disabled {
+      background: var(--gray-300);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: var(--gray-200);
+      color: var(--gray-700);
+    }
+
+    .btn-secondary:hover {
+      background: var(--gray-300);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+
+    .error-message {
+      background: #fef2f2;
+      color: #dc2626;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    /* ============ PAINEL ============ */
+    .painel-container {
+      display: none;
+    }
+
+    .painel-container.active {
+      display: block;
+    }
+
+    /* Header */
+    .painel-header {
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .header-brand img {
+      height: 40px;
+    }
+
+    .header-brand h1 {
+      font-size: 1.25rem;
+      color: var(--gray-900);
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .header-user span {
+      color: var(--gray-500);
+      font-size: 0.9rem;
+    }
+
+    /* Sidebar */
+    .painel-layout {
+      display: flex;
+      min-height: calc(100vh - 70px);
+    }
+
+    .sidebar {
+      width: 250px;
+      background: white;
+      border-right: 1px solid var(--gray-200);
+      padding: 1rem 0;
+      flex-shrink: 0;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1.5rem;
+      color: var(--gray-700);
+      text-decoration: none;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      background: var(--gray-50);
+      color: var(--primary);
+    }
+
+    .sidebar-nav a.active {
+      background: rgba(249, 115, 22, 0.1);
+      color: var(--primary);
+      border-left-color: var(--primary);
+      font-weight: 600;
+    }
+
+    .sidebar-nav svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+      color: var(--gray-900);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .stat-card h3 {
+      color: var(--gray-500);
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+
+    .stat-card .value.success { color: var(--success); }
+    .stat-card .value.warning { color: var(--warning); }
+    .stat-card .value.danger { color: var(--danger); }
+    .stat-card .value.primary { color: var(--primary); }
+
+    .stat-card .subtext {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin-top: 0.25rem;
+    }
+
+    /* Tables */
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header h2 {
+      font-size: 1.1rem;
+      color: var(--gray-900);
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 0.875rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    th {
+      background: var(--gray-50);
+      font-weight: 600;
+      color: var(--gray-700);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tr:hover {
+      background: var(--gray-50);
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-pendente { background: #fef3c7; color: #d97706; }
+    .badge-confirmado { background: #dbeafe; color: #2563eb; }
+    .badge-concluido { background: #d1fae5; color: #059669; }
+    .badge-cancelado { background: #fee2e2; color: #dc2626; }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--gray-200);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        left: -250px;
+        top: 70px;
+        height: calc(100vh - 70px);
+        z-index: 50;
+        transition: left 0.3s;
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .main-content {
+        padding: 1rem;
+      }
+
+      .painel-header {
+        padding: 1rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* Hidden sections */
+    .page-section {
+      display: none;
+    }
+
+    .page-section.active {
+      display: block;
+    }
+
+    /* Forms */
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filters select,
+    .filters input {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gray-500);
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    /* Modal Change Password */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      margin: 1rem;
+    }
+
+    .modal h2 {
+      margin-bottom: 1rem;
+      color: var(--gray-900);
+    }
+
+    .modal p {
+      color: var(--gray-500);
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- ============ LOGIN ============ -->
+  <div id="loginContainer" class="login-container">
+    <div class="login-card">
+      <div class="login-logo">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <h1>Painel da Empresa</h1>
+        <p>Gerencie seus agendamentos</p>
+      </div>
+
+      <div id="loginError" class="error-message"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required placeholder="seu@email.com">
+        </div>
+
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" required placeholder="Sua senha">
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btnLogin">
+          <span id="btnLoginText">Entrar</span>
+          <span id="btnLoginLoading" style="display: none;">Entrando...</span>
+        </button>
+      </form>
+
+      <p style="text-align: center; margin-top: 1.5rem; color: var(--gray-500); font-size: 0.85rem;">
+        Esqueceu a senha? Entre em contato com o suporte.
+      </p>
+    </div>
+  </div>
+
+  <!-- ============ PAINEL ============ -->
+  <div id="painelContainer" class="painel-container">
+    <!-- Header -->
+    <header class="painel-header">
+      <div class="header-brand">
+        <img id="empresaLogo" src="/favicon.svg" alt="Logo">
+        <h1 id="empresaNome">Minha Empresa</h1>
+      </div>
+      <div class="header-user">
+        <span id="usuarioNome">Usuário</span>
+        <button class="btn btn-secondary btn-sm" id="btnLogout">Sair</button>
+      </div>
+    </header>
+
+    <div class="painel-layout">
+      <!-- Sidebar -->
+      <nav class="sidebar" id="sidebar">
+        <ul class="sidebar-nav">
+          <li>
+            <a href="#" data-page="dashboard" class="active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+              Dashboard
+            </a>
+          </li>
+          <li>
+            <a href="#" data-page="agendamentos">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              Agendamentos
+            </a>
+          </li>
+          <li>
+            <a href="#" data-page="clientes">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Clientes
+            </a>
+          </li>
+          <li>
+            <a href="#" data-page="minha-empresa">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              Minha Empresa
+            </a>
+          </li>
+          <li>
+            <a href="#" data-page="configuracoes">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              Configuracoes
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Dashboard -->
+        <section id="page-dashboard" class="page-section active">
+          <h1 class="page-title">Dashboard</h1>
+
+          <div class="stats-grid" id="dashboardStats">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Agendamentos de Hoje</h2>
+            </div>
+            <div class="card-body" id="agendamentosHoje">
+              <div class="loading"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Proximos Agendamentos</h2>
+            </div>
+            <div class="card-body" id="proximosAgendamentos">
+              <div class="loading"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Agendamentos -->
+        <section id="page-agendamentos" class="page-section">
+          <h1 class="page-title">Agendamentos</h1>
+
+          <div class="filters">
+            <select id="filtroStatus">
+              <option value="todos">Todos os status</option>
+              <option value="pendente">Pendente</option>
+              <option value="confirmado">Confirmado</option>
+              <option value="concluido">Concluido</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+            <input type="date" id="filtroDataInicio" placeholder="Data inicio">
+            <input type="date" id="filtroDataFim" placeholder="Data fim">
+            <input type="text" id="filtroBusca" placeholder="Buscar por nome, placa, telefone...">
+            <button class="btn btn-primary btn-sm" id="btnFiltrar">Filtrar</button>
+          </div>
+
+          <div class="card">
+            <div class="card-body" id="listaAgendamentos">
+              <div class="loading"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Clientes -->
+        <section id="page-clientes" class="page-section">
+          <h1 class="page-title">Clientes</h1>
+
+          <div class="card">
+            <div class="card-body" id="listaClientes">
+              <div class="loading"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Minha Empresa -->
+        <section id="page-minha-empresa" class="page-section">
+          <h1 class="page-title">Minha Empresa</h1>
+
+          <div class="card">
+            <div class="card-body" id="dadosEmpresa">
+              <div class="loading"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Configuracoes -->
+        <section id="page-configuracoes" class="page-section">
+          <h1 class="page-title">Configuracoes</h1>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Alterar Senha</h2>
+            </div>
+            <div class="card-body">
+              <form id="formAlterarSenha">
+                <div class="form-group">
+                  <label>Senha Atual</label>
+                  <input type="password" id="senhaAtual" required>
+                </div>
+                <div class="form-group">
+                  <label>Nova Senha</label>
+                  <input type="password" id="novaSenha" required minlength="6">
+                </div>
+                <div class="form-group">
+                  <label>Confirmar Nova Senha</label>
+                  <input type="password" id="confirmarSenha" required>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">Alterar Senha</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Horarios de Funcionamento</h2>
+            </div>
+            <div class="card-body" id="configHorarios">
+              <div class="loading"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal Alterar Senha (primeiro acesso) -->
+  <div class="modal-overlay" id="modalPrimeiroAcesso">
+    <div class="modal">
+      <h2>Alterar Senha</h2>
+      <p>Por seguranca, altere sua senha temporaria.</p>
+      <form id="formPrimeiroAcesso">
+        <div class="form-group">
+          <label>Nova Senha</label>
+          <input type="password" id="novaSenhaPrimeiro" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label>Confirmar Senha</label>
+          <input type="password" id="confirmarSenhaPrimeiro" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Alterar e Continuar</button>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="/src/painel-empresa.js"></script>
+</body>
+</html>
