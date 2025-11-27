@@ -9,7 +9,8 @@ class Empresa {
       const allowedFields = [
         // Dados básicos
         'nome', 'slug', 'razao_social', 'cnpj', 'email', 'telefone',
-        'endereco', 'cidade', 'estado', 'cep', 'chave_pix', 'pix_key', 'pix_type',
+        'endereco', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'cep',
+        'chave_pix', 'pix_key', 'pix_type',
         // Preços
         'preco_cautelar', 'preco_transferencia', 'preco_outros',
         // Horários
@@ -21,7 +22,7 @@ class Empresa {
         'cor_primaria', 'cor_secundaria', 'cor_texto', 'cor_fundo', 'fonte_primaria',
         'template_id', 'descricao',
         // Textos
-        'titulo_hero', 'subtitulo_hero', 'texto_sobre',
+        'titulo_hero', 'subtitulo_hero', 'texto_sobre', 'titulo_pagina', 'meta_description',
         // Contato
         'whatsapp_numero', 'whatsapp', 'facebook_url', 'instagram_url', 'linkedin_url', 'website_url', 'site_url',
         // Localização
@@ -31,7 +32,7 @@ class Empresa {
         // Analytics
         'meta_pixel_id', 'google_analytics_id',
         // Features
-        'mostrar_whatsapp_float'
+        'mostrar_whatsapp_float', 'mostrar_marca_propria'
       ];
 
       // Construir query dinamicamente apenas com campos fornecidos

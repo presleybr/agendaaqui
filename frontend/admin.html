@@ -1200,124 +1200,388 @@
 
   <!-- Modal Nova/Editar Empresa -->
   <div id="modalEmpresa" class="modal" style="display: none;">
-    <div class="modal-content" style="max-width: 800px;">
+    <div class="modal-content modal-empresa-content">
       <span class="close" id="fecharModalEmpresa">&times;</span>
-      <h2 id="modalEmpresaTitle" style="margin-bottom: 30px; color: var(--brand-primary);">Nova Empresa</h2>
+      <h2 id="modalEmpresaTitle" style="margin-bottom: 20px; color: var(--brand-primary);">Nova Empresa</h2>
+
+      <!-- Tabs de Navegação -->
+      <div class="empresa-tabs">
+        <button type="button" class="empresa-tab active" data-tab="basicos">📋 Básicos</button>
+        <button type="button" class="empresa-tab" data-tab="localizacao">📍 Localização</button>
+        <button type="button" class="empresa-tab" data-tab="precos">💰 Preços</button>
+        <button type="button" class="empresa-tab" data-tab="visual">🎨 Visual</button>
+        <button type="button" class="empresa-tab" data-tab="redes">🌐 Redes</button>
+        <button type="button" class="empresa-tab" data-tab="pagamento">💳 Pagamento</button>
+      </div>
 
       <form id="formEmpresa">
-        <!-- Dados Básicos -->
-        <div class="detail-section">
-          <h3>📋 Dados Básicos</h3>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="empresaNome">Nome da Empresa *</label>
-              <input type="text" id="empresaNome" required placeholder="Ex: Vistoria Express SP">
+        <!-- TAB: Dados Básicos -->
+        <div class="empresa-tab-content active" id="tab-basicos">
+          <div class="detail-section">
+            <h3>📋 Dados Básicos</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaNome">Nome da Empresa *</label>
+                <input type="text" id="empresaNome" required placeholder="Ex: Vistoria Express SP">
+              </div>
+              <div class="form-group">
+                <label for="empresaSlug">Subdomínio *</label>
+                <input type="text" id="empresaSlug" required placeholder="Ex: vistoria-sp">
+                <small style="color: #666;">
+                  Será: <strong><span id="previewSlug">...</span>.agendaaquivistorias.com.br</strong>
+                </small>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="empresaSlug">Subdomínio *</label>
-              <input type="text" id="empresaSlug" required placeholder="Ex: vistoria-sp">
-              <small style="color: #666;">
-                Será: <strong><span id="previewSlug">...</span>.agendaaquivistorias.com.br</strong>
-              </small>
-            </div>
-          </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="empresaEmail">Email *</label>
-              <input type="email" id="empresaEmail" required placeholder="contato@empresa.com">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaRazaoSocial">Razão Social</label>
+                <input type="text" id="empresaRazaoSocial" placeholder="Razão social completa">
+              </div>
+              <div class="form-group">
+                <label for="empresaCNPJ">CNPJ</label>
+                <input type="text" id="empresaCNPJ" placeholder="00.000.000/0000-00">
+              </div>
             </div>
-            <div class="form-group">
-              <label for="empresaTelefone">Telefone</label>
-              <input type="tel" id="empresaTelefone" placeholder="(67) 99999-9999">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaEmail">Email *</label>
+                <input type="email" id="empresaEmail" required placeholder="contato@empresa.com">
+              </div>
+              <div class="form-group">
+                <label for="empresaTelefone">Telefone</label>
+                <input type="tel" id="empresaTelefone" placeholder="(67) 99999-9999">
+              </div>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label for="empresaCNPJ">CNPJ (opcional)</label>
-            <input type="text" id="empresaCNPJ" placeholder="00.000.000/0000-00">
-          </div>
-        </div>
-
-        <!-- Pagamento -->
-        <div class="detail-section">
-          <h3>💰 Configurações de Pagamento</h3>
-          <div class="form-group">
-            <label for="empresaChavePix">Chave PIX (para receber repasses) *</label>
-            <input type="text" id="empresaChavePix" required placeholder="email@empresa.com, telefone ou chave aleatória">
-            <small style="color: #666;">
-              ⚠️ Os repasses serão enviados para esta chave PIX após os primeiros 30 dias.
-            </small>
-          </div>
-
-          <div class="alert alert-info" style="margin-top: 15px;">
-            <strong>ℹ️ Regra de Comissão:</strong><br>
-            • Primeiros 30 dias: <strong>R$ 5,00 fixo</strong> para a plataforma por transação<br>
-            • Após 30 dias: <strong>0% de comissão</strong> (todo valor vai para o cliente)
-          </div>
-        </div>
-
-        <!-- Preços e Horários -->
-        <div class="detail-section">
-          <h3>⚙️ Configurações do Negócio</h3>
-
-          <h4 style="margin-top: 20px;">Preços (em Reais)</h4>
-          <div class="form-row">
             <div class="form-group">
-              <label for="empresaPrecoCautelar">Vistoria Cautelar</label>
-              <input type="number" id="empresaPrecoCautelar" step="0.01" min="0" value="150.00" placeholder="150.00">
+              <label for="empresaDescricao">Descrição da Empresa</label>
+              <textarea id="empresaDescricao" rows="3" placeholder="Descreva brevemente sua empresa..."></textarea>
             </div>
-            <div class="form-group">
-              <label for="empresaPrecoTransferencia">Vistoria Transferência</label>
-              <input type="number" id="empresaPrecoTransferencia" step="0.01" min="0" value="120.00" placeholder="120.00">
-            </div>
-            <div class="form-group">
-              <label for="empresaPrecoOutros">Outros Serviços</label>
-              <input type="number" id="empresaPrecoOutros" step="0.01" min="0" value="100.00" placeholder="100.00">
-            </div>
-          </div>
 
-          <h4 style="margin-top: 20px;">Horário de Funcionamento</h4>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="empresaHorarioInicio">Abertura</label>
-              <input type="time" id="empresaHorarioInicio" value="08:00">
-            </div>
-            <div class="form-group">
-              <label for="empresaHorarioFim">Fechamento</label>
-              <input type="time" id="empresaHorarioFim" value="18:00">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaStatus">Status</label>
+                <select id="empresaStatus">
+                  <option value="ativo">Ativo</option>
+                  <option value="trial">Trial (Teste)</option>
+                  <option value="inativo">Inativo</option>
+                  <option value="suspenso">Suspenso</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="empresaPlano">Plano</label>
+                <select id="empresaPlano">
+                  <option value="basico">Básico</option>
+                  <option value="premium">Premium</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Status e Plano -->
-        <div class="detail-section">
-          <h3>📊 Status e Plano</h3>
-          <div class="form-row">
+        <!-- TAB: Localização -->
+        <div class="empresa-tab-content" id="tab-localizacao">
+          <div class="detail-section">
+            <h3>📍 Localização</h3>
+            <div class="form-row">
+              <div class="form-group" style="flex: 0 0 150px;">
+                <label for="empresaCep">CEP</label>
+                <input type="text" id="empresaCep" placeholder="00000-000" maxlength="9">
+                <small style="color: #666;">Digite o CEP para buscar</small>
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label for="empresaEndereco">Endereço</label>
+                <input type="text" id="empresaEndereco" placeholder="Rua, Avenida...">
+              </div>
+              <div class="form-group" style="flex: 0 0 100px;">
+                <label for="empresaNumero">Número</label>
+                <input type="text" id="empresaNumero" placeholder="123">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaComplemento">Complemento</label>
+                <input type="text" id="empresaComplemento" placeholder="Sala, Bloco...">
+              </div>
+              <div class="form-group">
+                <label for="empresaBairro">Bairro</label>
+                <input type="text" id="empresaBairro" placeholder="Bairro">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group" style="flex: 2;">
+                <label for="empresaCidade">Cidade</label>
+                <input type="text" id="empresaCidade" placeholder="Cidade">
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label for="empresaEstado">Estado</label>
+                <select id="empresaEstado">
+                  <option value="">Selecione</option>
+                  <option value="AC">AC</option>
+                  <option value="AL">AL</option>
+                  <option value="AP">AP</option>
+                  <option value="AM">AM</option>
+                  <option value="BA">BA</option>
+                  <option value="CE">CE</option>
+                  <option value="DF">DF</option>
+                  <option value="ES">ES</option>
+                  <option value="GO">GO</option>
+                  <option value="MA">MA</option>
+                  <option value="MT">MT</option>
+                  <option value="MS">MS</option>
+                  <option value="MG">MG</option>
+                  <option value="PA">PA</option>
+                  <option value="PB">PB</option>
+                  <option value="PR">PR</option>
+                  <option value="PE">PE</option>
+                  <option value="PI">PI</option>
+                  <option value="RJ">RJ</option>
+                  <option value="RN">RN</option>
+                  <option value="RS">RS</option>
+                  <option value="RO">RO</option>
+                  <option value="RR">RR</option>
+                  <option value="SC">SC</option>
+                  <option value="SP">SP</option>
+                  <option value="SE">SE</option>
+                  <option value="TO">TO</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaLatitude">Latitude (opcional)</label>
+                <input type="number" id="empresaLatitude" step="any" placeholder="-23.5505">
+              </div>
+              <div class="form-group">
+                <label for="empresaLongitude">Longitude (opcional)</label>
+                <input type="number" id="empresaLongitude" step="any" placeholder="-46.6333">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Preços -->
+        <div class="empresa-tab-content" id="tab-precos">
+          <div class="detail-section">
+            <h3>💰 Preços dos Serviços</h3>
+            <p style="color: #666; margin-bottom: 20px;">Defina os preços que serão exibidos na página de agendamento</p>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaPrecoCautelar">Vistoria Cautelar (R$)</label>
+                <input type="number" id="empresaPrecoCautelar" step="0.01" min="0" value="150.00" placeholder="150.00">
+              </div>
+              <div class="form-group">
+                <label for="empresaPrecoTransferencia">Vistoria Transferência (R$)</label>
+                <input type="number" id="empresaPrecoTransferencia" step="0.01" min="0" value="120.00" placeholder="120.00">
+              </div>
+              <div class="form-group">
+                <label for="empresaPrecoOutros">Outros Serviços (R$)</label>
+                <input type="number" id="empresaPrecoOutros" step="0.01" min="0" value="100.00" placeholder="100.00">
+              </div>
+            </div>
+
+            <h4 style="margin-top: 30px;">Horário de Funcionamento</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaHorarioInicio">Abertura</label>
+                <input type="time" id="empresaHorarioInicio" value="08:00">
+              </div>
+              <div class="form-group">
+                <label for="empresaHorarioFim">Fechamento</label>
+                <input type="time" id="empresaHorarioFim" value="18:00">
+              </div>
+              <div class="form-group">
+                <label for="empresaIntervalo">Intervalo (min)</label>
+                <select id="empresaIntervalo">
+                  <option value="30">30 minutos</option>
+                  <option value="60" selected>1 hora</option>
+                  <option value="90">1h30</option>
+                  <option value="120">2 horas</option>
+                </select>
+              </div>
+            </div>
+
             <div class="form-group">
-              <label for="empresaStatus">Status</label>
-              <select id="empresaStatus">
-                <option value="ativo">Ativo</option>
-                <option value="trial">Trial (Teste)</option>
-                <option value="inativo">Inativo</option>
-                <option value="suspenso">Suspenso</option>
+              <label for="empresaHorarioTexto">Descrição do Horário (exibido no site)</label>
+              <input type="text" id="empresaHorarioTexto" placeholder="Seg-Sex: 8h-18h, Sáb: 8h-12h">
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Personalização Visual -->
+        <div class="empresa-tab-content" id="tab-visual">
+          <div class="detail-section">
+            <h3>🎨 Personalização Visual</h3>
+
+            <div class="form-group">
+              <label for="empresaTemplate">Template do Site</label>
+              <select id="empresaTemplate">
+                <option value="default">Padrão</option>
+                <option value="modern">Moderno</option>
+                <option value="classic">Clássico</option>
+                <option value="minimal">Minimalista</option>
               </select>
             </div>
+
+            <h4 style="margin-top: 20px;">Cores do Site</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaCorPrimaria">Cor Primária</label>
+                <div class="color-picker-wrapper">
+                  <input type="color" id="empresaCorPrimaria" value="#2563eb">
+                  <input type="text" id="empresaCorPrimariaText" value="#2563eb" maxlength="7">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="empresaCorSecundaria">Cor Secundária</label>
+                <div class="color-picker-wrapper">
+                  <input type="color" id="empresaCorSecundaria" value="#1e40af">
+                  <input type="text" id="empresaCorSecundariaText" value="#1e40af" maxlength="7">
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview das cores -->
+            <div class="color-preview" id="colorPreview">
+              <div class="preview-header" style="background: linear-gradient(135deg, #2563eb, #1e40af); color: white; padding: 15px; border-radius: 8px;">
+                <strong>Preview das Cores</strong>
+                <p style="margin: 5px 0 0 0; opacity: 0.9;">Assim ficará o header do site</p>
+              </div>
+              <button type="button" class="preview-btn" style="margin-top: 10px; background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+                Botão de Exemplo
+              </button>
+            </div>
+
+            <h4 style="margin-top: 30px;">Imagens</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaLogoUrl">URL do Logo</label>
+                <input type="url" id="empresaLogoUrl" placeholder="https://...">
+                <small style="color: #666;">Recomendado: PNG transparente, 200x60px</small>
+              </div>
+              <div class="form-group">
+                <label for="empresaCapaUrl">URL da Capa/Banner</label>
+                <input type="url" id="empresaCapaUrl" placeholder="https://...">
+                <small style="color: #666;">Recomendado: 1920x600px</small>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaPerfilUrl">URL da Foto de Perfil</label>
+                <input type="url" id="empresaPerfilUrl" placeholder="https://...">
+              </div>
+              <div class="form-group">
+                <label for="empresaFaviconUrl">URL do Favicon</label>
+                <input type="url" id="empresaFaviconUrl" placeholder="https://...">
+                <small style="color: #666;">Ícone da aba do navegador</small>
+              </div>
+            </div>
+
+            <h4 style="margin-top: 30px;">SEO e Meta Tags</h4>
             <div class="form-group">
-              <label for="empresaPlano">Plano</label>
-              <select id="empresaPlano">
-                <option value="basico">Básico</option>
-                <option value="premium">Premium</option>
-                <option value="enterprise">Enterprise</option>
-              </select>
+              <label for="empresaTituloPagina">Título da Página</label>
+              <input type="text" id="empresaTituloPagina" placeholder="Vistoria Veicular - Agende Online">
+            </div>
+            <div class="form-group">
+              <label for="empresaMetaDescription">Meta Description</label>
+              <textarea id="empresaMetaDescription" rows="2" placeholder="Descrição para buscadores (máx 160 caracteres)" maxlength="160"></textarea>
             </div>
           </div>
         </div>
 
-        <!-- Botões -->
-        <div class="form-actions" style="margin-top: 30px;">
+        <!-- TAB: Redes Sociais -->
+        <div class="empresa-tab-content" id="tab-redes">
+          <div class="detail-section">
+            <h3>🌐 Redes Sociais e Contato</h3>
+
+            <div class="form-group">
+              <label for="empresaWhatsapp">WhatsApp (com DDD)</label>
+              <input type="tel" id="empresaWhatsapp" placeholder="67999999999">
+              <small style="color: #666;">Apenas números. Será usado no botão flutuante de WhatsApp</small>
+            </div>
+
+            <div class="form-group">
+              <label for="empresaSite">Site Próprio</label>
+              <input type="url" id="empresaSite" placeholder="https://www.empresa.com.br">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="empresaFacebook">Facebook</label>
+                <input type="url" id="empresaFacebook" placeholder="https://facebook.com/suaempresa">
+              </div>
+              <div class="form-group">
+                <label for="empresaInstagram">Instagram</label>
+                <input type="url" id="empresaInstagram" placeholder="https://instagram.com/suaempresa">
+              </div>
+            </div>
+
+            <h4 style="margin-top: 30px;">Configurações de Exibição</h4>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="empresaMostrarWhatsapp" checked>
+                Mostrar botão flutuante do WhatsApp
+              </label>
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="empresaMostrarMarca" checked>
+                Mostrar "Powered by AgendaAqui" no rodapé
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Pagamento -->
+        <div class="empresa-tab-content" id="tab-pagamento">
+          <div class="detail-section">
+            <h3>💳 Configurações de Pagamento</h3>
+
+            <div class="form-row">
+              <div class="form-group" style="flex: 2;">
+                <label for="empresaChavePix">Chave PIX *</label>
+                <input type="text" id="empresaChavePix" required placeholder="email@empresa.com, telefone ou chave aleatória">
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label for="empresaTipoPix">Tipo da Chave</label>
+                <select id="empresaTipoPix">
+                  <option value="cpf">CPF</option>
+                  <option value="cnpj">CNPJ</option>
+                  <option value="email">E-mail</option>
+                  <option value="telefone">Telefone</option>
+                  <option value="aleatoria">Chave Aleatória</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="alert alert-info" style="margin-top: 20px;">
+              <strong>ℹ️ Regra de Comissão:</strong><br>
+              • Primeiros 30 dias: <strong>R$ 5,00 fixo</strong> para a plataforma por transação<br>
+              • Após 30 dias: <strong>0% de comissão</strong> (todo valor vai para a empresa)
+            </div>
+
+            <div class="alert alert-warning" style="margin-top: 15px;">
+              <strong>⚠️ Importante:</strong><br>
+              Certifique-se de que a chave PIX está correta. Os repasses serão enviados automaticamente para esta chave.
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões (fixos no rodapé do modal) -->
+        <div class="form-actions empresa-form-actions">
           <button type="button" class="btn btn-secondary" id="cancelarEmpresa">Cancelar</button>
-          <button type="button" class="btn btn-primary btn-large" id="salvarEmpresa">Salvar Empresa</button>
+          <button type="button" class="btn btn-primary btn-large" id="salvarEmpresa">
+            <span id="salvarEmpresaText">Salvar Empresa</span>
+            <span id="salvarEmpresaLoading" style="display: none;">Salvando...</span>
+          </button>
         </div>
       </form>
     </div>

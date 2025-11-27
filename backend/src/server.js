@@ -22,6 +22,7 @@ const adminRoutes = require('./routes/admin');
 const empresasRoutes = require('./routes/empresas');
 const tenantRoutes = require('./routes/tenant');
 const repassesRoutes = require('./routes/repasses');
+const uploadRoutes = require('./routes/upload');
 
 const app = express();
 
@@ -46,6 +47,9 @@ app.use(express.static(publicPath, {
     }
   }
 }));
+
+// Serve uploads folder for uploaded images
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Serve static files from frontend build in production BEFORE any other middleware
 if (process.env.NODE_ENV === 'production') {
@@ -213,6 +217,12 @@ app.get('/api/health', async (req, res) => {
 app.use('/api/admin/empresas', empresasRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Upload Routes (requerem autenticação)
+app.use('/api/upload', uploadRoutes);
+
+// Rotas públicas de empresas (para página de agendamento)
+app.use('/api/empresas', empresasRoutes);
+
 // Repasses Routes (transferências PIX automáticas)
 app.use('/api/repasses', repassesRoutes);
 
@@ -240,6 +250,43 @@ app.get('/admin', (req, res) => {
     res.sendFile(adminPath);
   } else {
     res.status(404).send('Admin panel not found');
+  }
+});
+
+// Rota para páginas de empresas (URLs amigáveis)
+// Deve vir ANTES do catch-all do SPA
+// Exemplos: /vistoriapremium, /vistoria-express-sp
+app.get('/:slug([a-z0-9-]+)', (req, res, next) => {
+  const fs = require('fs');
+  const empresaPath = path.join(__dirname, '../../frontend/empresa.html');
+
+  // Lista de rotas reservadas que NÃO são slugs de empresas
+  const reservedRoutes = [
+    'admin',
+    'api',
+    'assets',
+    'uploads',
+    'src',
+    'dist',
+    'health',
+    'favicon',
+    'robots',
+    'sitemap'
+  ];
+
+  // Se for uma rota reservada, passa para o próximo handler
+  if (reservedRoutes.includes(req.params.slug)) {
+    return next();
+  }
+
+  // Verificar se o arquivo empresa.html existe
+  if (fs.existsSync(empresaPath)) {
+    console.log(`📄 Servindo página de empresa para slug: ${req.params.slug}`);
+    res.sendFile(empresaPath);
+  } else {
+    // Se empresa.html não existir, deixa o próximo handler cuidar
+    console.warn('⚠️ empresa.html não encontrado em:', empresaPath);
+    next();
   }
 });
 

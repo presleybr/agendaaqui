@@ -30,14 +30,33 @@ class EmpresaPage {
   }
 
   getSlugFromURL() {
-    // Extrair slug do pathname
-    // Exemplo: /minhaempresa -> minhaempresa
-    const path = window.location.pathname;
-    const slug = path.replace('/', '').replace('.html', '');
-
-    // Se estiver em desenvolvimento, pode usar query string
+    // Prioridade 1: Query string (?empresa=slug) - útil para desenvolvimento
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('empresa') || slug;
+    const querySlug = urlParams.get('empresa') || urlParams.get('slug');
+    if (querySlug) {
+      return querySlug;
+    }
+
+    // Prioridade 2: Extrair do pathname
+    // Exemplos: /vistoriapremium -> vistoriapremium
+    //           /vistoria-express -> vistoria-express
+    const path = window.location.pathname;
+
+    // Remove a barra inicial e qualquer .html no final
+    let slug = path.replace(/^\//, '').replace(/\.html$/, '');
+
+    // Se ainda tiver barras (ex: /empresa/slug), pega o último segmento
+    if (slug.includes('/')) {
+      const segments = slug.split('/').filter(s => s);
+      slug = segments[segments.length - 1] || '';
+    }
+
+    // Validar que é um slug válido (apenas letras minúsculas, números e hífens)
+    if (slug && /^[a-z0-9-]+$/.test(slug)) {
+      return slug;
+    }
+
+    return null;
   }
 
   async loadEmpresa() {

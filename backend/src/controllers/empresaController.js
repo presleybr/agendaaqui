@@ -148,6 +148,9 @@ class EmpresaController {
         email,
         telefone,
         endereco,
+        numero,
+        complemento,
+        bairro,
         cidade,
         estado,
         cep,
@@ -184,6 +187,8 @@ class EmpresaController {
         subtitulo_hero,
         texto_sobre,
         descricao,
+        titulo_pagina,
+        meta_description,
 
         // Contato e redes sociais
         whatsapp_numero,
@@ -209,9 +214,11 @@ class EmpresaController {
 
         // Configurações de exibição
         mostrar_whatsapp_float,
+        mostrar_marca_propria,
 
-        // Plano
-        plano
+        // Plano e status
+        plano,
+        status
       } = req.body;
 
       // Verificar se slug está disponível
@@ -232,6 +239,9 @@ class EmpresaController {
         email,
         telefone,
         endereco,
+        numero,
+        complemento,
+        bairro,
         cidade,
         estado,
         cep,
@@ -269,6 +279,8 @@ class EmpresaController {
         subtitulo_hero,
         texto_sobre,
         descricao,
+        titulo_pagina,
+        meta_description,
 
         // Contato e redes sociais
         whatsapp_numero,
@@ -294,10 +306,11 @@ class EmpresaController {
 
         // Configurações de exibição
         mostrar_whatsapp_float,
+        mostrar_marca_propria,
 
         // Sistema
         percentual_plataforma: 500, // R$ 5,00 fixo por transação
-        status: 'ativo',
+        status: status || 'ativo',
         plano: plano || 'basico'
       });
 
