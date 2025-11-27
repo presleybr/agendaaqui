@@ -4,6 +4,7 @@ import { formatters } from './utils/validators.js';
 import { format } from 'date-fns';
 import { ReportsManager } from './components/ReportsManager.js';
 import { EmpresasManager } from './components/EmpresasManager.js';
+import superAdminApi, { dashboardApi, empresasApi, agendamentosApi, clientesApi, relatoriosApi } from './services/superAdminApi.js';
 
 class AdminPanel {
   constructor() {
@@ -289,76 +290,40 @@ class AdminPanel {
 
   async loadEmpresasStats() {
     try {
-      console.log('📊 Loading empresas stats...');
+      console.log('📊 Loading empresas stats from Super Admin API...');
 
-      // Usar api.get() que já adiciona o token automaticamente via interceptor
-      const data = await api.get('/admin/empresas');
-      console.log('📦 Raw data received:', data);
+      // Usar o novo endpoint do Super Admin que retorna dados consolidados
+      const dashboardData = await dashboardApi.getDashboard();
+      console.log('📦 Dashboard data received:', dashboardData);
 
-      const empresas = data.empresas || data || [];
-      console.log('✅ Empresas loaded:', empresas.length);
-      console.log('📊 Empresas array:', empresas);
+      const { empresas, pagamentos, splits_pendentes } = dashboardData;
 
-      // Calcular stats
-      const totalEmpresas = empresas.length;
-      const empresasAtivas = empresas.filter(e => e.status === 'ativo').length;
+      // Atualizar DOM com dados reais do banco
+      document.getElementById('statTotalEmpresas').textContent = empresas?.total || 0;
+      document.getElementById('statEmpresasAtivas').textContent = empresas?.ativas || 0;
+      document.getElementById('statReceitaMes').textContent = formatters.currency(pagamentos?.valor_total || 0);
+      document.getElementById('statComissoesPendentes').textContent = formatters.currency(splits_pendentes?.valor_total || 0);
 
-      console.log('📊 Total empresas:', totalEmpresas);
-      console.log('📊 Empresas ativas:', empresasAtivas);
-
-      // Calcular receita do mês (somando receita de todas as empresas)
-      const hoje = new Date();
-      const mesAtual = hoje.getMonth();
-      const anoAtual = hoje.getFullYear();
-
-      let receitaMes = 0;
-      let comissoesPendentes = 0;
-
-      empresas.forEach((empresa, index) => {
-        console.log(`📊 Empresa ${index + 1}:`, {
-          nome: empresa.nome,
-          status: empresa.status,
-          data_inicio: empresa.data_inicio,
-          stats: empresa.stats
-        });
-
-        // Calcular dias desde o cadastro
-        const dataInicio = new Date(empresa.data_inicio);
-        const diasCadastro = Math.floor((hoje - dataInicio) / (1000 * 60 * 60 * 24));
-
-        console.log(`   Dias cadastro: ${diasCadastro}`);
-
-        // Se está nos primeiros 30 dias, tem comissão de R$ 5,00 por agendamento
-        if (diasCadastro <= 30) {
-          const agendamentos = empresa.stats?.total_agendamentos || 0;
-          console.log(`   Comissão pendente: ${agendamentos} agendamentos x R$ 5,00 = R$ ${agendamentos * 5},00`);
-          comissoesPendentes += agendamentos * 5; // R$ 5,00 por agendamento
-        }
-
-        // Somar receita total (os valores já estão em centavos no banco)
-        const valorTaxas = empresa.stats?.valor_taxas || 0;
-        console.log(`   Valor taxas: ${valorTaxas} centavos`);
-        receitaMes += valorTaxas;
-      });
-
-      console.log('💰 Receita total do mês:', receitaMes, 'centavos');
-      console.log('💰 Comissões pendentes:', comissoesPendentes * 100, 'centavos');
-
-      // Atualizar DOM
-      document.getElementById('statTotalEmpresas').textContent = totalEmpresas;
-      document.getElementById('statEmpresasAtivas').textContent = empresasAtivas;
-      document.getElementById('statReceitaMes').textContent = formatters.currency(receitaMes); // Já está em centavos
-      document.getElementById('statComissoesPendentes').textContent = formatters.currency(comissoesPendentes * 100); // Converter reais para centavos
-
-      console.log('✅ Empresas stats rendered to DOM');
+      console.log('✅ Empresas stats rendered to DOM from real database');
     } catch (error) {
       console.error('❌ Error loading empresas stats:', error);
 
-      // Set fallback values
-      document.getElementById('statTotalEmpresas').textContent = '0';
-      document.getElementById('statEmpresasAtivas').textContent = '0';
-      document.getElementById('statReceitaMes').textContent = 'R$ 0,00';
-      document.getElementById('statComissoesPendentes').textContent = 'R$ 0,00';
+      // Fallback: tentar carregar via API antiga
+      try {
+        const data = await api.get('/admin/empresas');
+        const empresas = data.empresas || data || [];
+
+        document.getElementById('statTotalEmpresas').textContent = empresas.length;
+        document.getElementById('statEmpresasAtivas').textContent = empresas.filter(e => e.status === 'ativo').length;
+        document.getElementById('statReceitaMes').textContent = 'R$ 0,00';
+        document.getElementById('statComissoesPendentes').textContent = 'R$ 0,00';
+      } catch (fallbackError) {
+        // Set fallback values
+        document.getElementById('statTotalEmpresas').textContent = '0';
+        document.getElementById('statEmpresasAtivas').textContent = '0';
+        document.getElementById('statReceitaMes').textContent = 'R$ 0,00';
+        document.getElementById('statComissoesPendentes').textContent = 'R$ 0,00';
+      }
     }
   }
 

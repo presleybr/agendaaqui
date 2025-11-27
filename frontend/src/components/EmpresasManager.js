@@ -1,4 +1,5 @@
 import { scheduleService } from '../services/api.js';
+import { empresasApi } from '../services/superAdminApi.js';
 
 export class EmpresasManager {
   constructor() {
@@ -17,41 +18,37 @@ export class EmpresasManager {
 
   async loadEmpresas() {
     try {
-      const token = localStorage.getItem('token');
-      console.log('🔐 Token presente:', !!token);
-      console.log('🔗 Fazendo request para:', `${scheduleService.API_URL}/admin/empresas`);
+      console.log('🔗 Carregando empresas via Super Admin API...');
 
-      const response = await fetch(`${scheduleService.API_URL}/admin/empresas`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Usar o novo serviço de API que já gerencia autenticação
+      const data = await empresasApi.listar();
+      console.log('📦 Dados recebidos:', data);
 
-      console.log('📡 Response status:', response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('❌ Erro da API:', errorData);
-
-        if (response.status === 500 || errorData.error?.includes('empresas')) {
-          console.warn('⚠️ Funcionalidade de empresas não disponível. Ignorando...');
-          this.empresas = [];
-          this.renderLista();
-          return;
-        }
-
-        throw new Error(errorData.error || 'Erro ao carregar empresas');
-      }
-
-      const data = await response.json();
-      this.empresas = data.empresas || data || [];
+      this.empresas = data.empresas || [];
       console.log('✅ Empresas carregadas:', this.empresas.length);
       this.renderLista();
     } catch (error) {
       console.error('❌ Erro ao carregar empresas:', error);
-      if (!error.message.includes('não disponível')) {
-        console.warn('⚠️ Não foi possível carregar empresas. A funcionalidade pode não estar ativa.');
+
+      // Fallback: tentar API antiga
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${scheduleService.API_URL}/admin/empresas`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          this.empresas = data.empresas || data || [];
+          this.renderLista();
+          return;
+        }
+      } catch (fallbackError) {
+        console.warn('⚠️ Fallback também falhou');
       }
+
+      this.empresas = [];
+      this.renderLista();
     }
   }
 
@@ -83,12 +80,17 @@ export class EmpresasManager {
         'trial': 'warning'
       }[empresa.status] || 'secondary';
 
-      const diasCadastro = Math.floor(
-        (new Date() - new Date(empresa.data_inicio)) / (1000 * 60 * 60 * 24)
+      // Usar dados já calculados pelo backend ou calcular localmente
+      const diasDesdeInicio = empresa.dias_desde_inicio ?? Math.floor(
+        (new Date() - new Date(empresa.data_inicio || empresa.created_at)) / (1000 * 60 * 60 * 24)
       );
 
-      const temComissao = diasCadastro <= 30;
-      const diasRestantes = temComissao ? 30 - diasCadastro : 0;
+      const temComissao = empresa.tem_comissao ?? (diasDesdeInicio <= 30);
+      const diasRestantes = empresa.dias_restantes_comissao ?? (temComissao ? 30 - diasDesdeInicio : 0);
+
+      // Métricas do banco de dados
+      const totalAgendamentos = empresa.total_agendamentos || empresa.metricas?.total_agendamentos || 0;
+      const receitaTotal = empresa.receita_total || empresa.metricas?.total_receita || 0;
 
       return `
         <tr>
@@ -113,8 +115,8 @@ export class EmpresasManager {
             <span class="badge badge-${statusClass}">${empresa.status}</span>
           </td>
           <td>
-            <strong>${empresa.metricas?.total_agendamentos || 0}</strong> agendamentos<br>
-            <small style="color: #666;">R$ ${((empresa.metricas?.total_receita || 0) / 100).toFixed(2)}</small>
+            <strong>${totalAgendamentos}</strong> agendamentos<br>
+            <small style="color: #666;">R$ ${(receitaTotal / 100).toFixed(2)}</small>
           </td>
           <td>
             <div class="btn-group">
@@ -375,17 +377,9 @@ export class EmpresasManager {
 
   async editar(id) {
     try {
-      const response = await fetch(`${scheduleService.API_URL}/admin/empresas/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao carregar empresa');
-      }
-
-      const empresa = await response.json();
+      // Usar a nova API que retorna dados completos
+      const empresa = await empresasApi.buscarPorId(id);
+      console.log('📦 Dados da empresa para edição:', empresa);
       this.empresaSelecionada = empresa;
 
       // Preencher formulário - Dados Básicos
@@ -567,25 +561,12 @@ export class EmpresasManager {
         return;
       }
 
-      const url = this.empresaSelecionada
-        ? `${scheduleService.API_URL}/admin/empresas/${this.empresaSelecionada.id}`
-        : `${scheduleService.API_URL}/admin/empresas`;
-
-      const method = this.empresaSelecionada ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao salvar empresa');
+      // Usar a nova API para salvar
+      let data;
+      if (this.empresaSelecionada) {
+        data = await empresasApi.atualizar(this.empresaSelecionada.id, formData);
+      } else {
+        data = await empresasApi.criar(formData);
       }
 
       alert(data.mensagem || 'Empresa salva com sucesso!');
@@ -620,19 +601,7 @@ export class EmpresasManager {
     }
 
     try {
-      const response = await fetch(`${scheduleService.API_URL}/admin/empresas/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao deletar empresa');
-      }
-
+      const data = await empresasApi.deletar(id);
       alert(data.mensagem || 'Empresa deletada com sucesso');
       await this.loadEmpresas();
     } catch (error) {

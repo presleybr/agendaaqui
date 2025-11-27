@@ -28,6 +28,9 @@ const uploadRoutes = require('./routes/upload');
 const authEmpresaRoutes = require('./routes/authEmpresa');
 const painelEmpresaRoutes = require('./routes/painelEmpresa');
 
+// Rotas completas do Super Admin
+const superAdminRoutes = require('./routes/superAdmin');
+
 const app = express();
 
 // Trust proxy - necessário para Render, Heroku, etc (proxies reversos)
@@ -220,6 +223,9 @@ app.get('/api/health', async (req, res) => {
 // IMPORTANTE: Rotas mais específicas devem vir primeiro
 app.use('/api/admin/empresas', empresasRoutes);
 app.use('/api/admin', adminRoutes);
+
+// Super Admin Routes (rotas completas do CRM)
+app.use('/api/super-admin', superAdminRoutes);
 
 // Upload Routes (requerem autenticação)
 app.use('/api/upload', uploadRoutes);
