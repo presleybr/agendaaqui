@@ -1,25 +1,25 @@
 # Redirects/Rewrites para Render Static Site
-# Ordem importa: regras mais específicas primeiro
+# Atualizado em 27/11/2025 - Ordem importa: regras mais específicas primeiro
 
-# Páginas específicas
-/admin    /admin.html    200
-/admin/*  /admin.html    200
-/painel   /painel-empresa.html    200
-/painel/* /painel-empresa.html    200
+# Páginas específicas (REWRITE - mantém URL)
+/admin      /admin.html             200
+/admin/*    /admin.html             200
+/painel     /painel-empresa.html    200
+/painel/*   /painel-empresa.html    200
 
-# Arquivos estáticos (não reescrever)
-/assets/* /assets/:splat 200
-/src/*    /src/:splat    200
-/*.js     /:splat.js     200
-/*.css    /:splat.css    200
-/*.svg    /:splat.svg    200
-/*.png    /:splat.png    200
-/*.jpg    /:splat.jpg    200
-/*.ico    /:splat.ico    200
+# Arquivos estáticos (passthrough)
+/assets/*   /assets/:splat  200
+/*.js       /:splat.js      200
+/*.css      /:splat.css     200
+/*.svg      /:splat.svg     200
+/*.png      /:splat.png     200
+/*.jpg      /:splat.jpg     200
+/*.ico      /:splat.ico     200
+/*.woff     /:splat.woff    200
+/*.woff2    /:splat.woff2   200
 
-# Slugs de empresas - qualquer path que não seja arquivo vai para empresa.html
-# Exemplo: /terceira-visao -> /empresa.html (rewrite, mantém URL)
-/:slug    /empresa.html  200
+# Slugs de empresas - paths dinâmicos
+/:slug      /empresa.html   200
 
-# Fallback para SPA (index.html)
-/*        /index.html    200
+# Fallback SPA
+/*          /index.html     200
