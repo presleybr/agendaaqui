@@ -21,8 +21,8 @@ async function popular() {
     const senhaHash = await bcrypt.hash('123456', 10);
 
     const empresaResult = await client.query(`
-      INSERT INTO empresas (nome, slug, email, telefone, whatsapp, cidade, estado, status, cor_primaria, cor_secundaria)
-      VALUES ('Terceira Visão Vistorias', 'terceira-visao', 'terceiravisao@gmail.com', '11999999999', '11999999999', 'São Paulo', 'SP', 'ativo', '#2563eb', '#1e40af')
+      INSERT INTO empresas (nome, slug, email, telefone, whatsapp, cidade, estado, status, cor_primaria, cor_secundaria, chave_pix, tipo_chave_pix)
+      VALUES ('Terceira Visão Vistorias', 'terceira-visao', 'terceiravisao@gmail.com', '11999999999', '11999999999', 'São Paulo', 'SP', 'ativo', '#2563eb', '#1e40af', 'terceiravisao@gmail.com', 'email')
       ON CONFLICT (slug) DO UPDATE SET nome = EXCLUDED.nome
       RETURNING id
     `);
