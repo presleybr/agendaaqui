@@ -1522,22 +1522,16 @@ html {
 }
 
 /* ============================================
-   SCHEDULING FORM - STEPS MOBILE
+   SCHEDULING FORM - COMPLETE MOBILE STYLES
    ============================================ */
+
+/* Desktop styles */
 #scheduleApp .steps-indicator {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
   position: relative;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  -webkit-overflow-scrolling: touch;
-}
-
-#scheduleApp .steps-indicator::-webkit-scrollbar {
-  display: none;
 }
 
 #scheduleApp .steps-indicator::before {
@@ -1559,7 +1553,7 @@ html {
   position: relative;
   z-index: 1;
   flex: 1;
-  min-width: 0;
+  min-width: 80px;
 }
 
 #scheduleApp .step-number {
@@ -1591,14 +1585,10 @@ html {
 }
 
 #scheduleApp .step-label {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: #65676b;
   text-align: center;
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 }
 
 #scheduleApp .step.active .step-label {
@@ -1606,33 +1596,292 @@ html {
   font-weight: 600;
 }
 
+/* Form wizard and steps */
+#scheduleApp .form-wizard {
+  padding: 0;
+}
+
+#scheduleApp .form-step h3 {
+  font-size: 1.25rem;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+#scheduleApp .form-group {
+  margin-bottom: 16px;
+}
+
+#scheduleApp .form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+#scheduleApp .form-group input,
+#scheduleApp .form-group select,
+#scheduleApp .form-group textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #dddfe2;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+#scheduleApp .form-group input:focus,
+#scheduleApp .form-group select:focus,
+#scheduleApp .form-group textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.1);
+}
+
+#scheduleApp .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+#scheduleApp .form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+#scheduleApp .form-actions .btn {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#scheduleApp .btn-primary {
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+}
+
+#scheduleApp .btn-primary:hover {
+  background: var(--brand-secondary);
+}
+
+#scheduleApp .btn-secondary {
+  background: #e4e6eb;
+  color: var(--text-primary);
+  border: none;
+}
+
+#scheduleApp .btn-secondary:hover {
+  background: #d8dadf;
+}
+
+/* Time slots */
+#scheduleApp .time-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+#scheduleApp .time-slot {
+  padding: 10px 8px;
+  border: 1px solid #dddfe2;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+#scheduleApp .time-slot:hover:not(.unavailable) {
+  border-color: var(--brand-primary);
+  background: rgba(24, 119, 242, 0.05);
+}
+
+#scheduleApp .time-slot.selected {
+  background: var(--brand-primary);
+  color: white;
+  border-color: var(--brand-primary);
+}
+
+#scheduleApp .time-slot.unavailable {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f0f2f5;
+}
+
+#scheduleApp .time-slot-info {
+  font-size: 0.7rem;
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+/* Summary box */
+#scheduleApp .summary-box {
+  background: #f0f2f5;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+#scheduleApp .summary-box h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+#scheduleApp .summary-box p {
+  font-size: 0.85rem;
+  margin: 4px 0;
+  color: var(--text-secondary);
+}
+
+#scheduleApp .summary-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+}
+
+/* ============================================
+   MOBILE FORM STYLES
+   ============================================ */
 @media (max-width: 768px) {
+  /* Steps indicator - vertical layout */
   #scheduleApp .steps-indicator {
-    flex-wrap: nowrap;
-    gap: 0;
-    padding: 0 4px;
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    gap: 4px;
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+  }
+
+  #scheduleApp .steps-indicator::-webkit-scrollbar {
+    display: none;
   }
 
   #scheduleApp .steps-indicator::before {
-    left: 30px;
-    right: 30px;
-    top: 18px;
+    top: 16px;
+    left: 20px;
+    right: 20px;
   }
 
   #scheduleApp .step {
-    flex: 1;
-    min-width: 56px;
+    min-width: 60px;
+    flex: 0 0 auto;
   }
 
   #scheduleApp .step-number {
-    width: 36px;
-    height: 36px;
-    font-size: 0.85rem;
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
   }
 
   #scheduleApp .step-label {
     font-size: 0.6rem;
-    max-width: 60px;
+    white-space: nowrap;
+    max-width: 65px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Form step title */
+  #scheduleApp .form-step h3 {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  /* Form rows - stack vertically */
+  #scheduleApp .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  /* Form inputs */
+  #scheduleApp .form-group {
+    margin-bottom: 14px;
+  }
+
+  #scheduleApp .form-group label {
+    font-size: 0.85rem;
+  }
+
+  #scheduleApp .form-group input,
+  #scheduleApp .form-group select,
+  #scheduleApp .form-group textarea {
+    padding: 14px 12px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Form actions - stack buttons */
+  #scheduleApp .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #scheduleApp .form-actions .btn {
+    width: 100%;
+    padding: 14px 20px;
+  }
+
+  /* Reverse button order on mobile */
+  #scheduleApp .form-actions .btn-secondary {
+    order: 2;
+  }
+
+  #scheduleApp .form-actions .btn-primary {
+    order: 1;
+  }
+
+  /* Time slots */
+  #scheduleApp .time-slots {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  #scheduleApp .time-slot {
+    padding: 12px 6px;
+    font-size: 0.85rem;
+  }
+
+  /* Summary */
+  #scheduleApp .summary-box {
+    padding: 14px;
+  }
+
+  #scheduleApp .summary-box h4 {
+    font-size: 0.85rem;
+  }
+
+  #scheduleApp .summary-box p {
+    font-size: 0.8rem;
+  }
+
+  #scheduleApp .summary-item {
+    font-size: 1rem;
+  }
+
+  /* Error message */
+  #scheduleApp .form-group .error-message {
+    font-size: 0.75rem;
+    color: #dc3545;
+    margin-top: 4px;
   }
 }
 
