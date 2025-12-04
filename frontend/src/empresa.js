@@ -229,8 +229,17 @@ class EmpresaPage {
     const profileInitial = document.getElementById('profileInitial');
 
     if (this.empresa.logo_url) {
-      profileImage.src = getImageUrl(this.empresa.logo_url);
-      profileImage.onerror = () => profilePicture.classList.add('no-image');
+      const logoUrl = getImageUrl(this.empresa.logo_url);
+      console.log('Logo URL:', logoUrl);
+      profileImage.onload = () => {
+        profilePicture.classList.remove('no-image');
+        profileImage.style.display = 'block';
+      };
+      profileImage.onerror = () => {
+        console.error('Erro ao carregar logo:', logoUrl);
+        profilePicture.classList.add('no-image');
+      };
+      profileImage.src = logoUrl;
     } else {
       profilePicture.classList.add('no-image');
     }
@@ -239,7 +248,16 @@ class EmpresaPage {
     // Cover photo
     const coverImage = document.getElementById('coverImage');
     if (this.empresa.foto_capa_url) {
-      coverImage.src = getImageUrl(this.empresa.foto_capa_url);
+      const capaUrl = getImageUrl(this.empresa.foto_capa_url);
+      console.log('Capa URL:', capaUrl);
+      coverImage.onload = () => {
+        coverImage.style.display = 'block';
+      };
+      coverImage.onerror = () => {
+        console.error('Erro ao carregar capa:', capaUrl);
+        coverImage.style.display = 'none';
+      };
+      coverImage.src = capaUrl;
     }
 
     // Name and location
