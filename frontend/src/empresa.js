@@ -1,4 +1,4 @@
-import { scheduleService } from './services/api.js';
+import { scheduleService, getImageUrl } from './services/api.js';
 import { ScheduleForm } from './components/ScheduleForm.js';
 
 class EmpresaPage {
@@ -229,7 +229,7 @@ class EmpresaPage {
     const profileInitial = document.getElementById('profileInitial');
 
     if (this.empresa.logo_url) {
-      profileImage.src = this.empresa.logo_url;
+      profileImage.src = getImageUrl(this.empresa.logo_url);
       profileImage.onerror = () => profilePicture.classList.add('no-image');
     } else {
       profilePicture.classList.add('no-image');
@@ -239,7 +239,7 @@ class EmpresaPage {
     // Cover photo
     const coverImage = document.getElementById('coverImage');
     if (this.empresa.foto_capa_url) {
-      coverImage.src = this.empresa.foto_capa_url;
+      coverImage.src = getImageUrl(this.empresa.foto_capa_url);
     }
 
     // Name and location

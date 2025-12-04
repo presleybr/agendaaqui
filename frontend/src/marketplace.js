@@ -3,7 +3,20 @@
  */
 
 // API Base URL
-const API_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = import.meta.env.VITE_API_URL || 'https://agendaaqui-backend.onrender.com/api';
+
+// Backend URL para imagens (remove /api do final)
+const BACKEND_URL = API_URL.replace(/\/api$/, '');
+
+/**
+ * Converte URLs de imagem relativas para absolutas do backend
+ */
+function getImageUrl(url) {
+  if (!url) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+  return `${BACKEND_URL}/${cleanUrl}`;
+}
 
 class Marketplace {
   constructor() {
@@ -395,8 +408,8 @@ class Marketplace {
         ? `<span class="distance-badge">${empresa.distancia_km} km</span>`
         : '';
 
-      const logoUrl = empresa.logo_url || empresa.foto_perfil_url || '/default-logo.png';
-      const capaUrl = empresa.foto_capa_url || empresa.banner_url || '';
+      const logoUrl = getImageUrl(empresa.logo_url || empresa.foto_perfil_url) || '/default-logo.png';
+      const capaUrl = getImageUrl(empresa.foto_capa_url || empresa.banner_url) || '';
 
       const location = [empresa.bairro, empresa.cidade, empresa.estado]
         .filter(Boolean)

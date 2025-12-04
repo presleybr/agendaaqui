@@ -38,6 +38,28 @@ function getApiUrl() {
 const API_URL = getApiUrl();
 console.log('✅ API_URL configurada como:', API_URL);
 
+// Backend URL para imagens (remove /api do final)
+const BACKEND_URL = API_URL.replace(/\/api$/, '');
+
+/**
+ * Converte URLs de imagem relativas para absolutas do backend
+ * @param {string} url - URL da imagem (pode ser relativa ou absoluta)
+ * @returns {string|null} URL absoluta da imagem ou null se nao houver URL
+ */
+export function getImageUrl(url) {
+  if (!url) return null;
+
+  // Se ja eh uma URL absoluta (http/https), retorna como esta
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  // Se eh uma URL relativa, adiciona o backend URL
+  // Remove barra inicial se existir para evitar duplicacao
+  const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+  return `${BACKEND_URL}/${cleanUrl}`;
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {

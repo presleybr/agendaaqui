@@ -4,7 +4,29 @@
  */
 
 // API Base URL
-const API_URL = import.meta.env?.VITE_API_URL || 'https://api.agendaaquivistorias.com.br/api';
+const API_URL = import.meta.env?.VITE_API_URL || 'https://agendaaqui-backend.onrender.com/api';
+
+// Backend URL para imagens (remove /api do final)
+const BACKEND_URL = API_URL.replace(/\/api$/, '');
+
+/**
+ * Converte URLs de imagem relativas para absolutas do backend
+ * @param {string} url - URL da imagem (pode ser relativa ou absoluta)
+ * @returns {string} URL absoluta da imagem
+ */
+function getImageUrl(url) {
+  if (!url) return null;
+
+  // Se ja eh uma URL absoluta (http/https), retorna como esta
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  // Se eh uma URL relativa, adiciona o backend URL
+  // Remove barra inicial se existir para evitar duplicacao
+  const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+  return `${BACKEND_URL}/${cleanUrl}`;
+}
 
 /**
  * Classe principal do Painel da Empresa
@@ -249,7 +271,7 @@ class PainelEmpresa {
       document.getElementById('sidebarEmpresaNome').textContent = this.empresa.nome || 'Minha Empresa';
 
       // Logo da empresa (verificar logo_url ou logo)
-      const logoUrl = this.empresa.logo_url || this.empresa.logo;
+      const logoUrl = getImageUrl(this.empresa.logo_url || this.empresa.logo);
       if (logoUrl) {
         const logo = document.getElementById('sidebarLogo');
         logo.src = logoUrl;
@@ -264,7 +286,7 @@ class PainelEmpresa {
       // Atualizar avatar do usuário com foto de perfil da empresa
       const userAvatarImg = document.getElementById('userAvatarImg');
       const userAvatarPlaceholder = document.getElementById('userAvatarPlaceholder');
-      const fotoPerfilUrl = this.empresa.foto_perfil_url || this.empresa.logo_url;
+      const fotoPerfilUrl = getImageUrl(this.empresa.foto_perfil_url || this.empresa.logo_url);
 
       if (userAvatarImg && fotoPerfilUrl) {
         userAvatarImg.src = fotoPerfilUrl;
@@ -865,8 +887,16 @@ class PainelEmpresa {
 
       // Filtrar agendamentos do dia
       const dayAppointments = this.calendarAppointments.filter(ap => {
-        const apDate = new Date(ap.data_agendamento).toISOString().split('T')[0];
-        return apDate === dateStr;
+        try {
+          // Usar data_hora (campo do banco) ou data_agendamento como fallback
+          const dateField = ap.data_hora || ap.data_agendamento;
+          if (!dateField) return false;
+          const apDate = new Date(dateField);
+          if (isNaN(apDate.getTime())) return false;
+          return apDate.toISOString().split('T')[0] === dateStr;
+        } catch {
+          return false;
+        }
       });
 
       const dayDiv = document.createElement('div');
@@ -1088,7 +1118,7 @@ class PainelEmpresa {
             <div style="text-align: center;">
               <label style="display: block; margin-bottom: 10px; font-weight: 600;">Logo da Empresa</label>
               <div id="logoPreview" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--border-medium); margin: 0 auto 10px; overflow: hidden; background: white; display: flex; align-items: center; justify-content: center;">
-                ${empresa.logo_url ? `<img src="${empresa.logo_url}" style="width: 100%; height: 100%; object-fit: cover;">` : `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`}
+                ${empresa.logo_url ? `<img src="${getImageUrl(empresa.logo_url)}" style="width: 100%; height: 100%; object-fit: cover;">` : `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`}
               </div>
               <input type="file" id="logoInput" accept="image/*" style="display: none;" onchange="painel.uploadImagem('logo')">
               <button type="button" class="btn btn-secondary" onclick="document.getElementById('logoInput').click()" style="font-size: 0.85rem; padding: 6px 12px;">
@@ -1101,7 +1131,7 @@ class PainelEmpresa {
             <div>
               <label style="display: block; margin-bottom: 10px; font-weight: 600;">Foto de Capa (aparece no marketplace)</label>
               <div id="capaPreview" style="width: 100%; height: 140px; border-radius: 12px; border: 2px dashed var(--border-medium); overflow: hidden; background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-                ${empresa.foto_capa_url ? `<img src="${empresa.foto_capa_url}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="text-align: center; color: var(--text-tertiary);"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><p style="font-size: 0.85rem; margin-top: 8px;">Recomendado: 800x400px</p></div>`}
+                ${empresa.foto_capa_url ? `<img src="${getImageUrl(empresa.foto_capa_url)}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="text-align: center; color: var(--text-tertiary);"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><p style="font-size: 0.85rem; margin-top: 8px;">Recomendado: 800x400px</p></div>`}
               </div>
               <input type="file" id="capaInput" accept="image/*" style="display: none;" onchange="painel.uploadImagem('capa')">
               <button type="button" class="btn btn-secondary" onclick="document.getElementById('capaInput').click()" style="font-size: 0.85rem; padding: 6px 12px;">
@@ -1244,8 +1274,11 @@ class PainelEmpresa {
         throw new Error(data.error || 'Erro no upload');
       }
 
+      // Converter URL para absoluta se necessario
+      const imageUrl = getImageUrl(data.url);
+
       // Atualizar preview
-      preview.innerHTML = `<img src="${data.url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+      preview.innerHTML = `<img src="${imageUrl}" style="width: 100%; height: 100%; object-fit: cover;">`;
 
       // Atualizar dados da empresa em memória
       if (tipo === 'logo') {
@@ -1253,7 +1286,7 @@ class PainelEmpresa {
         // Atualizar logo na sidebar
         const sidebarLogo = document.getElementById('sidebarLogo');
         if (sidebarLogo) {
-          sidebarLogo.src = data.url;
+          sidebarLogo.src = imageUrl;
           sidebarLogo.style.display = 'block';
         }
       } else if (tipo === 'capa') {
@@ -1263,7 +1296,7 @@ class PainelEmpresa {
         // Atualizar avatar na sidebar
         const userAvatarImg = document.getElementById('userAvatarImg');
         if (userAvatarImg) {
-          userAvatarImg.src = data.url;
+          userAvatarImg.src = imageUrl;
           userAvatarImg.style.display = 'block';
         }
       }

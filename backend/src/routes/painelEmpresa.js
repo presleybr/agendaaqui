@@ -682,7 +682,11 @@ router.post('/upload-imagem', requireRole('admin', 'gerente'), (req, res) => {
       const fullPath = req.file.path.replace(/\\/g, '/');
       const uploadsIndex = fullPath.indexOf('uploads/');
       const relativePath = uploadsIndex !== -1 ? fullPath.substring(uploadsIndex) : fullPath;
-      const imageUrl = '/' + relativePath;
+
+      // Construir URL absoluta usando BACKEND_URL ou detectando do request
+      const backendUrl = process.env.BACKEND_URL ||
+        (req.get('host')?.includes('localhost') ? `http://${req.get('host')}` : `https://${req.get('host')}`);
+      const imageUrl = `${backendUrl}/${relativePath}`;
 
       let campo = '';
       if (tipo === 'logo') campo = 'logo_url';
