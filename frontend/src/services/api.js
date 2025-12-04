@@ -83,12 +83,17 @@ api.interceptors.response.use((response) => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
 
-      // Redirecionar para login apenas se não estiver já na tela de login
-      if (!window.location.pathname.includes('admin') || window.location.hash) {
+      // Redirecionar para login apenas se não estiver já na tela de login do admin
+      const isAdminPage = window.location.pathname.includes('admin');
+      const loginScreenVisible = document.getElementById('loginScreen')?.style.display !== 'none';
+
+      if (!isAdminPage) {
         window.location.href = '/admin';
-      } else {
+      } else if (!loginScreenVisible) {
+        // Só recarrega se não estiver já mostrando a tela de login
         window.location.reload();
       }
+      // Se já está na tela de login, não faz nada
     }
   }
 

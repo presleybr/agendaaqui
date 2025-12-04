@@ -23,7 +23,14 @@ async function authFetch(url, options = {}) {
   if (response.status === 401) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/admin';
+
+    // Verificar se já está na página de admin antes de redirecionar
+    const isAdminPage = window.location.pathname.includes('admin');
+    if (!isAdminPage) {
+      window.location.href = '/admin';
+    }
+    // Se já está na página admin, não redireciona nem recarrega
+    // apenas lança o erro para ser tratado pelo caller
     throw new Error('Sessão expirada');
   }
 
