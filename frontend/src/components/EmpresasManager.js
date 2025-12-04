@@ -364,6 +364,7 @@ export class EmpresasManager {
     document.getElementById('empresaPrecoOutros').value = '100.00';
     document.getElementById('empresaHorarioInicio').value = '08:00';
     document.getElementById('empresaHorarioFim').value = '18:00';
+    document.getElementById('empresaTaxaPlataforma').value = '5.00';
 
     // Habilitar edição do slug
     const slugInput = document.getElementById('empresaSlug');
@@ -465,6 +466,10 @@ export class EmpresasManager {
       this.setFieldValue('empresaChavePix', empresa.chave_pix || empresa.pix_key);
       this.setFieldValue('empresaTipoPix', empresa.pix_type || empresa.tipo_pix);
 
+      // Taxa da plataforma (convertendo de centavos para reais)
+      const taxaEmReais = (empresa.percentual_plataforma || 500) / 100;
+      this.setFieldValue('empresaTaxaPlataforma', taxaEmReais.toFixed(2));
+
       // Reset tabs para primeira tab
       const tabs = document.querySelectorAll('.empresa-tab');
       const contents = document.querySelectorAll('.empresa-tab-content');
@@ -552,7 +557,10 @@ export class EmpresasManager {
 
         // Pagamento
         chave_pix: document.getElementById('empresaChavePix')?.value || '',
-        tipo_pix: document.getElementById('empresaTipoPix')?.value || 'cpf'
+        pix_type: document.getElementById('empresaTipoPix')?.value || 'cpf',
+
+        // Taxa da plataforma (em centavos)
+        percentual_plataforma: Math.round(parseFloat(document.getElementById('empresaTaxaPlataforma')?.value || 5) * 100)
       };
 
       // Validação básica
