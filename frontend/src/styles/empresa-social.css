@@ -764,8 +764,27 @@ body.empresa-profile-page {
 
 @media (max-width: 768px) {
   .services-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    gap: 12px;
+    padding-bottom: 8px;
+    margin: 0 -14px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .services-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .services-grid .service-item {
+    flex: 0 0 75%;
+    max-width: 75%;
+    scroll-snap-align: center;
   }
 }
 
@@ -1932,6 +1951,11 @@ html {
 
   /* Hide WhatsApp button in action buttons on mobile */
   .action-whatsapp {
+    display: none !important;
+  }
+
+  /* Hide primary action button (Agendar Vistoria) on mobile - replaced by CTA card */
+  .profile-actions .action-primary {
     display: none !important;
   }
 
