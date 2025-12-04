@@ -420,70 +420,58 @@
 }
 
 /* ============================================
-   PRICING
+   PRICING - Herda estilos do main.css
+   Apenas ajustes específicos para página de empresa
    ============================================ */
 .pricing {
   padding: 4rem 0;
+  background: var(--bg-primary);
 }
 
 .pricing h2 {
   text-align: center;
-  margin-bottom: 3rem;
-  color: var(--brand-primary);
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  font-size: 2.5rem;
+  font-weight: 700;
 }
 
-.pricing-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
-}
-
-.pricing-card {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
+.pricing .section-subtitle {
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
 }
 
-.pricing-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+/* Garantir visibilidade dos textos nos cards */
+.pricing-card {
+  background: #ffffff !important;
+  color: #333333;
 }
 
-.pricing-header {
-  margin-bottom: 1.5rem;
-}
-
-.pricing-title {
-  font-size: 1.25rem;
-  color: #333;
+.pricing-card h3 {
+  color: #1a1a1a !important;
+  font-size: 1.5rem;
   margin-bottom: 1rem;
 }
 
-.pricing-price {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.25rem;
-}
-
-.currency {
-  font-size: 1.25rem;
-  color: var(--brand-primary);
-}
-
-.amount {
-  font-size: 3rem;
+.pricing-card .price {
+  color: var(--brand-primary) !important;
+  font-size: 2.5rem;
   font-weight: 700;
-  color: var(--brand-primary);
+  margin: 1rem 0;
 }
 
-.pricing-description {
-  color: #666;
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
+.pricing-card .price-detail {
+  color: #666666 !important;
+  margin-bottom: 1rem;
+}
+
+.pricing-card ul {
+  color: #333333 !important;
+}
+
+.pricing-card ul li {
+  color: #333333 !important;
 }
 
 @media (max-width: 992px) {
