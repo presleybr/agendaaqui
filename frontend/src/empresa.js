@@ -271,15 +271,15 @@ class EmpresaPage {
     ];
 
     pricingGrid.innerHTML = precos.map((item, index) => `
-      <div class="pricing-card ${item.featured ? 'featured' : ''} stagger-item" style="background: #ffffff; border-radius: 16px; padding: 2rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); ${item.featured ? 'border: 2px solid var(--brand-primary);' : ''}">
-        ${item.featured ? '<div class="discount-badge" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #78350f; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 12px;">Mais Popular</div>' : ''}
+      <div class="pricing-card ${item.featured ? 'featured' : ''}" style="background: #ffffff; border-radius: 16px; padding: 2rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); opacity: 1 !important; ${item.featured ? 'border: 2px solid var(--brand-primary);' : 'border: 1px solid #e5e5e5;'}">
+        ${item.featured ? '<div style="background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #78350f; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; margin-bottom: 12px;">Mais Popular</div>' : ''}
         <h3 style="color: #1a1a1a; font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">${item.tipo}</h3>
-        <div class="price" style="color: var(--brand-primary); font-size: 2.5rem; font-weight: 700; margin: 1rem 0;">R$ ${formatPrice(item.preco)}</div>
-        <div class="price-detail" style="color: #666666; margin-bottom: 1rem; font-size: 0.95rem;">${item.descricao}</div>
-        <ul style="text-align: left; margin: 20px 0; list-style: none; padding: 0; color: #333333;">
+        <div style="color: var(--brand-primary, #ed6a2b); font-size: 2.5rem; font-weight: 700; margin: 1rem 0;">R$ ${formatPrice(item.preco)}</div>
+        <div style="color: #666666; margin-bottom: 1rem; font-size: 0.95rem;">${item.descricao}</div>
+        <ul style="text-align: left; margin: 20px 0; list-style: none; padding: 0;">
           ${item.items.map(i => `<li style="padding: 8px 0; color: #333333;">✓ ${i}</li>`).join('')}
         </ul>
-        <a href="#agendamento" class="btn ${item.featured ? 'btn-primary' : 'btn-secondary'} btn-select-service" data-service="${index === 0 ? 'cautelar' : index === 1 ? 'transferencia' : 'outros'}" style="width: 100%; display: inline-block; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; ${item.featured ? 'background: var(--brand-primary); color: white; border: none;' : 'background: white; color: #333; border: 1px solid #ddd;'}">Agendar</a>
+        <a href="#agendamento" class="btn-select-service" data-service="${index === 0 ? 'cautelar' : index === 1 ? 'transferencia' : 'outros'}" style="width: 100%; display: inline-block; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; cursor: pointer; ${item.featured ? 'background: var(--brand-primary, #ed6a2b); color: white; border: none;' : 'background: white; color: #333; border: 1px solid #ddd;'}">Agendar</a>
       </div>
     `).join('');
 
