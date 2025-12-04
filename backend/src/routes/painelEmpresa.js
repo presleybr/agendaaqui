@@ -22,43 +22,62 @@ router.get('/dashboard', async (req, res) => {
   try {
     const empresaId = req.empresa_id;
 
-    // Estatísticas gerais
+    // Estatísticas gerais (usando data_hora e status corretos)
     const stats = await db.query(`
       SELECT
         COUNT(*) as total_agendamentos,
         COUNT(CASE WHEN status = 'confirmado' THEN 1 END) as confirmados,
         COUNT(CASE WHEN status = 'pendente' THEN 1 END) as pendentes,
         COUNT(CASE WHEN status = 'cancelado' THEN 1 END) as cancelados,
-        COUNT(CASE WHEN status = 'concluido' THEN 1 END) as concluidos,
-        COUNT(CASE WHEN DATE(data_agendamento) = CURRENT_DATE THEN 1 END) as hoje,
-        COUNT(CASE WHEN DATE(data_agendamento) = CURRENT_DATE + 1 THEN 1 END) as amanha,
-        COALESCE(SUM(CASE WHEN status IN ('confirmado', 'concluido') THEN valor ELSE 0 END), 0) as faturamento_total,
-        COALESCE(SUM(CASE WHEN status IN ('confirmado', 'concluido') AND DATE(data_agendamento) >= DATE_TRUNC('month', CURRENT_DATE) THEN valor ELSE 0 END), 0) as faturamento_mes
+        COUNT(CASE WHEN status = 'realizado' THEN 1 END) as concluidos,
+        COUNT(CASE WHEN DATE(data_hora) = CURRENT_DATE THEN 1 END) as hoje,
+        COUNT(CASE WHEN DATE(data_hora) = CURRENT_DATE + 1 THEN 1 END) as amanha,
+        COALESCE(SUM(CASE WHEN status IN ('confirmado', 'realizado') THEN valor ELSE 0 END), 0) as faturamento_total,
+        COALESCE(SUM(CASE WHEN status IN ('confirmado', 'realizado') AND DATE(data_hora) >= DATE_TRUNC('month', CURRENT_DATE) THEN valor ELSE 0 END), 0) as faturamento_mes
       FROM agendamentos
       WHERE empresa_id = $1
     `, [empresaId]);
 
-    // Próximos agendamentos (hoje e futuros, não cancelados/concluídos)
+    // Próximos agendamentos (hoje e futuros, não cancelados/realizados)
+    // JOIN com clientes e veiculos para obter dados completos
     const proximos = await db.query(`
       SELECT
-        id, nome_cliente, telefone, email, placa,
-        data_agendamento, horario, tipo_servico, valor, status
-      FROM agendamentos
-      WHERE empresa_id = $1
-        AND data_agendamento >= CURRENT_DATE
-        AND status NOT IN ('cancelado', 'concluido')
-      ORDER BY data_agendamento, horario
+        a.id,
+        c.nome as nome_cliente,
+        c.telefone,
+        c.email,
+        v.placa,
+        a.data_hora,
+        TO_CHAR(a.data_hora, 'HH24:MI') as horario,
+        a.tipo_vistoria as tipo_servico,
+        a.valor,
+        a.status
+      FROM agendamentos a
+      LEFT JOIN clientes c ON a.cliente_id = c.id
+      LEFT JOIN veiculos v ON a.veiculo_id = v.id
+      WHERE a.empresa_id = $1
+        AND DATE(a.data_hora) >= CURRENT_DATE
+        AND a.status NOT IN ('cancelado', 'realizado')
+      ORDER BY a.data_hora
       LIMIT 10
     `, [empresaId]);
 
     // Agendamentos de hoje
     const hoje = await db.query(`
       SELECT
-        id, nome_cliente, telefone, placa,
-        horario, tipo_servico, valor, status
-      FROM agendamentos
-      WHERE empresa_id = $1 AND DATE(data_agendamento) = CURRENT_DATE
-      ORDER BY horario
+        a.id,
+        c.nome as nome_cliente,
+        c.telefone,
+        v.placa,
+        TO_CHAR(a.data_hora, 'HH24:MI') as horario,
+        a.tipo_vistoria as tipo_servico,
+        a.valor,
+        a.status
+      FROM agendamentos a
+      LEFT JOIN clientes c ON a.cliente_id = c.id
+      LEFT JOIN veiculos v ON a.veiculo_id = v.id
+      WHERE a.empresa_id = $1 AND DATE(a.data_hora) = CURRENT_DATE
+      ORDER BY a.data_hora
     `, [empresaId]);
 
     // Dados da empresa para exibir no header
@@ -91,37 +110,57 @@ router.get('/agendamentos', async (req, res) => {
     const offset = (page - 1) * limit;
 
     let query = `
-      SELECT * FROM agendamentos
-      WHERE empresa_id = $1
+      SELECT
+        a.id,
+        a.protocolo,
+        c.nome as nome_cliente,
+        c.telefone,
+        c.email,
+        c.cpf,
+        v.placa,
+        v.marca,
+        v.modelo,
+        a.data_hora,
+        TO_CHAR(a.data_hora, 'HH24:MI') as horario,
+        a.tipo_vistoria as tipo_servico,
+        a.valor,
+        a.status,
+        a.status_pagamento,
+        a.observacoes,
+        a.created_at
+      FROM agendamentos a
+      LEFT JOIN clientes c ON a.cliente_id = c.id
+      LEFT JOIN veiculos v ON a.veiculo_id = v.id
+      WHERE a.empresa_id = $1
     `;
     const params = [req.empresa_id];
     let paramIndex = 2;
 
     if (status && status !== 'todos') {
-      query += ` AND status = $${paramIndex++}`;
+      query += ` AND a.status = $${paramIndex++}`;
       params.push(status);
     }
     if (data_inicio) {
-      query += ` AND data_agendamento >= $${paramIndex++}`;
+      query += ` AND DATE(a.data_hora) >= $${paramIndex++}`;
       params.push(data_inicio);
     }
     if (data_fim) {
-      query += ` AND data_agendamento <= $${paramIndex++}`;
+      query += ` AND DATE(a.data_hora) <= $${paramIndex++}`;
       params.push(data_fim);
     }
     if (busca) {
-      query += ` AND (nome_cliente ILIKE $${paramIndex} OR placa ILIKE $${paramIndex} OR telefone ILIKE $${paramIndex})`;
+      query += ` AND (c.nome ILIKE $${paramIndex} OR v.placa ILIKE $${paramIndex} OR c.telefone ILIKE $${paramIndex})`;
       params.push(`%${busca}%`);
       paramIndex++;
     }
 
     // Query para contar total
-    const countQuery = query.replace('SELECT *', 'SELECT COUNT(*)');
+    const countQuery = query.replace(/SELECT[\s\S]*?FROM agendamentos/, 'SELECT COUNT(*) FROM agendamentos');
     const countResult = await db.query(countQuery, params);
     const total = parseInt(countResult.rows[0].count);
 
     // Adicionar ordenação e paginação
-    query += ` ORDER BY data_agendamento DESC, horario DESC LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
+    query += ` ORDER BY a.data_hora DESC LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
     params.push(parseInt(limit), offset);
 
     const result = await db.query(query, params);
@@ -148,10 +187,32 @@ router.get('/agendamentos', async (req, res) => {
  */
 router.get('/agendamentos/:id', async (req, res) => {
   try {
-    const result = await db.query(
-      'SELECT * FROM agendamentos WHERE id = $1 AND empresa_id = $2',
-      [req.params.id, req.empresa_id]
-    );
+    const result = await db.query(`
+      SELECT
+        a.id,
+        a.protocolo,
+        c.nome as nome_cliente,
+        c.telefone,
+        c.email,
+        c.cpf,
+        v.placa,
+        v.marca,
+        v.modelo,
+        v.ano,
+        v.cor,
+        a.data_hora,
+        TO_CHAR(a.data_hora, 'HH24:MI') as horario,
+        a.tipo_vistoria as tipo_servico,
+        a.valor,
+        a.status,
+        a.status_pagamento,
+        a.observacoes,
+        a.created_at
+      FROM agendamentos a
+      LEFT JOIN clientes c ON a.cliente_id = c.id
+      LEFT JOIN veiculos v ON a.veiculo_id = v.id
+      WHERE a.id = $1 AND a.empresa_id = $2
+    `, [req.params.id, req.empresa_id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Agendamento não encontrado' });
@@ -173,16 +234,18 @@ router.patch('/agendamentos/:id/status', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const statusValidos = ['pendente', 'confirmado', 'cancelado', 'concluido'];
+    const statusValidos = ['pendente', 'confirmado', 'cancelado', 'realizado'];
     if (!statusValidos.includes(status)) {
       return res.status(400).json({ error: 'Status inválido', statusValidos });
     }
 
-    // Verificar se pertence à empresa
-    const check = await db.query(
-      'SELECT id, status as status_atual, nome_cliente FROM agendamentos WHERE id = $1 AND empresa_id = $2',
-      [id, req.empresa_id]
-    );
+    // Verificar se pertence à empresa (JOIN com clientes para obter nome)
+    const check = await db.query(`
+      SELECT a.id, a.status as status_atual, c.nome as nome_cliente
+      FROM agendamentos a
+      LEFT JOIN clientes c ON a.cliente_id = c.id
+      WHERE a.id = $1 AND a.empresa_id = $2
+    `, [id, req.empresa_id]);
 
     if (check.rows.length === 0) {
       return res.status(404).json({ error: 'Agendamento não encontrado' });
@@ -203,7 +266,7 @@ router.patch('/agendamentos/:id/status', async (req, res) => {
       `, [
         req.empresa_id,
         req.usuarioEmpresa.id,
-        `Status do agendamento #${id} (${agendamento.nome_cliente}) alterado de ${agendamento.status_atual} para ${status}`,
+        `Status do agendamento #${id} (${agendamento.nome_cliente || 'Cliente'}) alterado de ${agendamento.status_atual} para ${status}`,
         JSON.stringify({ agendamento_id: id, de: agendamento.status_atual, para: status })
       ]);
     } catch (logErr) {
@@ -323,17 +386,19 @@ router.get('/clientes', async (req, res) => {
   try {
     const result = await db.query(`
       SELECT
-        nome_cliente as nome,
-        email,
-        telefone,
-        cpf,
-        COUNT(*) as total_agendamentos,
-        MAX(data_agendamento) as ultimo_agendamento,
-        SUM(CASE WHEN status IN ('confirmado', 'concluido') THEN valor ELSE 0 END) as valor_total
-      FROM agendamentos
-      WHERE empresa_id = $1 AND nome_cliente IS NOT NULL
-      GROUP BY nome_cliente, email, telefone, cpf
-      ORDER BY ultimo_agendamento DESC
+        c.id,
+        c.nome,
+        c.email,
+        c.telefone,
+        c.cpf,
+        COUNT(a.id) as total_agendamentos,
+        MAX(a.data_hora) as ultimo_agendamento,
+        COALESCE(SUM(CASE WHEN a.status IN ('confirmado', 'realizado') THEN a.valor ELSE 0 END), 0) as valor_total
+      FROM clientes c
+      LEFT JOIN agendamentos a ON c.id = a.cliente_id AND a.empresa_id = $1
+      WHERE c.empresa_id = $1
+      GROUP BY c.id, c.nome, c.email, c.telefone, c.cpf
+      ORDER BY ultimo_agendamento DESC NULLS LAST
     `, [req.empresa_id]);
 
     res.json({
@@ -419,16 +484,16 @@ router.get('/relatorios/resumo', async (req, res) => {
       query = `
         SELECT
           COUNT(*) as total_agendamentos,
-          COUNT(CASE WHEN status = 'pendente' THEN 1 END) as pendentes,
-          COUNT(CASE WHEN status = 'confirmado' THEN 1 END) as confirmados,
-          COUNT(CASE WHEN status = 'concluido' THEN 1 END) as concluidos,
-          COUNT(CASE WHEN status = 'cancelado' THEN 1 END) as cancelados,
-          COALESCE(SUM(CASE WHEN status IN ('confirmado', 'concluido') THEN valor ELSE 0 END), 0) as receita_total,
-          COUNT(DISTINCT CASE WHEN status != 'cancelado' THEN email END) as novos_clientes
-        FROM agendamentos
-        WHERE empresa_id = $1
-          AND data_agendamento >= $2
-          AND data_agendamento <= $3
+          COUNT(CASE WHEN a.status = 'pendente' THEN 1 END) as pendentes,
+          COUNT(CASE WHEN a.status = 'confirmado' THEN 1 END) as confirmados,
+          COUNT(CASE WHEN a.status = 'realizado' THEN 1 END) as concluidos,
+          COUNT(CASE WHEN a.status = 'cancelado' THEN 1 END) as cancelados,
+          COALESCE(SUM(CASE WHEN a.status IN ('confirmado', 'realizado') THEN a.valor ELSE 0 END), 0) as receita_total,
+          COUNT(DISTINCT CASE WHEN a.status != 'cancelado' THEN a.cliente_id END) as novos_clientes
+        FROM agendamentos a
+        WHERE a.empresa_id = $1
+          AND DATE(a.data_hora) >= $2
+          AND DATE(a.data_hora) <= $3
       `;
       params = [req.empresa_id, data_inicio, data_fim];
     } else {
@@ -436,15 +501,15 @@ router.get('/relatorios/resumo', async (req, res) => {
       query = `
         SELECT
           COUNT(*) as total_agendamentos,
-          COUNT(CASE WHEN status = 'pendente' THEN 1 END) as pendentes,
-          COUNT(CASE WHEN status = 'confirmado' THEN 1 END) as confirmados,
-          COUNT(CASE WHEN status = 'concluido' THEN 1 END) as concluidos,
-          COUNT(CASE WHEN status = 'cancelado' THEN 1 END) as cancelados,
-          COALESCE(SUM(CASE WHEN status IN ('confirmado', 'concluido') THEN valor ELSE 0 END), 0) as receita_total,
-          COUNT(DISTINCT CASE WHEN status != 'cancelado' THEN email END) as novos_clientes
-        FROM agendamentos
-        WHERE empresa_id = $1
-          AND data_agendamento >= CURRENT_DATE - $2::integer
+          COUNT(CASE WHEN a.status = 'pendente' THEN 1 END) as pendentes,
+          COUNT(CASE WHEN a.status = 'confirmado' THEN 1 END) as confirmados,
+          COUNT(CASE WHEN a.status = 'realizado' THEN 1 END) as concluidos,
+          COUNT(CASE WHEN a.status = 'cancelado' THEN 1 END) as cancelados,
+          COALESCE(SUM(CASE WHEN a.status IN ('confirmado', 'realizado') THEN a.valor ELSE 0 END), 0) as receita_total,
+          COUNT(DISTINCT CASE WHEN a.status != 'cancelado' THEN a.cliente_id END) as novos_clientes
+        FROM agendamentos a
+        WHERE a.empresa_id = $1
+          AND DATE(a.data_hora) >= CURRENT_DATE - $2::integer
       `;
       params = [req.empresa_id, parseInt(periodo)];
     }
@@ -486,20 +551,20 @@ router.get('/relatorios/servicos', async (req, res) => {
 
     let query = `
       SELECT
-        tipo_servico,
+        tipo_vistoria as tipo_servico,
         COUNT(*) as quantidade,
-        COALESCE(SUM(CASE WHEN status IN ('confirmado', 'concluido') THEN valor ELSE 0 END), 0) as receita_total
+        COALESCE(SUM(CASE WHEN status IN ('confirmado', 'realizado') THEN valor ELSE 0 END), 0) as receita_total
       FROM agendamentos
       WHERE empresa_id = $1
     `;
     const params = [req.empresa_id];
 
     if (data_inicio && data_fim) {
-      query += ` AND data_agendamento >= $2 AND data_agendamento <= $3`;
+      query += ` AND DATE(data_hora) >= $2 AND DATE(data_hora) <= $3`;
       params.push(data_inicio, data_fim);
     }
 
-    query += ` GROUP BY tipo_servico ORDER BY quantidade DESC`;
+    query += ` GROUP BY tipo_vistoria ORDER BY quantidade DESC`;
 
     const result = await db.query(query, params);
 

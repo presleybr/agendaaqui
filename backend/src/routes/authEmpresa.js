@@ -79,11 +79,15 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    // Log de atividade
-    await db.query(`
-      INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, ip_address)
-      VALUES ($1, $2, 'login', 'Login realizado com sucesso', $3)
-    `, [usuario.empresa_id, usuario.id, req.ip]);
+    // Log de atividade (não bloqueante - erro aqui não deve impedir o login)
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, ip_address)
+        VALUES ($1, $2, 'login', 'Login realizado com sucesso', $3)
+      `, [usuario.empresa_id, usuario.id, req.ip]);
+    } catch (logErr) {
+      console.error('Erro ao registrar log de login (não bloqueante):', logErr.message);
+    }
 
     console.log(`Login bem-sucedido: ${usuario.email} (empresa: ${usuario.empresa_nome})`);
 
@@ -195,11 +199,15 @@ router.post('/alterar-senha', authEmpresa, async (req, res) => {
       [novaHash, req.usuarioEmpresa.id]
     );
 
-    // Log
-    await db.query(`
-      INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, ip_address)
-      VALUES ($1, $2, 'alterar_senha', 'Senha alterada pelo usuário', $3)
-    `, [req.empresa_id, req.usuarioEmpresa.id, req.ip]);
+    // Log (não bloqueante)
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, ip_address)
+        VALUES ($1, $2, 'alterar_senha', 'Senha alterada pelo usuário', $3)
+      `, [req.empresa_id, req.usuarioEmpresa.id, req.ip]);
+    } catch (logErr) {
+      console.error('Erro ao registrar log (não bloqueante):', logErr.message);
+    }
 
     res.json({ success: true, message: 'Senha alterada com sucesso' });
 
@@ -336,11 +344,15 @@ router.post('/criar-senha', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    // Log
-    await db.query(`
-      INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, ip_address)
-      VALUES ($1, $2, 'criar_senha', 'Senha criada no primeiro acesso', $3)
-    `, [usuario.empresa_id, usuario.id, req.ip]);
+    // Log (não bloqueante)
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, ip_address)
+        VALUES ($1, $2, 'criar_senha', 'Senha criada no primeiro acesso', $3)
+      `, [usuario.empresa_id, usuario.id, req.ip]);
+    } catch (logErr) {
+      console.error('Erro ao registrar log (não bloqueante):', logErr.message);
+    }
 
     console.log(`Primeiro acesso: senha criada para ${email} (empresa: ${usuario.empresa_nome})`);
 
@@ -377,11 +389,15 @@ router.post('/criar-senha', async (req, res) => {
  */
 router.post('/logout', authEmpresa, async (req, res) => {
   try {
-    // Log de atividade
-    await db.query(`
-      INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, ip_address)
-      VALUES ($1, $2, 'logout', 'Logout realizado', $3)
-    `, [req.empresa_id, req.usuarioEmpresa.id, req.ip]);
+    // Log de atividade (não bloqueante)
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, ip_address)
+        VALUES ($1, $2, 'logout', 'Logout realizado', $3)
+      `, [req.empresa_id, req.usuarioEmpresa.id, req.ip]);
+    } catch (logErr) {
+      console.error('Erro ao registrar log (não bloqueante):', logErr.message);
+    }
 
     res.json({ success: true, message: 'Logout realizado' });
   } catch (err) {
