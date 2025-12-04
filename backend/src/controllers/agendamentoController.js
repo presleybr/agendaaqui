@@ -14,7 +14,9 @@ class AgendamentoController {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { cliente: clienteData, veiculo: veiculoData, tipo_vistoria, data, horario, endereco_vistoria, observacoes } = req.body;
+      const { cliente: clienteData, veiculo: veiculoData, tipo_vistoria, data, horario, endereco_vistoria, observacoes, empresa_id } = req.body;
+
+      console.log('📝 Dados recebidos para criar agendamento:', { tipo_vistoria, data, horario, empresa_id });
 
       // Verificar disponibilidade
       const availability = await AvailabilityService.canSchedule(data, horario);
@@ -41,18 +43,23 @@ class AgendamentoController {
       const precos = await Configuracao.getPrices();
       const preco = precos[tipo_vistoria] || precos.outros;
 
+      // Combinar data e horário em timestamp
+      const data_hora = `${data} ${horario}:00`;
+
       // Criar agendamento
       const agendamento = await Agendamento.create({
         cliente_id: cliente.id,
         veiculo_id: veiculo.id,
         tipo_vistoria,
-        data,
-        horario,
+        data_hora,
         endereco_vistoria,
-        preco,
+        valor: preco,
         observacoes,
-        status: 'pendente'
+        status: 'pendente',
+        empresa_id: empresa_id || null
       });
+
+      console.log('✅ Agendamento criado com sucesso:', agendamento.protocolo);
 
       // Enviar email de confirmação
       const emailAtivo = await Configuracao.get('email_confirmacao_ativo') === '1';
