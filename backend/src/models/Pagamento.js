@@ -4,16 +4,17 @@ class Pagamento {
   static async create(data) {
     const query = `
       INSERT INTO pagamentos (
-        agendamento_id, mp_payment_id, tipo_pagamento, valor, status,
+        agendamento_id, empresa_id, mp_payment_id, tipo_pagamento, valor, status,
         qr_code, qr_code_base64, payment_method_id, installments,
         dados_pagamento, data_pagamento
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id
     `;
 
     const result = await db.query(query, [
       data.agendamento_id,
+      data.empresa_id || null,
       data.mp_payment_id || null,
       data.tipo_pagamento,
       data.valor,
