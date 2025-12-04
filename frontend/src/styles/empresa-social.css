@@ -752,49 +752,6 @@ body.empresa-profile-page {
   height: 20px;
 }
 
-/* Mobile Actions */
-.mobile-actions {
-  display: none;
-}
-
-@media (max-width: 992px) {
-  .mobile-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-}
-
-.quick-action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 14px;
-  background: var(--bg-primary);
-  border: none;
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-weight: 600;
-  font-size: 0.95rem;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  width: 100%;
-}
-
-.quick-action-btn:hover {
-  background: #e4e6eb;
-}
-
-.quick-action-btn.whatsapp {
-  background: #25D366;
-  color: white;
-}
-
-.quick-action-btn.whatsapp:hover {
-  background: #1da851;
-}
 
 /* ============================================
    SERVICES SECTION
@@ -1088,6 +1045,32 @@ body.empresa-profile-page {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* MOBILE REVIEWS CAROUSEL */
+@media (max-width: 768px) {
+  .reviews-list {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    gap: 12px;
+    margin: 0 -14px;
+    padding: 0 14px;
+  }
+
+  .reviews-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .reviews-list .review-item {
+    flex: 0 0 90%;
+    max-width: 90%;
+    scroll-snap-align: center;
+  }
 }
 
 .review-item {
@@ -1536,4 +1519,141 @@ html {
   .content-main {
     gap: 12px;
   }
+}
+
+/* ============================================
+   SCHEDULING FORM - STEPS MOBILE
+   ============================================ */
+#scheduleApp .steps-indicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  position: relative;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+#scheduleApp .steps-indicator::-webkit-scrollbar {
+  display: none;
+}
+
+#scheduleApp .steps-indicator::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  right: 24px;
+  height: 2px;
+  background: #e4e6eb;
+  z-index: 0;
+}
+
+#scheduleApp .step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+#scheduleApp .step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #e4e6eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #65676b;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+#scheduleApp .step.active .step-number {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: white;
+}
+
+#scheduleApp .step.completed .step-number {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: white;
+}
+
+#scheduleApp .step-label {
+  font-size: 0.7rem;
+  color: #65676b;
+  text-align: center;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+#scheduleApp .step.active .step-label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  #scheduleApp .steps-indicator {
+    flex-wrap: nowrap;
+    gap: 0;
+    padding: 0 4px;
+  }
+
+  #scheduleApp .steps-indicator::before {
+    left: 30px;
+    right: 30px;
+    top: 18px;
+  }
+
+  #scheduleApp .step {
+    flex: 1;
+    min-width: 56px;
+  }
+
+  #scheduleApp .step-number {
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+
+  #scheduleApp .step-label {
+    font-size: 0.6rem;
+    max-width: 60px;
+  }
+}
+
+/* ============================================
+   PRICING HOVER - BLUE COLOR (NOT ORANGE)
+   ============================================ */
+.pricing-card {
+  animation: none !important;
+}
+
+.pricing-card:hover {
+  border-color: var(--brand-primary);
+  background: linear-gradient(135deg, rgba(24, 119, 242, 0.03) 0%, rgba(24, 119, 242, 0.08) 100%);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(24, 119, 242, 0.15);
+}
+
+.pricing-card.featured {
+  animation: none !important;
+}
+
+.pricing-card.featured:hover {
+  background: linear-gradient(135deg, rgba(24, 119, 242, 0.08) 0%, rgba(24, 119, 242, 0.15) 100%);
 }
