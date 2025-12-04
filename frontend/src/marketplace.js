@@ -360,80 +360,101 @@ class Marketplace {
 
   renderFeatured(empresas) {
     const grid = document.getElementById('featuredGrid');
-    if (!grid) return;
+    if (!grid) {
+      console.error('❌ featuredGrid não encontrado');
+      return;
+    }
+
+    console.log(`🎨 Renderizando ${empresas.length} empresas em destaque`);
 
     if (empresas.length === 0) {
       grid.innerHTML = '<p class="no-featured">Nenhuma empresa cadastrada ainda.</p>';
       return;
     }
 
-    grid.innerHTML = empresas.map(empresa => this.renderEmpresaCard(empresa, true)).join('');
+    try {
+      const cardsHtml = empresas.map(empresa => this.renderEmpresaCard(empresa, true)).join('');
+      grid.innerHTML = cardsHtml;
+      console.log('✅ Cards renderizados com sucesso');
+    } catch (error) {
+      console.error('❌ Erro ao renderizar cards:', error);
+      grid.innerHTML = '<p class="no-featured">Erro ao carregar empresas.</p>';
+    }
   }
 
   renderEmpresaCard(empresa, isFeatured = false) {
-    const precoMin = empresa.preco_minimo && empresa.preco_minimo < 99999
-      ? this.formatCurrency(empresa.preco_minimo)
-      : 'Consulte';
+    try {
+      const precoMin = empresa.preco_minimo && empresa.preco_minimo < 99999
+        ? this.formatCurrency(empresa.preco_minimo)
+        : 'Consulte';
 
-    const rating = empresa.google_rating || 5.0;
-    const reviews = empresa.google_reviews_count || 0;
+      const rating = parseFloat(empresa.google_rating) || 5.0;
+      const reviews = parseInt(empresa.google_reviews_count) || 0;
 
-    const distancia = empresa.distancia_km
-      ? `<span class="distance-badge">${empresa.distancia_km} km</span>`
-      : '';
+      const distancia = empresa.distancia_km
+        ? `<span class="distance-badge">${empresa.distancia_km} km</span>`
+        : '';
 
-    const logoUrl = empresa.logo_url || empresa.foto_perfil_url || '/default-logo.png';
+      const logoUrl = empresa.logo_url || empresa.foto_perfil_url || '/default-logo.png';
 
-    const location = [empresa.bairro, empresa.cidade, empresa.estado]
-      .filter(Boolean)
-      .join(', ');
+      const location = [empresa.bairro, empresa.cidade, empresa.estado]
+        .filter(Boolean)
+        .join(', ');
 
-    return `
-      <a href="${empresa.url}" class="empresa-card ${isFeatured ? 'featured-card' : ''}">
-        <div class="card-header">
-          <div class="empresa-logo">
-            <img src="${logoUrl}" alt="${empresa.nome}" onerror="this.src='/default-logo.png'">
-          </div>
-          ${distancia}
-        </div>
+      const descricaoTruncada = empresa.descricao
+        ? empresa.descricao.substring(0, 100) + (empresa.descricao.length > 100 ? '...' : '')
+        : '';
 
-        <div class="card-body">
-          <h3 class="empresa-nome">${empresa.nome}</h3>
-
-          ${location ? `
-            <p class="empresa-location">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-              ${location}
-            </p>
-          ` : ''}
-
-          <div class="empresa-rating">
-            <div class="stars">
-              ${this.renderStars(rating)}
+      return `
+        <a href="${empresa.url || '/' + empresa.slug}" class="empresa-card ${isFeatured ? 'featured-card' : ''}">
+          <div class="card-header">
+            <div class="empresa-logo">
+              <img src="${logoUrl}" alt="${empresa.nome || 'Empresa'}" onerror="this.style.display='none'">
             </div>
-            <span class="rating-text">${rating.toFixed(1)} (${reviews} avaliações)</span>
+            ${distancia}
           </div>
 
-          ${empresa.descricao ? `<p class="empresa-descricao">${empresa.descricao.substring(0, 100)}...</p>` : ''}
-        </div>
+          <div class="card-body">
+            <h3 class="empresa-nome">${empresa.nome || 'Sem nome'}</h3>
 
-        <div class="card-footer">
-          <div class="preco">
-            <span class="preco-label">A partir de</span>
-            <span class="preco-valor">${precoMin}</span>
+            ${location ? `
+              <p class="empresa-location">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                ${location}
+              </p>
+            ` : ''}
+
+            <div class="empresa-rating">
+              <div class="stars">
+                ${this.renderStars(rating)}
+              </div>
+              <span class="rating-text">${rating.toFixed(1)} (${reviews} avaliações)</span>
+            </div>
+
+            ${descricaoTruncada ? `<p class="empresa-descricao">${descricaoTruncada}</p>` : ''}
           </div>
-          <span class="btn-agendar">
-            Agendar
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </span>
-        </div>
-      </a>
-    `;
+
+          <div class="card-footer">
+            <div class="preco">
+              <span class="preco-label">A partir de</span>
+              <span class="preco-valor">${precoMin}</span>
+            </div>
+            <span class="btn-agendar">
+              Agendar
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </span>
+          </div>
+        </a>
+      `;
+    } catch (error) {
+      console.error('❌ Erro ao renderizar card:', empresa, error);
+      return '';
+    }
   }
 
   renderStars(rating) {
