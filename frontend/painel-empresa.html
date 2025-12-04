@@ -4,769 +4,606 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel da Empresa - AgendaAqui Vistorias</title>
-  <meta name="description" content="Gerencie seus agendamentos, clientes e configurações">
+  <meta name="description" content="Gerencie seus agendamentos, clientes e configuracoes">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-
-  <style>
-    :root {
-      --primary: #f97316;
-      --primary-dark: #ea580c;
-      --secondary: #1e40af;
-      --success: #22c55e;
-      --warning: #eab308;
-      --danger: #ef4444;
-      --gray-50: #f9fafb;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-300: #d1d5db;
-      --gray-500: #6b7280;
-      --gray-700: #374151;
-      --gray-900: #111827;
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--gray-100);
-      color: var(--gray-900);
-      min-height: 100vh;
-    }
-
-    /* ============ LOGIN ============ */
-    .login-container {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      padding: 1rem;
-    }
-
-    .login-card {
-      background: white;
-      border-radius: 16px;
-      padding: 2.5rem;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    }
-
-    .login-logo {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .login-logo h1 {
-      color: var(--primary);
-      font-size: 1.5rem;
-      margin-top: 0.5rem;
-    }
-
-    .login-logo p {
-      color: var(--gray-500);
-      font-size: 0.9rem;
-    }
-
-    .form-group {
-      margin-bottom: 1.25rem;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: var(--gray-700);
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border: 2px solid var(--gray-200);
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .form-group input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-      width: 100%;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
-    }
-
-    .btn-primary:disabled {
-      background: var(--gray-300);
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-secondary {
-      background: var(--gray-200);
-      color: var(--gray-700);
-    }
-
-    .btn-secondary:hover {
-      background: var(--gray-300);
-    }
-
-    .btn-success {
-      background: var(--success);
-      color: white;
-    }
-
-    .btn-danger {
-      background: var(--danger);
-      color: white;
-    }
-
-    .btn-sm {
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
-    }
-
-    .error-message {
-      background: #fef2f2;
-      color: #dc2626;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-      display: none;
-    }
-
-    .error-message.show {
-      display: block;
-    }
-
-    /* ============ PAINEL ============ */
-    .painel-container {
-      display: none;
-    }
-
-    .painel-container.active {
-      display: block;
-    }
-
-    /* Header */
-    .painel-header {
-      background: white;
-      padding: 1rem 2rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .header-brand img {
-      height: 40px;
-    }
-
-    .header-brand h1 {
-      font-size: 1.25rem;
-      color: var(--gray-900);
-    }
-
-    .header-user {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .header-user span {
-      color: var(--gray-500);
-      font-size: 0.9rem;
-    }
-
-    /* Sidebar */
-    .painel-layout {
-      display: flex;
-      min-height: calc(100vh - 70px);
-    }
-
-    .sidebar {
-      width: 250px;
-      background: white;
-      border-right: 1px solid var(--gray-200);
-      padding: 1rem 0;
-      flex-shrink: 0;
-    }
-
-    .sidebar-nav {
-      list-style: none;
-    }
-
-    .sidebar-nav a {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.875rem 1.5rem;
-      color: var(--gray-700);
-      text-decoration: none;
-      transition: all 0.2s;
-      border-left: 3px solid transparent;
-    }
-
-    .sidebar-nav a:hover {
-      background: var(--gray-50);
-      color: var(--primary);
-    }
-
-    .sidebar-nav a.active {
-      background: rgba(249, 115, 22, 0.1);
-      color: var(--primary);
-      border-left-color: var(--primary);
-      font-weight: 600;
-    }
-
-    .sidebar-nav svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    /* Main Content */
-    .main-content {
-      flex: 1;
-      padding: 2rem;
-      overflow-y: auto;
-    }
-
-    .page-title {
-      font-size: 1.5rem;
-      color: var(--gray-900);
-      margin-bottom: 1.5rem;
-    }
-
-    /* Cards */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .stat-card h3 {
-      color: var(--gray-500);
-      font-size: 0.875rem;
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-card .value {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--gray-900);
-    }
-
-    .stat-card .value.success { color: var(--success); }
-    .stat-card .value.warning { color: var(--warning); }
-    .stat-card .value.danger { color: var(--danger); }
-    .stat-card .value.primary { color: var(--primary); }
-
-    .stat-card .subtext {
-      font-size: 0.8rem;
-      color: var(--gray-500);
-      margin-top: 0.25rem;
-    }
-
-    /* Tables */
-    .card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      overflow: hidden;
-      margin-bottom: 1.5rem;
-    }
-
-    .card-header {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--gray-200);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .card-header h2 {
-      font-size: 1.1rem;
-      color: var(--gray-900);
-    }
-
-    .card-body {
-      padding: 1.5rem;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding: 0.875rem 1rem;
-      text-align: left;
-      border-bottom: 1px solid var(--gray-200);
-    }
-
-    th {
-      background: var(--gray-50);
-      font-weight: 600;
-      color: var(--gray-700);
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    tr:hover {
-      background: var(--gray-50);
-    }
-
-    /* Status Badges */
-    .badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .badge-pendente { background: #fef3c7; color: #d97706; }
-    .badge-confirmado { background: #dbeafe; color: #2563eb; }
-    .badge-concluido { background: #d1fae5; color: #059669; }
-    .badge-cancelado { background: #fee2e2; color: #dc2626; }
-
-    /* Loading */
-    .loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 3rem;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid var(--gray-200);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .sidebar {
-        position: fixed;
-        left: -250px;
-        top: 70px;
-        height: calc(100vh - 70px);
-        z-index: 50;
-        transition: left 0.3s;
-      }
-
-      .sidebar.open {
-        left: 0;
-      }
-
-      .main-content {
-        padding: 1rem;
-      }
-
-      .painel-header {
-        padding: 1rem;
-      }
-
-      .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    /* Hidden sections */
-    .page-section {
-      display: none;
-    }
-
-    .page-section.active {
-      display: block;
-    }
-
-    /* Forms */
-    .form-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: flex-end;
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--gray-200);
-    }
-
-    /* Filters */
-    .filters {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .filters select,
-    .filters input {
-      padding: 0.5rem 1rem;
-      border: 1px solid var(--gray-300);
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: 3rem;
-      color: var(--gray-500);
-    }
-
-    .empty-state svg {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 1rem;
-      opacity: 0.5;
-    }
-
-    /* Modal Change Password */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .modal-overlay.active {
-      display: flex;
-    }
-
-    .modal {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      width: 100%;
-      max-width: 400px;
-      margin: 1rem;
-    }
-
-    .modal h2 {
-      margin-bottom: 1rem;
-      color: var(--gray-900);
-    }
-
-    .modal p {
-      color: var(--gray-500);
-      margin-bottom: 1.5rem;
-    }
-  </style>
+  <link rel="stylesheet" href="/src/styles/theme.css">
+  <link rel="stylesheet" href="/src/styles/main.css">
+  <link rel="stylesheet" href="/src/styles/painel-empresa.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body>
-  <!-- ============ LOGIN ============ -->
-  <div id="loginContainer" class="login-container">
-    <div class="login-card">
-      <div class="login-logo">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2">
+<body class="admin-body">
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <div class="login-logo" id="loginLogo">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--brand-primary);">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
           <line x1="16" y1="2" x2="16" y2="6"></line>
           <line x1="8" y1="2" x2="8" y2="6"></line>
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
-        <h1>Painel da Empresa</h1>
-        <p>Gerencie seus agendamentos</p>
       </div>
-
-      <div id="loginError" class="error-message"></div>
+      <h1 style="text-align: center; margin-bottom: 8px; color: var(--brand-primary); font-size: 1.75rem;">Painel da Empresa</h1>
+      <p style="text-align: center; margin-bottom: 30px; color: var(--text-secondary);">Gerencie seus agendamentos</p>
 
       <form id="loginForm">
         <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" required placeholder="seu@email.com">
+          <label for="loginEmail">E-mail</label>
+          <input type="email" id="loginEmail" required placeholder="seu@email.com">
         </div>
-
         <div class="form-group">
-          <label for="senha">Senha</label>
-          <input type="password" id="senha" name="senha" required placeholder="Sua senha">
+          <label for="loginPassword">Senha</label>
+          <input type="password" id="loginPassword" required placeholder="Sua senha">
         </div>
-
-        <button type="submit" class="btn btn-primary" id="btnLogin">
+        <div id="loginError" class="alert alert-error" style="display: none;"></div>
+        <button type="submit" class="btn btn-primary btn-large" style="width: 100%;" id="btnLogin">
           <span id="btnLoginText">Entrar</span>
           <span id="btnLoginLoading" style="display: none;">Entrando...</span>
         </button>
       </form>
-
-      <p style="text-align: center; margin-top: 1.5rem; color: var(--gray-500); font-size: 0.85rem;">
+      <p style="text-align: center; margin-top: 1.5rem; color: var(--text-tertiary); font-size: 0.85rem;">
         Esqueceu a senha? Entre em contato com o suporte.
       </p>
     </div>
   </div>
 
-  <!-- ============ PAINEL ============ -->
-  <div id="painelContainer" class="painel-container">
-    <!-- Header -->
-    <header class="painel-header">
-      <div class="header-brand">
-        <img id="empresaLogo" src="/favicon.svg" alt="Logo">
-        <h1 id="empresaNome">Minha Empresa</h1>
+  <!-- Main Dashboard -->
+  <div id="mainDashboard" style="display: none;">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <img id="sidebarLogo" src="/favicon.svg" alt="Logo" style="height: 32px; display: none;">
+          <h2 id="sidebarEmpresaNome" style="color: var(--brand-primary); font-size: 1.25rem; text-align: center; margin: 0;">Minha Empresa</h2>
+        </div>
       </div>
-      <div class="header-user">
-        <span id="usuarioNome">Usuário</span>
-        <button class="btn btn-secondary btn-sm" id="btnLogout">Sair</button>
-      </div>
-    </header>
 
-    <div class="painel-layout">
-      <!-- Sidebar -->
-      <nav class="sidebar" id="sidebar">
-        <ul class="sidebar-nav">
-          <li>
-            <a href="#" data-page="dashboard" class="active">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
-              </svg>
-              Dashboard
-            </a>
-          </li>
-          <li>
-            <a href="#" data-page="agendamentos">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-              Agendamentos
-            </a>
-          </li>
-          <li>
-            <a href="#" data-page="clientes">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-              Clientes
-            </a>
-          </li>
-          <li>
-            <a href="#" data-page="minha-empresa">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-              </svg>
-              Minha Empresa
-            </a>
-          </li>
-          <li>
-            <a href="#" data-page="configuracoes">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-              </svg>
-              Configuracoes
-            </a>
-          </li>
-        </ul>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="dashboard">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span class="nav-text">Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-section="agendamentos">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span class="nav-text">Agendamentos</span>
+          <span class="nav-badge" id="badge-agendamentos" style="display: none;">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="clientes">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span class="nav-text">Clientes</span>
+        </a>
+        <a href="#" class="nav-item" data-section="calendario">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"></path>
+          </svg>
+          <span class="nav-text">Calendario</span>
+        </a>
+        <a href="#" class="nav-item" data-section="relatorios">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="20" x2="12" y2="10"></line>
+            <line x1="18" y1="20" x2="18" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="16"></line>
+          </svg>
+          <span class="nav-text">Relatorios</span>
+        </a>
+        <a href="#" class="nav-item" data-section="minha-empresa">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span class="nav-text">Minha Empresa</span>
+        </a>
+        <a href="#" class="nav-item" data-section="configuracoes">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"></path>
+          </svg>
+          <span class="nav-text">Configuracoes</span>
+        </a>
       </nav>
 
-      <!-- Main Content -->
-      <main class="main-content">
-        <!-- Dashboard -->
-        <section id="page-dashboard" class="page-section active">
-          <h1 class="page-title">Dashboard</h1>
-
-          <div class="stats-grid" id="dashboardStats">
-            <div class="loading"><div class="spinner"></div></div>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
           </div>
-
-          <div class="card">
-            <div class="card-header">
-              <h2>Agendamentos de Hoje</h2>
-            </div>
-            <div class="card-body" id="agendamentosHoje">
-              <div class="loading"><div class="spinner"></div></div>
-            </div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Usuario</div>
+            <div class="user-role" id="sidebarUserRole">Administrador</div>
           </div>
+        </div>
+        <button class="btn-logout" id="logoutBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Sair</span>
+        </button>
+      </div>
+    </aside>
 
-          <div class="card">
-            <div class="card-header">
-              <h2>Proximos Agendamentos</h2>
-            </div>
-            <div class="card-body" id="proximosAgendamentos">
-              <div class="loading"><div class="spinner"></div></div>
-            </div>
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="content-header">
+        <div class="header-left">
+          <button class="btn-menu-toggle" id="menuToggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <div class="header-search">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input type="text" placeholder="Buscar..." id="globalSearch">
           </div>
-        </section>
+        </div>
+      </header>
 
-        <!-- Agendamentos -->
-        <section id="page-agendamentos" class="page-section">
-          <h1 class="page-title">Agendamentos</h1>
-
-          <div class="filters">
-            <select id="filtroStatus">
-              <option value="todos">Todos os status</option>
-              <option value="pendente">Pendente</option>
-              <option value="confirmado">Confirmado</option>
-              <option value="concluido">Concluido</option>
-              <option value="cancelado">Cancelado</option>
-            </select>
-            <input type="date" id="filtroDataInicio" placeholder="Data inicio">
-            <input type="date" id="filtroDataFim" placeholder="Data fim">
-            <input type="text" id="filtroBusca" placeholder="Buscar por nome, placa, telefone...">
-            <button class="btn btn-primary btn-sm" id="btnFiltrar">Filtrar</button>
+      <!-- Dashboard Section -->
+      <section id="section-dashboard" class="content-section active">
+        <!-- Stats Cards -->
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card">
+            <div class="stat-label">Agendamentos Hoje</div>
+            <div class="stat-value" id="statToday">-</div>
           </div>
-
-          <div class="card">
-            <div class="card-body" id="listaAgendamentos">
-              <div class="loading"><div class="spinner"></div></div>
-            </div>
+          <div class="stat-card">
+            <div class="stat-label">Pendentes</div>
+            <div class="stat-value" id="statPending">-</div>
           </div>
-        </section>
-
-        <!-- Clientes -->
-        <section id="page-clientes" class="page-section">
-          <h1 class="page-title">Clientes</h1>
-
-          <div class="card">
-            <div class="card-body" id="listaClientes">
-              <div class="loading"><div class="spinner"></div></div>
-            </div>
+          <div class="stat-card">
+            <div class="stat-label">Confirmados</div>
+            <div class="stat-value" id="statConfirmed">-</div>
           </div>
-        </section>
-
-        <!-- Minha Empresa -->
-        <section id="page-minha-empresa" class="page-section">
-          <h1 class="page-title">Minha Empresa</h1>
-
-          <div class="card">
-            <div class="card-body" id="dadosEmpresa">
-              <div class="loading"><div class="spinner"></div></div>
-            </div>
+          <div class="stat-card">
+            <div class="stat-label">Faturamento Mensal</div>
+            <div class="stat-value" id="statRevenue">-</div>
           </div>
-        </section>
+        </div>
 
-        <!-- Configuracoes -->
-        <section id="page-configuracoes" class="page-section">
-          <h1 class="page-title">Configuracoes</h1>
-
-          <div class="card">
-            <div class="card-header">
-              <h2>Alterar Senha</h2>
+        <!-- Charts Section -->
+        <div class="charts-grid">
+          <!-- Revenue Chart Card -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h3>Faturamento Mensal</h3>
+                <div class="chart-subtitle">Ultimos 6 meses</div>
+              </div>
             </div>
-            <div class="card-body">
-              <form id="formAlterarSenha">
-                <div class="form-group">
-                  <label>Senha Atual</label>
-                  <input type="password" id="senhaAtual" required>
-                </div>
-                <div class="form-group">
-                  <label>Nova Senha</label>
-                  <input type="password" id="novaSenha" required minlength="6">
-                </div>
-                <div class="form-group">
-                  <label>Confirmar Nova Senha</label>
-                  <input type="password" id="confirmarSenha" required>
-                </div>
-                <div class="form-actions">
-                  <button type="submit" class="btn btn-primary">Alterar Senha</button>
-                </div>
-              </form>
+            <div class="chart-container" style="position: relative; height: 300px;">
+              <canvas id="revenueChart"></canvas>
             </div>
           </div>
 
-          <div class="card">
-            <div class="card-header">
-              <h2>Horarios de Funcionamento</h2>
+          <!-- Status Distribution Chart Card -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <h3>Status dos Agendamentos</h3>
+                <div class="chart-subtitle">Distribuicao atual</div>
+              </div>
             </div>
-            <div class="card-body" id="configHorarios">
-              <div class="loading"><div class="spinner"></div></div>
+            <div class="chart-container" style="position: relative; height: 300px;">
+              <canvas id="statusChart"></canvas>
             </div>
           </div>
-        </section>
-      </main>
+        </div>
+
+        <!-- Today's Appointments -->
+        <div class="section-header" style="margin-top: 32px;">
+          <h2>Agendamentos de Hoje</h2>
+        </div>
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Horario</th>
+                <th>Cliente</th>
+                <th>Telefone</th>
+                <th>Veiculo</th>
+                <th>Servico</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Acoes</th>
+              </tr>
+            </thead>
+            <tbody id="todayAppointmentsTable">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 40px;">
+                  <div class="spinner"></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Agendamentos Section -->
+      <section id="section-agendamentos" class="content-section">
+        <div class="section-header">
+          <h2>Gerenciar Agendamentos</h2>
+        </div>
+
+        <div class="filters-bar">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="filterDateStart">Data Inicio</label>
+              <input type="date" id="filterDateStart">
+            </div>
+            <div class="form-group">
+              <label for="filterDateEnd">Data Fim</label>
+              <input type="date" id="filterDateEnd">
+            </div>
+            <div class="form-group">
+              <label for="filterStatus">Status</label>
+              <select id="filterStatus">
+                <option value="">Todos</option>
+                <option value="pendente">Pendente</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="concluido">Concluido</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="filterSearch">Buscar</label>
+              <input type="text" id="filterSearch" placeholder="Nome, placa, telefone...">
+            </div>
+            <div class="form-group" style="display: flex; gap: 10px; align-items: flex-end;">
+              <button class="btn btn-primary" id="filterBtn">Filtrar</button>
+              <button class="btn btn-secondary" id="clearFilterBtn">Limpar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Data</th>
+                <th>Horario</th>
+                <th>Cliente</th>
+                <th>Telefone</th>
+                <th>Placa</th>
+                <th>Servico</th>
+                <th>Valor</th>
+                <th>Pagamento</th>
+                <th>Status</th>
+                <th>Acoes</th>
+              </tr>
+            </thead>
+            <tbody id="agendamentosTable">
+              <tr>
+                <td colspan="11" style="text-align: center; padding: 40px;">
+                  <div class="spinner"></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="paginationInfo" style="margin-top: 16px; color: var(--text-secondary);"></div>
+      </section>
+
+      <!-- Clientes Section -->
+      <section id="section-clientes" class="content-section">
+        <div class="section-header">
+          <h2>Clientes</h2>
+        </div>
+
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Telefone</th>
+                <th>Total Agendamentos</th>
+                <th>Ultimo Agendamento</th>
+                <th>Valor Total</th>
+              </tr>
+            </thead>
+            <tbody id="clientesTable">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 40px;">
+                  <div class="spinner"></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Calendario Section -->
+      <section id="section-calendario" class="content-section">
+        <div class="section-header">
+          <h2>Calendario</h2>
+          <div class="calendar-controls">
+            <button class="btn btn-secondary" id="prevMonthBtn">
+              <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              Anterior
+            </button>
+            <span class="current-month" id="currentMonthLabel">Janeiro 2025</span>
+            <button class="btn btn-secondary" id="nextMonthBtn">
+              Proximo
+              <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="calendar-container">
+          <div class="calendar-grid" id="calendarGrid">
+            <div class="calendar-day-header">Dom</div>
+            <div class="calendar-day-header">Seg</div>
+            <div class="calendar-day-header">Ter</div>
+            <div class="calendar-day-header">Qua</div>
+            <div class="calendar-day-header">Qui</div>
+            <div class="calendar-day-header">Sex</div>
+            <div class="calendar-day-header">Sab</div>
+          </div>
+
+          <div class="calendar-legend">
+            <div class="legend-item">
+              <div class="legend-color today"></div>
+              <span>Hoje</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color pendente"></div>
+              <span>Pendente</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color confirmado"></div>
+              <span>Confirmado</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color concluido"></div>
+              <span>Concluido</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color cancelado"></div>
+              <span>Cancelado</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Relatorios Section -->
+      <section id="section-relatorios" class="content-section">
+        <div class="section-header">
+          <h2>Relatorios</h2>
+          <button class="btn btn-primary" id="exportReportPDF">
+            <svg style="width: 16px; height: 16px; margin-right: 5px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Exportar PDF
+          </button>
+        </div>
+
+        <!-- Period Selector -->
+        <div class="filters-bar" style="margin-bottom: 30px;">
+          <div class="form-row" style="align-items: flex-end;">
+            <div class="form-group">
+              <label for="reportStartDate">Data Inicial</label>
+              <input type="date" id="reportStartDate">
+            </div>
+            <div class="form-group">
+              <label for="reportEndDate">Data Final</label>
+              <input type="date" id="reportEndDate">
+            </div>
+            <div class="form-group" style="display: flex; gap: 10px;">
+              <button class="btn btn-primary" id="generateReportBtn">Gerar Relatorio</button>
+              <button class="btn btn-secondary" id="setCurrentMonthBtn">Mes Atual</button>
+              <button class="btn btn-secondary" id="setLastMonthBtn">Mes Anterior</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Stats -->
+        <div class="stats-grid" id="reportStatsGrid" style="margin-bottom: 30px;">
+          <div class="stat-card">
+            <div class="stat-label">Total de Agendamentos</div>
+            <div class="stat-value" id="reportTotalAppointments">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Receita Total</div>
+            <div class="stat-value" id="reportTotalRevenue">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Novos Clientes</div>
+            <div class="stat-value" id="reportNewClients">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Taxa de Confirmacao</div>
+            <div class="stat-value" id="reportConfirmationRate">-</div>
+          </div>
+        </div>
+
+        <!-- Report Charts -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Evolucao da Receita</h3>
+              <div class="chart-subtitle">Receita diaria no periodo</div>
+            </div>
+            <div class="chart-container" style="height: 300px;">
+              <canvas id="reportRevenueChart"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Distribuicao por Status</h3>
+              <div class="chart-subtitle">Status dos agendamentos</div>
+            </div>
+            <div class="chart-container" style="height: 300px;">
+              <canvas id="reportStatusChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Services -->
+        <div class="chart-card" style="margin-top: 24px;">
+          <div class="chart-header">
+            <h3>Servicos Mais Solicitados</h3>
+          </div>
+          <div class="table-container" style="border: none; box-shadow: none;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Posicao</th>
+                  <th>Tipo de Servico</th>
+                  <th>Quantidade</th>
+                  <th>Receita Total</th>
+                  <th>Ticket Medio</th>
+                </tr>
+              </thead>
+              <tbody id="topServicesTable">
+                <tr>
+                  <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-tertiary);">
+                    Selecione um periodo e clique em "Gerar Relatorio"
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Minha Empresa Section -->
+      <section id="section-minha-empresa" class="content-section">
+        <div class="section-header">
+          <h2>Minha Empresa</h2>
+        </div>
+
+        <div class="settings-grid">
+          <!-- Dados Basicos -->
+          <div class="settings-card" style="grid-column: span 2;">
+            <h3>Dados da Empresa</h3>
+            <div id="empresaDataContainer">
+              <div class="loading" style="padding: 40px; text-align: center;">
+                <div class="spinner"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Configuracoes Section -->
+      <section id="section-configuracoes" class="content-section">
+        <div class="section-header">
+          <h2>Configuracoes</h2>
+        </div>
+
+        <div class="settings-grid">
+          <!-- Alterar Senha -->
+          <div class="settings-card">
+            <h3>
+              <svg style="width: 20px; height: 20px; margin-right: 8px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Alterar Senha
+            </h3>
+            <form id="formAlterarSenha">
+              <div class="form-group">
+                <label for="senhaAtual">Senha Atual</label>
+                <input type="password" id="senhaAtual" required>
+              </div>
+              <div class="form-group">
+                <label for="novaSenha">Nova Senha</label>
+                <input type="password" id="novaSenha" required minlength="6">
+              </div>
+              <div class="form-group">
+                <label for="confirmarSenha">Confirmar Nova Senha</label>
+                <input type="password" id="confirmarSenha" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Alterar Senha</button>
+            </form>
+          </div>
+
+          <!-- Horarios de Funcionamento -->
+          <div class="settings-card">
+            <h3>
+              <svg style="width: 20px; height: 20px; margin-right: 8px; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Horarios de Funcionamento
+            </h3>
+            <div id="configHorariosContainer">
+              <div class="loading" style="padding: 40px; text-align: center;">
+                <div class="spinner"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Detalhes do Agendamento -->
+  <div id="appointmentModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeAppointmentModal">&times;</span>
+      <h2 style="margin-bottom: 20px; color: var(--brand-primary);">Detalhes do Agendamento</h2>
+      <div id="appointmentDetails"></div>
     </div>
   </div>
 
-  <!-- Modal Alterar Senha (primeiro acesso) -->
-  <div class="modal-overlay" id="modalPrimeiroAcesso">
-    <div class="modal">
-      <h2>Alterar Senha</h2>
-      <p>Por seguranca, altere sua senha temporaria.</p>
+  <!-- Modal Primeiro Acesso -->
+  <div id="modalPrimeiroAcesso" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+      <h2 style="margin-bottom: 16px; color: var(--brand-primary);">Bem-vindo!</h2>
+      <p style="margin-bottom: 24px; color: var(--text-secondary);">Por seguranca, altere sua senha temporaria.</p>
       <form id="formPrimeiroAcesso">
         <div class="form-group">
-          <label>Nova Senha</label>
+          <label for="novaSenhaPrimeiro">Nova Senha</label>
           <input type="password" id="novaSenhaPrimeiro" required minlength="6">
         </div>
         <div class="form-group">
-          <label>Confirmar Senha</label>
+          <label for="confirmarSenhaPrimeiro">Confirmar Senha</label>
           <input type="password" id="confirmarSenhaPrimeiro" required>
         </div>
-        <button type="submit" class="btn btn-primary">Alterar e Continuar</button>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Alterar e Continuar</button>
       </form>
     </div>
   </div>

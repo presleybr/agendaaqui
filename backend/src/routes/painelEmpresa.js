@@ -195,16 +195,20 @@ router.patch('/agendamentos/:id/status', async (req, res) => {
       [status, id]
     );
 
-    // Log
-    await db.query(`
-      INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, dados_extras)
-      VALUES ($1, $2, 'atualizar_status', $3, $4)
-    `, [
-      req.empresa_id,
-      req.usuarioEmpresa.id,
-      `Status do agendamento #${id} (${agendamento.nome_cliente}) alterado de ${agendamento.status_atual} para ${status}`,
-      JSON.stringify({ agendamento_id: id, de: agendamento.status_atual, para: status })
-    ]);
+    // Log (não bloqueante)
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, dados_extras)
+        VALUES ($1, $2, 'atualizar_status', $3, $4)
+      `, [
+        req.empresa_id,
+        req.usuarioEmpresa.id,
+        `Status do agendamento #${id} (${agendamento.nome_cliente}) alterado de ${agendamento.status_atual} para ${status}`,
+        JSON.stringify({ agendamento_id: id, de: agendamento.status_atual, para: status })
+      ]);
+    } catch (logErr) {
+      console.error('Erro ao registrar log (não bloqueante):', logErr.message);
+    }
 
     res.json({ success: true, message: 'Status atualizado com sucesso' });
 
@@ -291,11 +295,15 @@ router.put('/minha-empresa', requireRole('admin', 'gerente'), async (req, res) =
         cor_primaria, cor_secundaria, facebook_url, instagram_url, site_url,
         req.empresa_id]);
 
-    // Log
-    await db.query(`
-      INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao)
-      VALUES ($1, $2, 'atualizar_empresa', 'Dados da empresa atualizados')
-    `, [req.empresa_id, req.usuarioEmpresa.id]);
+    // Log (não bloqueante)
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao)
+        VALUES ($1, $2, 'atualizar_empresa', 'Dados da empresa atualizados')
+      `, [req.empresa_id, req.usuarioEmpresa.id]);
+    } catch (logErr) {
+      console.error('Erro ao registrar log (não bloqueante):', logErr.message);
+    }
 
     res.json({ success: true, message: 'Dados atualizados com sucesso' });
 
@@ -376,11 +384,15 @@ router.put('/configuracoes/horarios', requireRole('admin'), async (req, res) => 
       WHERE id = $4
     `, [horario_inicio, horario_fim, intervalo_minutos, req.empresa_id]);
 
-    // Log
-    await db.query(`
-      INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao)
-      VALUES ($1, $2, 'atualizar_horarios', 'Horários de funcionamento atualizados')
-    `, [req.empresa_id, req.usuarioEmpresa.id]);
+    // Log (não bloqueante)
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao)
+        VALUES ($1, $2, 'atualizar_horarios', 'Horários de funcionamento atualizados')
+      `, [req.empresa_id, req.usuarioEmpresa.id]);
+    } catch (logErr) {
+      console.error('Erro ao registrar log (não bloqueante):', logErr.message);
+    }
 
     res.json({ success: true, message: 'Horários atualizados' });
 
@@ -397,35 +409,65 @@ router.put('/configuracoes/horarios', requireRole('admin'), async (req, res) => 
  */
 router.get('/relatorios/resumo', async (req, res) => {
   try {
-    const { periodo = '30' } = req.query; // dias
+    const { data_inicio, data_fim, periodo = '30' } = req.query;
 
-    const result = await db.query(`
-      SELECT
-        DATE(data_agendamento) as data,
-        COUNT(*) as total,
-        COUNT(CASE WHEN status = 'concluido' THEN 1 END) as concluidos,
-        COUNT(CASE WHEN status = 'cancelado' THEN 1 END) as cancelados,
-        SUM(CASE WHEN status IN ('confirmado', 'concluido') THEN valor ELSE 0 END) as faturamento
-      FROM agendamentos
-      WHERE empresa_id = $1
-        AND data_agendamento >= CURRENT_DATE - $2::integer
-      GROUP BY DATE(data_agendamento)
-      ORDER BY data DESC
-    `, [req.empresa_id, parseInt(periodo)]);
+    let query;
+    let params;
 
-    // Calcular totais
-    const totais = result.rows.reduce((acc, row) => {
-      acc.total += parseInt(row.total);
-      acc.concluidos += parseInt(row.concluidos);
-      acc.cancelados += parseInt(row.cancelados);
-      acc.faturamento += parseInt(row.faturamento || 0);
-      return acc;
-    }, { total: 0, concluidos: 0, cancelados: 0, faturamento: 0 });
+    if (data_inicio && data_fim) {
+      // Usar datas específicas
+      query = `
+        SELECT
+          COUNT(*) as total_agendamentos,
+          COUNT(CASE WHEN status = 'pendente' THEN 1 END) as pendentes,
+          COUNT(CASE WHEN status = 'confirmado' THEN 1 END) as confirmados,
+          COUNT(CASE WHEN status = 'concluido' THEN 1 END) as concluidos,
+          COUNT(CASE WHEN status = 'cancelado' THEN 1 END) as cancelados,
+          COALESCE(SUM(CASE WHEN status IN ('confirmado', 'concluido') THEN valor ELSE 0 END), 0) as receita_total,
+          COUNT(DISTINCT CASE WHEN status != 'cancelado' THEN email END) as novos_clientes
+        FROM agendamentos
+        WHERE empresa_id = $1
+          AND data_agendamento >= $2
+          AND data_agendamento <= $3
+      `;
+      params = [req.empresa_id, data_inicio, data_fim];
+    } else {
+      // Usar período em dias
+      query = `
+        SELECT
+          COUNT(*) as total_agendamentos,
+          COUNT(CASE WHEN status = 'pendente' THEN 1 END) as pendentes,
+          COUNT(CASE WHEN status = 'confirmado' THEN 1 END) as confirmados,
+          COUNT(CASE WHEN status = 'concluido' THEN 1 END) as concluidos,
+          COUNT(CASE WHEN status = 'cancelado' THEN 1 END) as cancelados,
+          COALESCE(SUM(CASE WHEN status IN ('confirmado', 'concluido') THEN valor ELSE 0 END), 0) as receita_total,
+          COUNT(DISTINCT CASE WHEN status != 'cancelado' THEN email END) as novos_clientes
+        FROM agendamentos
+        WHERE empresa_id = $1
+          AND data_agendamento >= CURRENT_DATE - $2::integer
+      `;
+      params = [req.empresa_id, parseInt(periodo)];
+    }
+
+    const result = await db.query(query, params);
+    const stats = result.rows[0] || {};
+
+    // Calcular taxa de confirmação
+    const total = parseInt(stats.total_agendamentos || 0);
+    const confirmados = parseInt(stats.confirmados || 0) + parseInt(stats.concluidos || 0);
+    const taxa_confirmacao = total > 0 ? (confirmados / total) * 100 : 0;
 
     res.json({
-      periodo: parseInt(periodo),
-      dados_diarios: result.rows,
-      totais
+      total_agendamentos: parseInt(stats.total_agendamentos || 0),
+      receita_total: parseInt(stats.receita_total || 0),
+      novos_clientes: parseInt(stats.novos_clientes || 0),
+      taxa_confirmacao: Math.round(taxa_confirmacao),
+      por_status: {
+        pendente: parseInt(stats.pendentes || 0),
+        confirmado: parseInt(stats.confirmados || 0),
+        concluido: parseInt(stats.concluidos || 0),
+        cancelado: parseInt(stats.cancelados || 0)
+      }
     });
 
   } catch (err) {
@@ -440,20 +482,39 @@ router.get('/relatorios/resumo', async (req, res) => {
  */
 router.get('/relatorios/servicos', async (req, res) => {
   try {
-    const result = await db.query(`
+    const { data_inicio, data_fim } = req.query;
+
+    let query = `
       SELECT
         tipo_servico,
         COUNT(*) as quantidade,
-        SUM(CASE WHEN status IN ('confirmado', 'concluido') THEN valor ELSE 0 END) as faturamento
+        COALESCE(SUM(CASE WHEN status IN ('confirmado', 'concluido') THEN valor ELSE 0 END), 0) as receita_total
       FROM agendamentos
       WHERE empresa_id = $1
-      GROUP BY tipo_servico
-      ORDER BY quantidade DESC
-    `, [req.empresa_id]);
+    `;
+    const params = [req.empresa_id];
 
-    res.json(result.rows);
+    if (data_inicio && data_fim) {
+      query += ` AND data_agendamento >= $2 AND data_agendamento <= $3`;
+      params.push(data_inicio, data_fim);
+    }
+
+    query += ` GROUP BY tipo_servico ORDER BY quantidade DESC`;
+
+    const result = await db.query(query, params);
+
+    // Calcular ticket médio para cada serviço
+    const servicos = result.rows.map(s => ({
+      tipo_servico: s.tipo_servico,
+      quantidade: parseInt(s.quantidade),
+      receita_total: parseInt(s.receita_total || 0),
+      ticket_medio: s.quantidade > 0 ? Math.round(parseInt(s.receita_total || 0) / parseInt(s.quantidade)) : 0
+    }));
+
+    res.json({ servicos });
 
   } catch (err) {
+    console.error('Erro ao gerar relatório de serviços:', err);
     res.status(500).json({ error: 'Erro ao gerar relatório' });
   }
 });
