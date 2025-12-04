@@ -272,31 +272,24 @@ class AdminPanel {
 
   async loadStats() {
     try {
-      console.log('📊 Loading stats...');
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const firstDayOfMonth = format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd');
-      const lastDayOfMonth = format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), 'yyyy-MM-dd');
+      console.log('📊 Loading stats from Super Admin API...');
 
-      console.log('   Today:', today);
-      console.log('   Month range:', firstDayOfMonth, 'to', lastDayOfMonth);
+      // Usar o endpoint do Super Admin para dados consolidados de TODAS as empresas
+      const dashboardData = await dashboardApi.getDashboard();
+      console.log('✅ Dashboard data loaded:', dashboardData);
 
-      const [todayData, monthData] = await Promise.all([
-        api.get(`/agendamentos?data=${today}`),
-        api.get(`/agendamentos/stats?data_inicio=${firstDayOfMonth}&data_fim=${lastDayOfMonth}`)
-      ]);
+      const { agendamentos, pagamentos, agendamentos_hoje } = dashboardData;
 
-      console.log('✅ Stats loaded:', { todayData, monthData });
+      // Atualizar DOM com dados reais
+      document.getElementById('statToday').textContent = agendamentos_hoje || 0;
+      document.getElementById('statPending').textContent = agendamentos?.pendentes || 0;
+      document.getElementById('statConfirmed').textContent = agendamentos?.confirmados || 0;
+      document.getElementById('statRevenue').textContent = formatters.currency(pagamentos?.valor_total || agendamentos?.receita_total || 0);
 
-      document.getElementById('statToday').textContent = todayData.total || 0;
-      document.getElementById('statPending').textContent = monthData.pendentes || 0;
-      document.getElementById('statConfirmed').textContent = monthData.confirmados || 0;
-      document.getElementById('statRevenue').textContent = formatters.currency(monthData.receita_total || 0);
-
-      console.log('✅ Stats rendered to DOM');
+      console.log('✅ Stats rendered to DOM from Super Admin API');
     } catch (error) {
       console.error('❌ Error loading stats:', error);
       console.error('   Error details:', error.response?.data);
-      console.error('   Error status:', error.response?.status);
 
       // Set fallback values
       document.getElementById('statToday').textContent = '0';
@@ -511,7 +504,7 @@ class AdminPanel {
 
     const loadingHTML = `
       <tr>
-        <td colspan="8" style="text-align: center; padding: 40px;">
+        <td colspan="9" style="text-align: center; padding: 40px;">
           <div class="spinner"></div>
           <p style="margin-top: 10px; color: #666;">Carregando agendamentos...</p>
         </td>
@@ -523,10 +516,9 @@ class AdminPanel {
       if (dashboardTbody) dashboardTbody.innerHTML = loadingHTML;
       if (agendamentosTbody) agendamentosTbody.innerHTML = loadingHTML;
 
-      const params = new URLSearchParams(this.currentFilters);
-      console.log('📋 Loading appointments with params:', params.toString());
-
-      const response = await api.get(`/agendamentos?${params.toString()}`);
+      // Usar Super Admin API para ver agendamentos de TODAS as empresas
+      console.log('📋 Loading appointments from Super Admin API...');
+      const response = await agendamentosApi.listar(this.currentFilters);
       console.log('✅ Appointments loaded:', response);
 
       this.appointments = response.agendamentos || [];
@@ -567,7 +559,7 @@ class AdminPanel {
     const agendamentosTbody = document.getElementById('agendamentosAppointmentsTable');
 
     const emptyStateHTML = `
-      <tr><td colspan="9" style="text-align: center; padding: 40px;">
+      <tr><td colspan="10" style="text-align: center; padding: 40px;">
         <div style="color: #666;">
           <svg style="width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -591,28 +583,52 @@ class AdminPanel {
 
     try {
       const tableHTML = this.appointments.map(appointment => {
-        // Parse date safely - handle both YYYY-MM-DD and full ISO formats
-        const dateStr = appointment.data.includes('T') ? appointment.data.split('T')[0] : appointment.data;
-        const [year, month, day] = dateStr.split('-').map(Number);
-        const appointmentDate = new Date(year, month - 1, day);
+        // Parse date safely - handle data_hora (ISO) or data (YYYY-MM-DD)
+        let appointmentDate;
+        let horario = appointment.horario || '';
+
+        if (appointment.data_hora) {
+          appointmentDate = new Date(appointment.data_hora);
+          if (!horario) {
+            horario = format(appointmentDate, 'HH:mm');
+          }
+        } else if (appointment.data) {
+          const dateStr = appointment.data.includes('T') ? appointment.data.split('T')[0] : appointment.data;
+          const [year, month, day] = dateStr.split('-').map(Number);
+          appointmentDate = new Date(year, month - 1, day);
+        } else {
+          appointmentDate = new Date();
+        }
+
+        // Campos podem vir com nomes diferentes da API
+        const clienteNome = appointment.cliente_nome || appointment.nome_cliente || 'N/A';
+        const clienteTelefone = appointment.cliente_telefone || appointment.telefone || 'N/A';
+        const veiculoPlaca = appointment.veiculo_placa || appointment.placa || 'N/A';
+        const veiculoMarca = appointment.veiculo_marca || '';
+        const veiculoModelo = appointment.veiculo_modelo || '';
+        const empresaNome = appointment.empresa_nome || 'Matriz';
+        const valor = appointment.preco || appointment.valor || 0;
 
         return `
       <tr>
-        <td><strong>${appointment.protocolo}</strong></td>
+        <td><strong>${appointment.protocolo || '#' + appointment.id}</strong></td>
         <td>
-          ${appointment.cliente_nome}<br>
-          <small style="color: #666;">${appointment.cliente_telefone || 'N/A'}</small>
+          <small style="color: #3b82f6; font-weight: 500;">${empresaNome}</small>
         </td>
         <td>
-          ${appointment.veiculo_marca} ${appointment.veiculo_modelo}<br>
-          <small style="color: #666;">${appointment.veiculo_placa}</small>
+          ${clienteNome}<br>
+          <small style="color: #666;">${clienteTelefone}</small>
+        </td>
+        <td>
+          ${veiculoMarca} ${veiculoModelo}<br>
+          <small style="color: #666;">${veiculoPlaca}</small>
         </td>
         <td>
           ${format(appointmentDate, 'dd/MM/yyyy')}<br>
-          <small style="color: #666;">${appointment.horario}</small>
+          <small style="color: #666;">${horario}</small>
         </td>
         <td>${this.getTipoLabel(appointment.tipo_vistoria)}</td>
-        <td>${formatters.currency(appointment.preco)}</td>
+        <td>${formatters.currency(valor)}</td>
         <td>
           <span class="status-badge ${appointment.status}">${this.getStatusLabel(appointment.status)}</span>
         </td>
@@ -656,7 +672,7 @@ class AdminPanel {
       console.error('❌ Render error:', error);
 
       const errorHTML = `
-        <tr><td colspan="9" style="text-align: center; padding: 40px;">
+        <tr><td colspan="10" style="text-align: center; padding: 40px;">
           <div style="color: var(--status-danger);">
             <p style="font-weight: 600; margin-bottom: 5px;">Erro ao renderizar agendamentos</p>
             <p style="font-size: 0.9rem; color: #666;">${error.message}</p>
@@ -1272,7 +1288,7 @@ class AdminPanel {
 
     const loadingHTML = `
       <tr>
-        <td colspan="6" style="text-align: center; padding: 40px;">
+        <td colspan="7" style="text-align: center; padding: 40px;">
           <div class="spinner"></div>
           <p style="margin-top: 10px; color: #666;">Carregando clientes...</p>
         </td>
@@ -1282,19 +1298,20 @@ class AdminPanel {
     try {
       if (tbody) tbody.innerHTML = loadingHTML;
 
-      console.log('📋 Loading clientes...');
-      const data = await api.get('/clientes');
+      // Usar Super Admin API para ver clientes de TODAS as empresas
+      console.log('📋 Loading clientes from Super Admin API...');
+      const data = await clientesApi.listar();
       console.log('✅ Clientes loaded:', data);
 
       this.clientes = data.clientes || [];
-      console.log(`📊 Loaded ${this.clientes.length} clientes (total: ${data.total})`);
+      console.log(`📊 Loaded ${this.clientes.length} clientes`);
 
       this.renderClientes();
     } catch (error) {
       console.error('❌ Error loading clientes:', error);
 
       const errorHTML = `
-        <tr><td colspan="6" style="text-align: center; padding: 40px;">
+        <tr><td colspan="7" style="text-align: center; padding: 40px;">
           <div style="color: var(--status-danger);">
             <svg style="width: 48px; height: 48px; margin-bottom: 10px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
@@ -1318,7 +1335,7 @@ class AdminPanel {
     const tbody = document.getElementById('clientesTable');
 
     const emptyStateHTML = `
-      <tr><td colspan="6" style="text-align: center; padding: 40px;">
+      <tr><td colspan="7" style="text-align: center; padding: 40px;">
         <div style="color: #666;">
           <svg style="width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -1340,12 +1357,17 @@ class AdminPanel {
     console.log(`🎨 Rendering ${this.clientes.length} clientes`);
 
     try {
-      const tableHTML = this.clientes.map(cliente => `
+      const tableHTML = this.clientes.map(cliente => {
+        // Empresa pode vir do Super Admin API
+        const empresaNome = cliente.empresa_nome || 'Matriz';
+
+        return `
         <tr>
           <td><strong>${cliente.nome}</strong></td>
           <td>${this.formatCPF(cliente.cpf)}</td>
           <td>${this.formatTelefone(cliente.telefone)}</td>
           <td>${cliente.email || '-'}</td>
+          <td><span class="empresa-badge">${empresaNome}</span></td>
           <td>${format(new Date(cliente.created_at), 'dd/MM/yyyy')}</td>
           <td>
             <div class="action-buttons">
@@ -1364,7 +1386,7 @@ class AdminPanel {
             </div>
           </td>
         </tr>
-      `).join('');
+      `}).join('');
 
       if (tbody) tbody.innerHTML = tableHTML;
       console.log('✅ Clientes table rendered successfully');
@@ -1372,7 +1394,7 @@ class AdminPanel {
       console.error('❌ Render error:', error);
 
       const errorHTML = `
-        <tr><td colspan="6" style="text-align: center; padding: 40px;">
+        <tr><td colspan="7" style="text-align: center; padding: 40px;">
           <div style="color: var(--status-danger);">
             <p style="font-weight: 600; margin-bottom: 5px;">Erro ao renderizar clientes</p>
             <p style="font-size: 0.9rem; color: #666;">${error.message}</p>
