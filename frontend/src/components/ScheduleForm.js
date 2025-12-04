@@ -110,82 +110,96 @@ export class ScheduleForm {
 
   renderSteps() {
     const steps = [
-      { num: 1, label: 'Pessoais' },
-      { num: 2, label: 'Veículo' },
-      { num: 3, label: 'Horário' },
-      { num: 4, label: 'Confirmar' },
-      { num: 5, label: 'Pagar' }
+      { num: 1, label: 'Dados Pessoais', shortLabel: 'Pessoais' },
+      { num: 2, label: 'Dados do Veículo', shortLabel: 'Veículo' },
+      { num: 3, label: 'Data e Horário', shortLabel: 'Horário' },
+      { num: 4, label: 'Confirmação', shortLabel: 'Confirmar' },
+      { num: 5, label: 'Pagamento', shortLabel: 'Pagar' }
     ];
 
-    const indicatorStyle = `
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: flex-start;
-      width: 100%;
-      padding: 10px 0 20px 0;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #e4e6eb;
-    `;
+    const isMobile = window.innerWidth <= 768;
 
-    const stepStyle = `
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex: 1;
-      text-align: center;
-    `;
+    // Build HTML for each step
+    const stepsHtml = steps.map(step => {
+      const isActive = step.num === this.currentStep;
+      const isCompleted = step.num < this.currentStep;
 
-    const getNumberStyle = (isActive, isCompleted) => {
-      let bg = '#fff';
-      let border = '#e4e6eb';
-      let color = '#65676b';
+      // Circle colors
+      let circleBg = '#ffffff';
+      let circleBorder = '#d1d5db';
+      let circleColor = '#6b7280';
 
       if (isActive) {
-        bg = '#1877f2';
-        border = '#1877f2';
-        color = '#fff';
+        circleBg = '#3B82F6';
+        circleBorder = '#3B82F6';
+        circleColor = '#ffffff';
       } else if (isCompleted) {
-        bg = '#22c55e';
-        border = '#22c55e';
-        color = '#fff';
+        circleBg = '#22c55e';
+        circleBorder = '#22c55e';
+        circleColor = '#ffffff';
       }
 
-      return `
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: ${bg};
-        border: 2px solid ${border};
-        color: ${color};
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 14px;
-        margin-bottom: 6px;
-      `;
-    };
+      const labelColor = isActive ? '#3B82F6' : '#6b7280';
+      const labelWeight = isActive ? '600' : '400';
+      const displayLabel = isMobile ? step.shortLabel : step.label;
 
-    const getLabelStyle = (isActive) => `
-      font-size: 10px;
-      color: ${isActive ? '#1877f2' : '#65676b'};
-      font-weight: ${isActive ? '600' : '500'};
-      white-space: nowrap;
-    `;
+      return `
+        <div style="display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; z-index: 1;">
+          <div style="
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
+            border-radius: 50%;
+            background-color: ${circleBg};
+            border: 2px solid ${circleBorder};
+            color: ${circleColor};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          ">${isCompleted ? '✓' : step.num}</div>
+          <div style="
+            margin-top: 8px;
+            font-size: ${isMobile ? '9px' : '11px'};
+            color: ${labelColor};
+            font-weight: ${labelWeight};
+            text-align: center;
+            white-space: nowrap;
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          ">${displayLabel}</div>
+        </div>
+      `;
+    }).join('');
 
     return `
-      <div class="steps-indicator" style="${indicatorStyle}">
-        ${steps.map(step => {
-          const isActive = step.num === this.currentStep;
-          const isCompleted = step.num < this.currentStep;
-          return `
-            <div class="step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" style="${stepStyle}">
-              <div class="step-number" style="${getNumberStyle(isActive, isCompleted)}">${step.num}</div>
-              <div class="step-label" style="${getLabelStyle(isActive)}">${step.label}</div>
-            </div>
-          `;
-        }).join('')}
+      <div style="
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+        padding: 16px 8px;
+        margin-bottom: 24px;
+        position: relative;
+        background: #f8fafc;
+        border-radius: 12px;
+      ">
+        <!-- Linha conectora -->
+        <div style="
+          position: absolute;
+          top: 34px;
+          left: 10%;
+          right: 10%;
+          height: 2px;
+          background: #e5e7eb;
+          z-index: 0;
+        "></div>
+        ${stepsHtml}
       </div>
     `;
   }
