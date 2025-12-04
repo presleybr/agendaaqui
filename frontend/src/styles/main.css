@@ -546,13 +546,13 @@ body {
 }
 
 .btn-secondary {
-  background: var(--bg-primary);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
-  border-color: var(--border-medium);
+  border: 2px solid var(--border-medium);
 }
 
 .btn-secondary:hover {
-  background: var(--bg-hover);
+  background: var(--bg-active);
   border-color: var(--border-strong);
 }
 
@@ -1813,6 +1813,24 @@ body {
   color: var(--brand-primary);
   font-family: var(--font-mono);
   letter-spacing: 0.05em;
+}
+
+/* Success Message Buttons */
+.success-message .btn {
+  margin: var(--spacing-2);
+}
+
+.success-message .btn-secondary {
+  background: var(--neutral-100);
+  color: var(--text-primary);
+  border: 2px solid var(--neutral-300);
+  padding: var(--spacing-3) var(--spacing-6);
+  font-weight: var(--font-medium);
+}
+
+.success-message .btn-secondary:hover {
+  background: var(--neutral-200);
+  border-color: var(--neutral-400);
 }
 
 /* ============================================
