@@ -110,21 +110,82 @@ export class ScheduleForm {
 
   renderSteps() {
     const steps = [
-      { num: 1, label: 'Dados Pessoais' },
-      { num: 2, label: 'Dados do Veículo' },
-      { num: 3, label: 'Data e Horário' },
-      { num: 4, label: 'Confirmação' },
-      { num: 5, label: 'Pagamento' }
+      { num: 1, label: 'Pessoais' },
+      { num: 2, label: 'Veículo' },
+      { num: 3, label: 'Horário' },
+      { num: 4, label: 'Confirmar' },
+      { num: 5, label: 'Pagar' }
     ];
 
+    const indicatorStyle = `
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+      padding: 10px 0 20px 0;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e4e6eb;
+    `;
+
+    const stepStyle = `
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      text-align: center;
+    `;
+
+    const getNumberStyle = (isActive, isCompleted) => {
+      let bg = '#fff';
+      let border = '#e4e6eb';
+      let color = '#65676b';
+
+      if (isActive) {
+        bg = '#1877f2';
+        border = '#1877f2';
+        color = '#fff';
+      } else if (isCompleted) {
+        bg = '#22c55e';
+        border = '#22c55e';
+        color = '#fff';
+      }
+
+      return `
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: ${bg};
+        border: 2px solid ${border};
+        color: ${color};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 6px;
+      `;
+    };
+
+    const getLabelStyle = (isActive) => `
+      font-size: 10px;
+      color: ${isActive ? '#1877f2' : '#65676b'};
+      font-weight: ${isActive ? '600' : '500'};
+      white-space: nowrap;
+    `;
+
     return `
-      <div class="steps-indicator">
-        ${steps.map(step => `
-          <div class="step ${step.num === this.currentStep ? 'active' : ''} ${step.num < this.currentStep ? 'completed' : ''}">
-            <div class="step-number">${step.num}</div>
-            <div class="step-label">${step.label}</div>
-          </div>
-        `).join('')}
+      <div class="steps-indicator" style="${indicatorStyle}">
+        ${steps.map(step => {
+          const isActive = step.num === this.currentStep;
+          const isCompleted = step.num < this.currentStep;
+          return `
+            <div class="step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" style="${stepStyle}">
+              <div class="step-number" style="${getNumberStyle(isActive, isCompleted)}">${step.num}</div>
+              <div class="step-label" style="${getLabelStyle(isActive)}">${step.label}</div>
+            </div>
+          `;
+        }).join('')}
       </div>
     `;
   }
