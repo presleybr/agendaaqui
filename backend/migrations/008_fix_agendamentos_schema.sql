@@ -5,6 +5,15 @@
 -- Adiciona coluna data_hora se não existir
 ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS data_hora TIMESTAMP;
 
+-- Adiciona coluna endereco_vistoria se não existir
+ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS endereco_vistoria TEXT;
+
+-- Adiciona coluna observacoes se não existir
+ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS observacoes TEXT;
+
+-- Adiciona coluna empresa_id se não existir
+ALTER TABLE agendamentos ADD COLUMN IF NOT EXISTS empresa_id INTEGER REFERENCES empresas(id) ON DELETE CASCADE;
+
 -- Preenche data_hora com dados existentes de data + horario (se essas colunas existirem)
 DO $$
 BEGIN
