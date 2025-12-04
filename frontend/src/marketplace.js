@@ -396,6 +396,7 @@ class Marketplace {
         : '';
 
       const logoUrl = empresa.logo_url || empresa.foto_perfil_url || '/default-logo.png';
+      const capaUrl = empresa.foto_capa_url || empresa.banner_url || '';
 
       const location = [empresa.bairro, empresa.cidade, empresa.estado]
         .filter(Boolean)
@@ -405,9 +406,15 @@ class Marketplace {
         ? empresa.descricao.substring(0, 100) + (empresa.descricao.length > 100 ? '...' : '')
         : '';
 
+      // Estilo do header com ou sem capa
+      const headerStyle = capaUrl
+        ? `style="background-image: url('${capaUrl}'); background-size: cover; background-position: center;"`
+        : '';
+      const headerClass = capaUrl ? 'card-header has-capa' : 'card-header';
+
       return `
         <a href="${empresa.url || '/' + empresa.slug}" class="empresa-card ${isFeatured ? 'featured-card' : ''}">
-          <div class="card-header">
+          <div class="${headerClass}" ${headerStyle}>
             <div class="empresa-logo">
               <img src="${logoUrl}" alt="${empresa.nome || 'Empresa'}" onerror="this.style.display='none'">
             </div>

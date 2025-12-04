@@ -260,7 +260,14 @@ class PainelEmpresa {
 
     if (this.usuario) {
       document.getElementById('sidebarUserName').textContent = this.usuario.nome || 'Usuario';
-      document.getElementById('sidebarUserRole').textContent = this.usuario.role || 'Administrador';
+      // Traduzir role para portugues
+      const roleLabels = {
+        'admin': 'Administrador',
+        'gerente': 'Gerente',
+        'atendente': 'Atendente',
+        'funcionario': 'Funcionario'
+      };
+      document.getElementById('sidebarUserRole').textContent = roleLabels[this.usuario.role] || this.usuario.role || 'Usuario';
     }
   }
 
@@ -1059,6 +1066,37 @@ class PainelEmpresa {
 
       container.innerHTML = `
         <form id="formMinhaEmpresa" style="display: grid; gap: 20px;">
+
+          <!-- Imagens da Empresa -->
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; padding: 20px; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-light);">
+            <!-- Logo -->
+            <div style="text-align: center;">
+              <label style="display: block; margin-bottom: 10px; font-weight: 600;">Logo da Empresa</label>
+              <div id="logoPreview" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--border-medium); margin: 0 auto 10px; overflow: hidden; background: white; display: flex; align-items: center; justify-content: center;">
+                ${empresa.logo_url ? `<img src="${empresa.logo_url}" style="width: 100%; height: 100%; object-fit: cover;">` : `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`}
+              </div>
+              <input type="file" id="logoInput" accept="image/*" style="display: none;" onchange="painel.uploadImagem('logo')">
+              <button type="button" class="btn btn-secondary" onclick="document.getElementById('logoInput').click()" style="font-size: 0.85rem; padding: 6px 12px;">
+                <svg style="width: 14px; height: 14px; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Alterar Logo
+              </button>
+            </div>
+
+            <!-- Capa -->
+            <div>
+              <label style="display: block; margin-bottom: 10px; font-weight: 600;">Foto de Capa (aparece no marketplace)</label>
+              <div id="capaPreview" style="width: 100%; height: 140px; border-radius: 12px; border: 2px dashed var(--border-medium); overflow: hidden; background: var(--bg-primary); display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                ${empresa.foto_capa_url ? `<img src="${empresa.foto_capa_url}" style="width: 100%; height: 100%; object-fit: cover;">` : `<div style="text-align: center; color: var(--text-tertiary);"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><p style="font-size: 0.85rem; margin-top: 8px;">Recomendado: 800x400px</p></div>`}
+              </div>
+              <input type="file" id="capaInput" accept="image/*" style="display: none;" onchange="painel.uploadImagem('capa')">
+              <button type="button" class="btn btn-secondary" onclick="document.getElementById('capaInput').click()" style="font-size: 0.85rem; padding: 6px 12px;">
+                <svg style="width: 14px; height: 14px; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Alterar Capa
+              </button>
+              <small style="display: block; margin-top: 8px; color: var(--text-tertiary);">Esta imagem aparece nos cards da sua empresa no marketplace</small>
+            </div>
+          </div>
+
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
               <label>Nome da Empresa</label>
@@ -1148,6 +1186,63 @@ class PainelEmpresa {
     } catch (err) {
       console.error('Erro ao carregar empresa:', err);
       container.innerHTML = '<div style="color: var(--status-danger); padding: 20px;">Erro ao carregar dados da empresa</div>';
+    }
+  }
+
+  async uploadImagem(tipo) {
+    const inputId = tipo === 'logo' ? 'logoInput' : 'capaInput';
+    const previewId = tipo === 'logo' ? 'logoPreview' : 'capaPreview';
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+
+    if (!input.files || !input.files[0]) {
+      return;
+    }
+
+    const file = input.files[0];
+
+    // Validar tamanho (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Arquivo muito grande. Maximo 5MB.');
+      return;
+    }
+
+    // Mostrar loading
+    preview.innerHTML = '<div class="spinner"></div>';
+
+    try {
+      const formData = new FormData();
+      formData.append('imagem', file);
+      formData.append('tipo', tipo);
+
+      const response = await fetch(`${API_URL}/empresa/painel/upload-imagem`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro no upload');
+      }
+
+      // Atualizar preview
+      if (tipo === 'logo') {
+        preview.innerHTML = `<img src="${data.url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+      } else {
+        preview.innerHTML = `<img src="${data.url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+      }
+
+      alert('Imagem enviada com sucesso!');
+
+    } catch (err) {
+      console.error('Erro no upload:', err);
+      alert(err.message || 'Erro ao enviar imagem');
+      // Restaurar preview
+      this.loadMinhaEmpresa();
     }
   }
 

@@ -547,4 +547,102 @@ router.get('/log-atividades', requireRole('admin'), async (req, res) => {
   }
 });
 
+// ==================== UPLOAD DE IMAGENS ====================
+
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configuracao do storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const tipo = req.body.tipo || 'outros';
+    let folder = 'uploads/empresas';
+
+    if (tipo === 'logo') folder = 'uploads/empresas/logos';
+    else if (tipo === 'capa') folder = 'uploads/empresas/capas';
+    else if (tipo === 'perfil') folder = 'uploads/empresas/perfis';
+
+    // Criar diretorio se nao existir
+    const fullPath = path.join(__dirname, '../../../', folder);
+    if (!fs.existsSync(fullPath)) {
+      fs.mkdirSync(fullPath, { recursive: true });
+    }
+
+    cb(null, folder);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, `empresa-${req.empresa_id}-${uniqueSuffix}${ext}`);
+  }
+});
+
+const uploadEmpresa = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (mimetype && extname) return cb(null, true);
+    cb(new Error('Apenas imagens sao permitidas'));
+  }
+}).single('imagem');
+
+/**
+ * POST /api/empresa/painel/upload-imagem
+ * Upload de logo ou capa da empresa
+ */
+router.post('/upload-imagem', requireRole('admin', 'gerente'), (req, res) => {
+  uploadEmpresa(req, res, async (err) => {
+    if (err) {
+      console.error('Erro no upload:', err);
+      return res.status(400).json({ error: err.message || 'Erro no upload' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhuma imagem enviada' });
+    }
+
+    try {
+      const tipo = req.body.tipo || 'outros';
+      const imageUrl = '/' + req.file.path.replace(/\\/g, '/');
+
+      let campo = '';
+      if (tipo === 'logo') campo = 'logo_url';
+      else if (tipo === 'capa') campo = 'foto_capa_url';
+      else if (tipo === 'perfil') campo = 'foto_perfil_url';
+      else campo = 'banner_url';
+
+      // Atualizar banco de dados
+      await db.query(
+        `UPDATE empresas SET ${campo} = $1, updated_at = NOW() WHERE id = $2`,
+        [imageUrl, req.empresa_id]
+      );
+
+      // Log (nao bloqueante)
+      try {
+        await db.query(`
+          INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao)
+          VALUES ($1, $2, 'upload_imagem', $3)
+        `, [req.empresa_id, req.usuarioEmpresa.id, `Upload de ${tipo}: ${imageUrl}`]);
+      } catch (logErr) {
+        console.error('Erro ao registrar log:', logErr.message);
+      }
+
+      res.json({
+        success: true,
+        message: 'Imagem enviada com sucesso',
+        url: imageUrl,
+        tipo: tipo
+      });
+
+    } catch (dbErr) {
+      console.error('Erro ao salvar URL:', dbErr);
+      res.status(500).json({ error: 'Erro ao salvar imagem no banco' });
+    }
+  });
+});
+
 module.exports = router;

@@ -30,6 +30,7 @@ class EmpresaController {
         SELECT
           id, nome, slug, cidade, estado, bairro, endereco,
           telefone, whatsapp, logo_url, foto_perfil_url,
+          foto_capa_url, banner_url,
           preco_cautelar, preco_transferencia, preco_outros,
           horario_inicio, horario_fim, horario_funcionamento,
           google_rating, google_reviews_count,
