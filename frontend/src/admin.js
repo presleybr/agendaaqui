@@ -79,6 +79,9 @@ class AdminPanel {
     // Initialize empresas manager
     this.empresasManager = new EmpresasManager();
 
+    // Expor empresasManager globalmente para os handlers onclick
+    window.empresasManager = this.empresasManager;
+
     // Setup empresas modal controls
     this.setupEmpresasModal();
 
@@ -2915,6 +2918,3 @@ class AdminPanel {
 
 // Initialize admin panel
 window.adminPanel = new AdminPanel();
-
-// Make empresasManager globally accessible for onclick handlers
-window.empresasManager = window.adminPanel.empresasManager;
