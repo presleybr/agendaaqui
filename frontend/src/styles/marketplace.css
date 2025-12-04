@@ -610,7 +610,7 @@
 
 /* ===== Advantages Section ===== */
 .advantages-section {
-  padding: 5rem 0;
+  padding: 3rem 0;
   background: #f8fafc;
 }
 
@@ -623,12 +623,17 @@
 .advantages-section .section-subtitle {
   text-align: center;
   color: #64748b;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
+}
+
+/* Carrossel container */
+.advantages-carousel {
+  overflow: visible;
 }
 
 .advantages-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
 }
 
@@ -1052,32 +1057,67 @@
     line-height: 1.4;
   }
 
-  /* Services info compacto no mobile */
-  .services-info {
+  /* Carrossel horizontal para Vantagens no mobile */
+  .advantages-section {
     padding: 2rem 0;
   }
 
-  .services-grid {
+  .advantages-section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .advantages-section .section-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .advantages-carousel {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+
+  .advantages-carousel::-webkit-scrollbar {
+    display: none;
+  }
+
+  .advantages-grid {
+    display: flex;
     gap: 1rem;
+    padding-bottom: 0.5rem;
   }
 
-  .service-info-card {
+  .advantage-card {
+    flex: 0 0 70%;
+    scroll-snap-align: center;
     padding: 1.25rem;
+    min-width: 0;
   }
 
-  .service-info-card h3 {
+  .advantage-icon {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 0.75rem;
+  }
+
+  .advantage-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .advantage-card h3 {
     font-size: 1rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
 
-  .service-info-card p {
+  .advantage-card p {
     font-size: 0.85rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .service-info-card li {
-    font-size: 0.85rem;
-    padding: 0.35rem 0;
+    line-height: 1.4;
   }
 
   /* Footer ajustado para mobile */
