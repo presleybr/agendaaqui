@@ -618,23 +618,28 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// Base path para uploads (backend/uploads)
+const uploadsBasePath = path.join(__dirname, '../../uploads');
+
 // Configuracao do storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const tipo = req.body.tipo || 'outros';
-    let folder = 'uploads/empresas';
+    let subFolder = 'empresas';
 
-    if (tipo === 'logo') folder = 'uploads/empresas/logos';
-    else if (tipo === 'capa') folder = 'uploads/empresas/capas';
-    else if (tipo === 'perfil') folder = 'uploads/empresas/perfis';
+    if (tipo === 'logo') subFolder = 'empresas/logos';
+    else if (tipo === 'capa') subFolder = 'empresas/capas';
+    else if (tipo === 'perfil') subFolder = 'empresas/perfis';
+
+    // Caminho completo do diretorio
+    const fullPath = path.join(uploadsBasePath, subFolder);
 
     // Criar diretorio se nao existir
-    const fullPath = path.join(__dirname, '../../../', folder);
     if (!fs.existsSync(fullPath)) {
       fs.mkdirSync(fullPath, { recursive: true });
     }
 
-    cb(null, folder);
+    cb(null, fullPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -672,7 +677,12 @@ router.post('/upload-imagem', requireRole('admin', 'gerente'), (req, res) => {
 
     try {
       const tipo = req.body.tipo || 'outros';
-      const imageUrl = '/' + req.file.path.replace(/\\/g, '/');
+
+      // Extrair caminho relativo a partir de 'uploads/'
+      const fullPath = req.file.path.replace(/\\/g, '/');
+      const uploadsIndex = fullPath.indexOf('uploads/');
+      const relativePath = uploadsIndex !== -1 ? fullPath.substring(uploadsIndex) : fullPath;
+      const imageUrl = '/' + relativePath;
 
       let campo = '';
       if (tipo === 'logo') campo = 'logo_url';
