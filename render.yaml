@@ -38,6 +38,26 @@ services:
           name: agendaaqui-backend
           envVarKey: RENDER_EXTERNAL_URL
     routes:
+      # Páginas específicas
+      - type: rewrite
+        source: /admin
+        destination: /admin.html
+      - type: rewrite
+        source: /admin/*
+        destination: /admin.html
+      - type: rewrite
+        source: /cliente
+        destination: /cliente.html
+      - type: rewrite
+        source: /cliente/*
+        destination: /cliente.html
+      - type: rewrite
+        source: /painel
+        destination: /painel-empresa.html
+      - type: rewrite
+        source: /painel/*
+        destination: /painel-empresa.html
+      # Fallback SPA
       - type: rewrite
         source: /*
         destination: /index.html
