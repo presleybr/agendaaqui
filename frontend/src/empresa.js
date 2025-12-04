@@ -117,24 +117,88 @@ class EmpresaPage {
   }
 
   setupMobileCTA() {
-    const mobileCTA = document.getElementById('mobileCTA');
-    const schedulingCard = document.getElementById('agendamento');
+    const ctaButton = document.getElementById('ctaButton');
+    const ctaContent = document.getElementById('ctaContent');
+    const ctaFormContainer = document.getElementById('ctaFormContainer');
+    const ctaCancelBtn = document.getElementById('ctaCancelBtn');
+    const mobileScheduleApp = document.getElementById('mobileScheduleApp');
 
-    mobileCTA?.addEventListener('click', (e) => {
+    // Track if form has been initialized
+    this.mobileFormInitialized = false;
+
+    // Click on "Agendar Agora" button - show form
+    ctaButton?.addEventListener('click', (e) => {
       e.preventDefault();
+      e.stopPropagation();
 
-      // Show the scheduling form on mobile
-      if (schedulingCard) {
-        schedulingCard.style.display = 'block';
-        schedulingCard.style.setProperty('display', 'block', 'important');
+      // Hide CTA content, show form
+      if (ctaContent) ctaContent.style.display = 'none';
+      if (ctaFormContainer) ctaFormContainer.style.display = 'block';
 
-        // Scroll to the scheduling section
-        schedulingCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-        // Hide the CTA after clicking
-        mobileCTA.style.display = 'none';
+      // Initialize form if not already done
+      if (!this.mobileFormInitialized && mobileScheduleApp && this.empresa) {
+        this.mobileScheduleForm = new ScheduleForm(mobileScheduleApp, {
+          empresaId: this.empresa.id,
+          precos: {
+            cautelar: this.empresa.preco_cautelar,
+            transferencia: this.empresa.preco_transferencia,
+            outros: this.empresa.preco_outros
+          }
+        });
+        this.mobileFormInitialized = true;
       }
     });
+
+    // Click on Cancel button - go back to CTA
+    ctaCancelBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Show CTA content, hide form
+      if (ctaContent) ctaContent.style.display = 'block';
+      if (ctaFormContainer) ctaFormContainer.style.display = 'none';
+    });
+
+    // Intercept navigation links to #agendamento on mobile
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      document.querySelectorAll('a[href="#agendamento"]').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+
+          // Close mobile menu if open
+          const mobileMenu = document.getElementById('mobileMenu');
+          const menuToggle = document.getElementById('mobileMenuToggle');
+          mobileMenu?.classList.remove('active');
+          menuToggle?.classList.remove('active');
+
+          // Scroll to the CTA card and show the form
+          const mobileCTA = document.getElementById('mobileCTA');
+          if (mobileCTA) {
+            mobileCTA.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // After scrolling, show the form
+            setTimeout(() => {
+              if (ctaContent) ctaContent.style.display = 'none';
+              if (ctaFormContainer) ctaFormContainer.style.display = 'block';
+
+              // Initialize form if not already done
+              if (!this.mobileFormInitialized && mobileScheduleApp && this.empresa) {
+                this.mobileScheduleForm = new ScheduleForm(mobileScheduleApp, {
+                  empresaId: this.empresa.id,
+                  precos: {
+                    cautelar: this.empresa.preco_cautelar,
+                    transferencia: this.empresa.preco_transferencia,
+                    outros: this.empresa.preco_outros
+                  }
+                });
+                this.mobileFormInitialized = true;
+              }
+            }, 300);
+          }
+        });
+      });
+    }
   }
 
   setupTabNavigation() {
