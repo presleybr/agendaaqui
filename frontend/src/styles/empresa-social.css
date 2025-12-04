@@ -1643,17 +1643,128 @@ html {
   animation: none !important;
 }
 
+.pricing-card::after {
+  display: none !important;
+}
+
 .pricing-card:hover {
-  border-color: var(--brand-primary);
-  background: linear-gradient(135deg, rgba(24, 119, 242, 0.03) 0%, rgba(24, 119, 242, 0.08) 100%);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(24, 119, 242, 0.15);
+  border-color: var(--brand-primary) !important;
+  background: linear-gradient(135deg, rgba(24, 119, 242, 0.03) 0%, rgba(24, 119, 242, 0.08) 100%) !important;
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 24px rgba(24, 119, 242, 0.15) !important;
 }
 
 .pricing-card.featured {
   animation: none !important;
+  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.15) !important;
+}
+
+.pricing-card.featured::after {
+  display: none !important;
 }
 
 .pricing-card.featured:hover {
-  background: linear-gradient(135deg, rgba(24, 119, 242, 0.08) 0%, rgba(24, 119, 242, 0.15) 100%);
+  background: linear-gradient(135deg, rgba(24, 119, 242, 0.08) 0%, rgba(24, 119, 242, 0.15) 100%) !important;
+  box-shadow: 0 8px 24px rgba(24, 119, 242, 0.2) !important;
+}
+
+/* ============================================
+   MOBILE CTA CARD
+   ============================================ */
+.mobile-cta-agendamento {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Hide WhatsApp float button on mobile */
+  .whatsapp-float {
+    display: none !important;
+  }
+
+  /* Hide WhatsApp button in action buttons on mobile */
+  .action-whatsapp {
+    display: none !important;
+  }
+
+  /* Hide scheduling form on mobile */
+  .scheduling-card {
+    display: none !important;
+  }
+
+  /* Show CTA card on mobile */
+  .mobile-cta-agendamento {
+    display: block;
+    background: linear-gradient(135deg, #1877f2 0%, #166fe5 100%);
+    border-radius: 16px;
+    padding: 24px 20px;
+    margin: 16px 0;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(24, 119, 242, 0.3);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: white;
+  }
+
+  .mobile-cta-agendamento:hover,
+  .mobile-cta-agendamento:active {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(24, 119, 242, 0.4);
+  }
+
+  .cta-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+
+  .cta-icon svg {
+    width: 28px;
+    height: 28px;
+    color: white;
+  }
+
+  .cta-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: white;
+  }
+
+  .cta-subtitle {
+    font-size: 0.9rem;
+    margin: 0 0 16px 0;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.4;
+  }
+
+  .cta-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: white;
+    color: #1877f2;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .cta-button:hover {
+    background: #f0f0f0;
+  }
+
+  .cta-button svg {
+    width: 20px;
+    height: 20px;
+  }
 }

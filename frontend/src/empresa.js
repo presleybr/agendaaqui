@@ -111,6 +111,30 @@ class EmpresaPage {
 
     // Photo modal
     this.setupPhotoModal();
+
+    // Mobile CTA - Show scheduling form when clicked
+    this.setupMobileCTA();
+  }
+
+  setupMobileCTA() {
+    const mobileCTA = document.getElementById('mobileCTA');
+    const schedulingCard = document.getElementById('agendamento');
+
+    mobileCTA?.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      // Show the scheduling form on mobile
+      if (schedulingCard) {
+        schedulingCard.style.display = 'block';
+        schedulingCard.style.setProperty('display', 'block', 'important');
+
+        // Scroll to the scheduling section
+        schedulingCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Hide the CTA after clicking
+        mobileCTA.style.display = 'none';
+      }
+    });
   }
 
   setupTabNavigation() {
