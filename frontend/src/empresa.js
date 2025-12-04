@@ -144,6 +144,9 @@ class EmpresaPage {
       whatsappBtn.style.display = 'flex';
     }
 
+    // Localização
+    this.renderLocalizacao();
+
     // Footer
     document.getElementById('footerNome').textContent = this.empresa.nome;
     document.getElementById('footerDescricao').textContent = this.empresa.descricao || 'Seu parceiro de confiança em vistorias veiculares';
@@ -236,6 +239,76 @@ class EmpresaPage {
       socialContainer.innerHTML = links.join('');
       socialContainer.style.display = 'flex';
     }
+  }
+
+  renderLocalizacao() {
+    // Verificar se tem endereço configurado
+    if (!this.empresa.endereco && !this.empresa.cidade) {
+      return; // Não mostrar seção se não tiver endereço
+    }
+
+    // Mostrar seção e link na navegação
+    const locSection = document.getElementById('localizacao');
+    const navLink = document.getElementById('navLocalizacao');
+
+    if (locSection) {
+      locSection.style.display = 'block';
+    }
+    if (navLink) {
+      navLink.style.display = 'inline';
+    }
+
+    // Montar endereço completo
+    const enderecoCompleto = [
+      this.empresa.endereco,
+      this.empresa.cidade,
+      this.empresa.estado
+    ].filter(Boolean).join(', ');
+
+    // Popular informações
+    const locEndereco = document.getElementById('locEndereco');
+    const locTelefone = document.getElementById('locTelefone');
+    const locHorario = document.getElementById('locHorario');
+    const locDirections = document.getElementById('locDirections');
+
+    if (locEndereco) {
+      locEndereco.textContent = enderecoCompleto || 'Endereço não informado';
+    }
+
+    if (locTelefone) {
+      locTelefone.textContent = this.empresa.telefone || this.empresa.whatsapp || 'Não informado';
+    }
+
+    if (locHorario) {
+      locHorario.textContent = this.empresa.horario_funcionamento || 'Consulte-nos';
+    }
+
+    // Link para Google Maps
+    if (locDirections && enderecoCompleto) {
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(enderecoCompleto)}`;
+      locDirections.href = mapsUrl;
+    }
+
+    // Renderizar mapa
+    this.renderMapa(enderecoCompleto);
+  }
+
+  renderMapa(endereco) {
+    const mapaContainer = document.getElementById('empresaMapa');
+    if (!mapaContainer || !endereco) return;
+
+    // Usar Google Maps Embed API (gratuito, não precisa de API key para embed básico)
+    const encodedAddress = encodeURIComponent(endereco);
+
+    mapaContainer.innerHTML = `
+      <iframe
+        src="https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8&iwloc=&output=embed"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        title="Localização ${this.empresa.nome}"
+      ></iframe>
+    `;
   }
 
   renderPricing() {

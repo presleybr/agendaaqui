@@ -39,6 +39,7 @@
           <a href="#precos" class="nav-link">Preços</a>
           <a href="#beneficios" class="nav-link">Benefícios</a>
           <a href="#depoimentos" class="nav-link">Depoimentos</a>
+          <a href="#localizacao" class="nav-link" id="navLocalizacao" style="display: none;">Localização</a>
           <a href="#agendamento" class="nav-link">Agendar</a>
         </nav>
         <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Menu">
@@ -190,6 +191,52 @@
       <h2>O Que Nossos Clientes Dizem</h2>
       <div class="reviews-carousel-wrapper" id="reviewsContainer">
         <!-- Será preenchido dinamicamente -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Localização Section -->
+  <section id="localizacao" class="localizacao-section" style="display: none;">
+    <div class="container">
+      <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 0.5rem; color: #1a1a1a;">Nossa Localização</h2>
+      <p style="text-align: center; color: #666; margin-bottom: 2rem;">Venha nos visitar ou agende uma vistoria</p>
+
+      <div class="localizacao-content">
+        <div class="localizacao-info">
+          <div class="info-item">
+            <div class="info-icon">📍</div>
+            <div class="info-text">
+              <h4>Endereço</h4>
+              <p id="locEndereco">-</p>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-icon">📞</div>
+            <div class="info-text">
+              <h4>Telefone</h4>
+              <p id="locTelefone">-</p>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-icon">🕐</div>
+            <div class="info-text">
+              <h4>Horário de Funcionamento</h4>
+              <p id="locHorario">-</p>
+            </div>
+          </div>
+
+          <a href="#" id="locDirections" class="btn btn-primary btn-directions" target="_blank" rel="noopener noreferrer">
+            🗺️ Como Chegar
+          </a>
+        </div>
+
+        <div class="localizacao-mapa">
+          <div id="empresaMapa" class="mapa-container">
+            <!-- Mapa será carregado aqui -->
+          </div>
+        </div>
       </div>
     </div>
   </section>
