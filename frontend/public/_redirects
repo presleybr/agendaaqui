@@ -5,13 +5,16 @@
 # Todas as chamadas /api/* devem ir para o backend (api.agendaaquivistorias.com.br)
 /api/*      https://api.agendaaquivistorias.com.br/api/:splat  200
 
-# Páginas específicas (REWRITE - mantém URL)
-/admin      /admin.html             200
-/admin/*    /admin.html             200
-/cliente    /cliente.html           200
-/cliente/*  /cliente.html           200
-/painel     /painel-empresa.html    200
-/painel/*   /painel-empresa.html    200
+# Páginas HTML específicas (REWRITE 200 - mantém URL, serve arquivo)
+/admin              /admin.html             200
+/admin/             /admin.html             200
+/admin/*            /admin.html             200
+/cliente            /cliente.html           200
+/cliente/           /cliente.html           200
+/cliente/*          /cliente.html           200
+/painel             /painel-empresa.html    200
+/painel/            /painel-empresa.html    200
+/painel/*           /painel-empresa.html    200
 
 # Arquivos estáticos (passthrough)
 /assets/*   /assets/:splat  200
@@ -24,7 +27,7 @@
 /*.woff     /:splat.woff    200
 /*.woff2    /:splat.woff2   200
 
-# Slugs de empresas - paths dinâmicos
+# Slugs de empresas - paths dinâmicos (DEVE vir depois das rotas específicas)
 /:slug      /empresa.html   200
 
 # Fallback SPA
