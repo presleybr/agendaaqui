@@ -8,6 +8,8 @@
 # Páginas específicas (REWRITE - mantém URL)
 /admin      /admin.html             200
 /admin/*    /admin.html             200
+/cliente    /cliente.html           200
+/cliente/*  /cliente.html           200
 /painel     /painel-empresa.html    200
 /painel/*   /painel-empresa.html    200
 
