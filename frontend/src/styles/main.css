@@ -248,11 +248,22 @@ body {
   position: relative;
   z-index: 2;
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .hero-content {
   max-width: 800px;
+  text-align: center;
   animation: fadeInUp 800ms ease-out;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: var(--spacing-4);
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .hero-title {
@@ -924,7 +935,7 @@ body {
 .pricing h2 {
   text-align: center;
   font-size: var(--text-4xl);
-  margin-bottom: var(--spacing-16);
+  margin-bottom: var(--spacing-6);
   color: var(--text-primary);
   font-weight: var(--font-bold);
   letter-spacing: -0.02em;
@@ -933,18 +944,15 @@ body {
   width: 100%;
 }
 
+.pricing .section-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-12);
+  font-size: var(--text-lg);
+}
+
 .pricing h2::after {
-  content: '';
-  position: absolute;
-  bottom: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 4px;
-  background: var(--gradient-primary);
-  border-radius: var(--radius-full);
-  box-shadow: 0 0 15px rgba(237, 106, 43, 0.6);
-  animation: glowPulse 2s ease-in-out infinite;
+  display: none;
 }
 
 .pricing-grid {
