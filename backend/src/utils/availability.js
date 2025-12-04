@@ -34,7 +34,13 @@ class AvailabilityService {
       const bloqueado = result.rows[0];
 
       if (!bloqueado) {
-        const agendamentosNoHorario = agendamentosNaData.filter(a => a.horario === horario);
+        // Extrair horário do data_hora (timestamp) para comparar
+        const agendamentosNoHorario = agendamentosNaData.filter(a => {
+          if (!a.data_hora) return false;
+          const dataHora = new Date(a.data_hora);
+          const horarioAgendamento = format(dataHora, 'HH:mm');
+          return horarioAgendamento === horario;
+        });
         const vagasDisponiveis = vagasPorHorario - agendamentosNoHorario.length;
 
         slots.push({

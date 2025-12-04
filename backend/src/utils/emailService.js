@@ -51,8 +51,11 @@ class EmailService {
   }
 
   getConfirmacaoTemplate(agendamento) {
-    const dataFormatada = new Date(agendamento.data).toLocaleDateString('pt-BR');
-    const precoFormatado = (agendamento.preco / 100).toFixed(2);
+    // Extrair data e horário do timestamp data_hora
+    const dataHora = new Date(agendamento.data_hora || agendamento.data);
+    const dataFormatada = dataHora.toLocaleDateString('pt-BR');
+    const horarioFormatado = agendamento.horario || dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const precoFormatado = ((agendamento.valor || agendamento.preco || 0) / 100).toFixed(2);
 
     return `
       <!DOCTYPE html>
@@ -83,7 +86,7 @@ class EmailService {
               <h3>📋 Detalhes do Agendamento</h3>
               <p><strong>Protocolo:</strong> ${agendamento.protocolo}</p>
               <p><strong>Data:</strong> ${dataFormatada}</p>
-              <p><strong>Horário:</strong> ${agendamento.horario}</p>
+              <p><strong>Horário:</strong> ${horarioFormatado}</p>
               <p><strong>Tipo:</strong> ${agendamento.tipo_vistoria}</p>
               <p><strong>Valor:</strong> R$ ${precoFormatado}</p>
             </div>
@@ -120,7 +123,10 @@ class EmailService {
   }
 
   getLembreteTemplate(agendamento) {
-    const dataFormatada = new Date(agendamento.data).toLocaleDateString('pt-BR');
+    // Extrair data e horário do timestamp data_hora
+    const dataHora = new Date(agendamento.data_hora || agendamento.data);
+    const dataFormatada = dataHora.toLocaleDateString('pt-BR');
+    const horarioFormatado = agendamento.horario || dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     return `
       <!DOCTYPE html>
@@ -150,7 +156,7 @@ class EmailService {
               <h3>📋 Detalhes</h3>
               <p><strong>Protocolo:</strong> ${agendamento.protocolo}</p>
               <p><strong>Data:</strong> ${dataFormatada}</p>
-              <p><strong>Horário:</strong> ${agendamento.horario}</p>
+              <p><strong>Horário:</strong> ${horarioFormatado}</p>
               <p><strong>Veículo:</strong> ${agendamento.veiculo_marca} ${agendamento.veiculo_modelo} - ${agendamento.veiculo_placa}</p>
             </div>
 

@@ -16,37 +16,57 @@ class AgendamentoController {
 
       const { cliente: clienteData, veiculo: veiculoData, tipo_vistoria, data, horario, endereco_vistoria, observacoes, empresa_id } = req.body;
 
-      console.log('📝 Dados recebidos para criar agendamento:', { tipo_vistoria, data, horario, empresa_id });
+      console.log('📝 Dados recebidos para criar agendamento:', {
+        tipo_vistoria,
+        data,
+        horario,
+        empresa_id,
+        clienteData,
+        veiculoData
+      });
 
       // Verificar disponibilidade
+      console.log('🔍 Verificando disponibilidade...');
       const availability = await AvailabilityService.canSchedule(data, horario);
       if (!availability.allowed) {
         return res.status(400).json({ error: availability.reason });
       }
+      console.log('✅ Disponibilidade OK');
 
       // Buscar ou criar cliente
+      console.log('👤 Processando cliente com CPF:', clienteData.cpf);
       let cliente = await Cliente.findByCPF(clienteData.cpf);
       if (!cliente) {
+        console.log('   Criando novo cliente...');
         cliente = await Cliente.create(clienteData);
       } else {
+        console.log('   Cliente existente, atualizando...');
         // Atualizar dados do cliente se necessário
         cliente = await Cliente.update(cliente.id, clienteData);
       }
+      console.log('✅ Cliente processado:', cliente?.id);
 
       // Buscar ou criar veículo
+      console.log('🚗 Processando veículo com placa:', veiculoData.placa);
       let veiculo = await Veiculo.findByPlaca(veiculoData.placa);
       if (!veiculo) {
+        console.log('   Criando novo veículo...');
         veiculo = await Veiculo.create({ ...veiculoData, cliente_id: cliente.id });
       }
+      console.log('✅ Veículo processado:', veiculo?.id);
 
       // Obter preço
+      console.log('💰 Obtendo preços...');
       const precos = await Configuracao.getPrices();
       const preco = precos[tipo_vistoria] || precos.outros;
+      console.log('✅ Preço obtido:', preco, 'para tipo:', tipo_vistoria);
 
       // Combinar data e horário em timestamp
       const data_hora = `${data} ${horario}:00`;
+      console.log('📅 Data/hora combinada:', data_hora);
 
       // Criar agendamento
+      console.log('📝 Criando agendamento...');
       const agendamento = await Agendamento.create({
         cliente_id: cliente.id,
         veiculo_id: veiculo.id,
@@ -74,8 +94,13 @@ class AgendamentoController {
 
       res.status(201).json(agendamento);
     } catch (error) {
-      console.error('Erro ao criar agendamento:', error);
-      res.status(500).json({ error: 'Erro ao criar agendamento' });
+      console.error('❌ Erro ao criar agendamento:', error);
+      console.error('   Stack:', error.stack);
+      res.status(500).json({
+        error: 'Erro ao criar agendamento',
+        details: error.message,
+        code: error.code
+      });
     }
   }
 
