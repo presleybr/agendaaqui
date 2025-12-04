@@ -5,21 +5,18 @@ const Pagamento = require('../models/Pagamento');
 
 class SplitPaymentService {
   /**
-   * Calcula a taxa que deve ser cobrada baseado no tempo de funcionamento da empresa
-   * @param {number} empresaId - ID da empresa
-   * @returns {Promise<number>} - Taxa em centavos
+   * Calcula a taxa que deve ser cobrada baseado na configuração da empresa
+   * @param {object} empresa - Objeto da empresa
+   * @returns {number} - Taxa em centavos
    */
-  static async calcularTaxa(empresaId) {
-    const diasFuncionamento = await Empresa.getDiasFuncionamento(empresaId);
-    const diasTaxaInicial = parseInt(await Configuracao.get('dias_taxa_inicial') || '30');
+  static calcularTaxa(empresa) {
+    // Usa a taxa configurada na empresa (percentual_plataforma)
+    // Padrão: 500 centavos = R$ 5,00
+    const taxaEmpresa = empresa.percentual_plataforma || 500;
 
-    if (diasFuncionamento <= diasTaxaInicial) {
-      // Primeiros 30 dias: R$ 5,00
-      return parseInt(await Configuracao.get('taxa_inicial') || '500');
-    } else {
-      // Após 30 dias: R$ 7,00
-      return parseInt(await Configuracao.get('taxa_apos_30_dias') || '700');
-    }
+    console.log(`💰 Taxa da empresa "${empresa.nome}": R$ ${(taxaEmpresa / 100).toFixed(2)}`);
+
+    return taxaEmpresa;
   }
 
   /**
@@ -35,8 +32,9 @@ class SplitPaymentService {
         throw new Error('Pagamento não encontrado');
       }
 
-      if (pagamento.status !== 'aprovado') {
-        throw new Error('Apenas pagamentos aprovados podem ter split processado');
+      // Aceita status 'approved' (MP) ou 'aprovado' (interno)
+      if (pagamento.status !== 'approved' && pagamento.status !== 'aprovado') {
+        throw new Error(`Apenas pagamentos aprovados podem ter split processado. Status atual: ${pagamento.status}`);
       }
 
       // Verificar se já foi processado
@@ -50,13 +48,27 @@ class SplitPaymentService {
         throw new Error('Empresa não encontrada');
       }
 
-      // Calcular taxa
-      const taxa = await this.calcularTaxa(empresa.id);
-      const valorEmpresa = pagamento.valor - taxa;
+      // Calcular taxa usando a configuração da empresa
+      const taxa = this.calcularTaxa(empresa);
+
+      // Usar valor_total (em centavos) do pagamento
+      const valorTotal = pagamento.valor_total || pagamento.valor || 0;
+      const valorEmpresa = valorTotal - taxa;
 
       if (valorEmpresa < 0) {
-        throw new Error('Valor do pagamento menor que a taxa');
+        throw new Error(`Valor do pagamento (R$ ${(valorTotal/100).toFixed(2)}) menor que a taxa (R$ ${(taxa/100).toFixed(2)})`);
       }
+
+      console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      console.log(`💰 REGISTRANDO SPLIT DE PAGAMENTO`);
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      console.log(`   Pagamento ID: ${pagamento.id}`);
+      console.log(`   Empresa: ${empresa.nome} (ID: ${empresa.id})`);
+      console.log(`   Valor Total: R$ ${(valorTotal / 100).toFixed(2)}`);
+      console.log(`   Taxa Plataforma: R$ ${(taxa / 100).toFixed(2)}`);
+      console.log(`   Valor Empresa: R$ ${(valorEmpresa / 100).toFixed(2)}`);
+      console.log(`   Chave PIX: ${empresa.chave_pix || empresa.pix_key || 'Não configurada'}`);
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
 
       // Atualizar pagamento com dados do split
       await Pagamento.update(pagamento.id, {
@@ -64,9 +76,11 @@ class SplitPaymentService {
         valor_empresa: valorEmpresa,
         status_repasse: 'pendente',
         split_data: JSON.stringify({
-          taxa_percentual: ((taxa / pagamento.valor) * 100).toFixed(2),
+          taxa_percentual: ((taxa / valorTotal) * 100).toFixed(2),
           taxa_valor: taxa,
           empresa_valor: valorEmpresa,
+          empresa_nome: empresa.nome,
+          empresa_pix: empresa.chave_pix || empresa.pix_key,
           processado_em: new Date().toISOString()
         })
       });
@@ -89,8 +103,8 @@ class SplitPaymentService {
         agendamento_id: pagamento.agendamento_id,
         tipo: 'repasse',
         valor: valorEmpresa,
-        descricao: `Repasse - Pagamento #${pagamento.id}`,
-        pix_key: empresa.pix_key,
+        descricao: `Repasse - Pagamento #${pagamento.id} - ${empresa.nome}`,
+        pix_key: empresa.chave_pix || empresa.pix_key,
         pix_status: 'pendente',
         status: 'pendente'
       });
@@ -98,14 +112,14 @@ class SplitPaymentService {
       return {
         success: true,
         pagamento_id: pagamento.id,
-        valor_total: pagamento.valor,
+        valor_total: valorTotal,
         taxa,
         valor_empresa: valorEmpresa,
         transacao_repasse_id: transacaoRepasse.id,
         empresa: {
           id: empresa.id,
           nome: empresa.nome,
-          pix_key: empresa.pix_key,
+          pix_key: empresa.chave_pix || empresa.pix_key,
           pix_type: empresa.pix_type
         }
       };

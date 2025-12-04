@@ -127,6 +127,14 @@
           <span class="nav-text">Empresas</span>
           <span class="nav-badge" id="badge-empresas" style="display: none;">0</span>
         </a>
+        <a href="#" class="nav-item" data-section="repasses">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+          <span class="nav-text">Repasses</span>
+          <span class="nav-badge" id="badge-repasses" style="display: none;">0</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
@@ -813,6 +821,81 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- Seção Repasses -->
+      <section id="section-repasses" class="content-section">
+        <div class="section-header">
+          <h2>💰 Repasses para Empresas</h2>
+          <div style="display: flex; gap: 10px;">
+            <select id="filtroStatusRepasse" class="form-control" style="width: auto;">
+              <option value="pendente">Pendentes</option>
+              <option value="processado">Processados</option>
+              <option value="erro">Com Erro</option>
+              <option value="">Todos</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Resumo de Repasses -->
+        <div class="stats-grid" style="margin-bottom: 30px;">
+          <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+            <div class="stat-label">Pendentes</div>
+            <div class="stat-value" id="statRepassesPendentes">R$ 0,00</div>
+            <div class="stat-info" id="statQtdPendentes">0 repasses</div>
+          </div>
+          <div class="stat-card" style="border-left: 4px solid #10b981;">
+            <div class="stat-label">Processados (Mês)</div>
+            <div class="stat-value" id="statRepassesProcessados">R$ 0,00</div>
+            <div class="stat-info" id="statQtdProcessados">0 repasses</div>
+          </div>
+          <div class="stat-card" style="border-left: 4px solid #3b82f6;">
+            <div class="stat-label">Taxa Plataforma (Mês)</div>
+            <div class="stat-value" id="statTaxaPlataforma">R$ 0,00</div>
+            <div class="stat-info">Receita da plataforma</div>
+          </div>
+          <div class="stat-card" style="border-left: 4px solid #ef4444;">
+            <div class="stat-label">Com Erro</div>
+            <div class="stat-value" id="statRepassesErro">R$ 0,00</div>
+            <div class="stat-info" id="statQtdErro">0 repasses</div>
+          </div>
+        </div>
+
+        <!-- Tabela de Repasses -->
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Empresa</th>
+                <th>Pagamento</th>
+                <th>Valor Total</th>
+                <th>Taxa</th>
+                <th>Valor Repasse</th>
+                <th>Chave PIX</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="repassesTableBody">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 40px;">
+                  <div class="spinner"></div>
+                  <p style="margin-top: 10px; color: #666;">Carregando repasses...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Instruções -->
+        <div class="alert alert-info" style="margin-top: 20px;">
+          <strong>ℹ️ Como funciona:</strong><br>
+          1. Quando um pagamento é aprovado, o sistema registra automaticamente o split (taxa + valor da empresa)<br>
+          2. Faça a transferência PIX manualmente para a chave PIX da empresa<br>
+          3. Clique em "Marcar como Pago" para registrar que o repasse foi feito<br>
+          4. Guarde o comprovante para referência futura
         </div>
       </section>
 

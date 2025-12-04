@@ -902,4 +902,147 @@ router.patch('/usuarios/:userId/ativo', authAdmin, async (req, res) => {
   }
 });
 
+// ============================================
+// TRANSAÇÕES - Gestão de Repasses
+// ============================================
+
+// Listar transações com filtros
+router.get('/transacoes', authAdmin, async (req, res) => {
+  try {
+    const { tipo, status, empresa_id, limite = 100, offset = 0 } = req.query;
+
+    let query = `
+      SELECT
+        t.*,
+        e.nome as empresa_nome,
+        e.slug as empresa_slug,
+        p.valor_total,
+        p.valor_taxa,
+        p.mp_payment_id
+      FROM transacoes t
+      LEFT JOIN empresas e ON t.empresa_id = e.id
+      LEFT JOIN pagamentos p ON t.pagamento_id = p.id
+      WHERE 1=1
+    `;
+    const params = [];
+    let paramIndex = 1;
+
+    if (tipo) {
+      query += ` AND t.tipo = $${paramIndex}`;
+      params.push(tipo);
+      paramIndex++;
+    }
+
+    if (status) {
+      query += ` AND t.status = $${paramIndex}`;
+      params.push(status);
+      paramIndex++;
+    }
+
+    if (empresa_id) {
+      query += ` AND t.empresa_id = $${paramIndex}`;
+      params.push(empresa_id);
+      paramIndex++;
+    }
+
+    query += ` ORDER BY t.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    params.push(parseInt(limite), parseInt(offset));
+
+    const result = await db.query(query, params);
+
+    res.json({ transacoes: result.rows });
+  } catch (error) {
+    console.error('Erro ao listar transações:', error);
+    res.status(500).json({ error: 'Erro ao listar transações' });
+  }
+});
+
+// Atualizar status de uma transação (marcar repasse como pago)
+router.patch('/transacoes/:id', authAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, pix_status, comprovante } = req.body;
+
+    const updates = [];
+    const params = [];
+    let paramIndex = 1;
+
+    if (status) {
+      updates.push(`status = $${paramIndex}`);
+      params.push(status);
+      paramIndex++;
+    }
+
+    if (pix_status) {
+      updates.push(`pix_status = $${paramIndex}`);
+      params.push(pix_status);
+      paramIndex++;
+    }
+
+    if (comprovante) {
+      updates.push(`pix_txid = $${paramIndex}`);
+      params.push(comprovante);
+      paramIndex++;
+    }
+
+    if (status === 'processado') {
+      updates.push('data_processamento = CURRENT_TIMESTAMP');
+    }
+
+    updates.push('updated_at = CURRENT_TIMESTAMP');
+    params.push(id);
+
+    const query = `
+      UPDATE transacoes
+      SET ${updates.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const result = await db.query(query, params);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Transação não encontrada' });
+    }
+
+    // Se for repasse e foi marcado como processado, atualizar o pagamento também
+    if (result.rows[0].tipo === 'repasse' && status === 'processado' && result.rows[0].pagamento_id) {
+      await db.query(`
+        UPDATE pagamentos
+        SET status_repasse = 'processado', data_repasse = CURRENT_TIMESTAMP
+        WHERE id = $1
+      `, [result.rows[0].pagamento_id]);
+    }
+
+    res.json({
+      transacao: result.rows[0],
+      mensagem: 'Transação atualizada com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar transação:', error);
+    res.status(500).json({ error: 'Erro ao atualizar transação' });
+  }
+});
+
+// Resumo de transações para dashboard
+router.get('/transacoes/resumo', authAdmin, async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT
+        COUNT(*) FILTER (WHERE tipo = 'repasse' AND status = 'pendente') as repasses_pendentes,
+        COALESCE(SUM(valor) FILTER (WHERE tipo = 'repasse' AND status = 'pendente'), 0) as valor_pendente,
+        COUNT(*) FILTER (WHERE tipo = 'repasse' AND status = 'processado') as repasses_processados,
+        COALESCE(SUM(valor) FILTER (WHERE tipo = 'repasse' AND status = 'processado'), 0) as valor_processado,
+        COUNT(*) FILTER (WHERE tipo = 'taxa') as total_taxas,
+        COALESCE(SUM(valor) FILTER (WHERE tipo = 'taxa'), 0) as valor_taxas
+      FROM transacoes
+    `);
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Erro ao buscar resumo:', error);
+    res.status(500).json({ error: 'Erro ao buscar resumo de transações' });
+  }
+});
+
 module.exports = router;

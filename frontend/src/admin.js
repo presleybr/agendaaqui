@@ -241,9 +241,20 @@ class AdminPanel {
         } else if (sectionId === 'empresas') {
           console.log('Navigating to Empresas - loading stats...');
           await this.loadEmpresasStats();
+        } else if (sectionId === 'repasses') {
+          console.log('Navigating to Repasses - loading data...');
+          await this.loadRepasses();
         }
       });
     });
+
+    // Filtro de status de repasses
+    const filtroStatusRepasse = document.getElementById('filtroStatusRepasse');
+    if (filtroStatusRepasse) {
+      filtroStatusRepasse.addEventListener('change', () => {
+        this.loadRepasses();
+      });
+    }
 
     // Menu toggle (mobile)
     const menuToggle = document.getElementById('menuToggle');
@@ -327,6 +338,166 @@ class AdminPanel {
         document.getElementById('statReceitaMes').textContent = 'R$ 0,00';
         document.getElementById('statComissoesPendentes').textContent = 'R$ 0,00';
       }
+    }
+  }
+
+  async loadRepasses() {
+    const tbody = document.getElementById('repassesTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align: center; padding: 40px;">
+          <div class="spinner"></div>
+          <p style="margin-top: 10px; color: #666;">Carregando repasses...</p>
+        </td>
+      </tr>
+    `;
+
+    try {
+      console.log('📋 Loading repasses...');
+      const filtroStatus = document.getElementById('filtroStatusRepasse')?.value || 'pendente';
+
+      // Carregar transações de repasse
+      const response = await api.get(`/super-admin/transacoes?tipo=repasse&status=${filtroStatus}`);
+      const transacoes = response.transacoes || [];
+
+      console.log('✅ Repasses loaded:', transacoes.length);
+
+      // Atualizar estatísticas
+      await this.loadRepassesStats();
+
+      if (transacoes.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 40px; color: #666;">
+              Nenhum repasse ${filtroStatus ? `com status "${filtroStatus}"` : ''} encontrado
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = transacoes.map(t => {
+        const data = new Date(t.created_at).toLocaleDateString('pt-BR');
+        const statusClass = t.status === 'processado' ? 'success' : t.status === 'erro' ? 'error' : 'warning';
+        const statusText = t.status === 'processado' ? 'Pago' : t.status === 'erro' ? 'Erro' : 'Pendente';
+
+        return `
+          <tr>
+            <td>${data}</td>
+            <td>${t.empresa_nome || '-'}</td>
+            <td>#${t.pagamento_id || '-'}</td>
+            <td>${formatters.currency(t.valor_total || 0)}</td>
+            <td>${formatters.currency(t.valor_taxa || 0)}</td>
+            <td><strong>${formatters.currency(t.valor || 0)}</strong></td>
+            <td>
+              <span class="pix-key" title="${t.pix_key || 'Não configurada'}" style="cursor: pointer;" onclick="navigator.clipboard.writeText('${t.pix_key || ''}').then(() => alert('Chave PIX copiada!'))">
+                ${t.pix_key ? t.pix_key.substring(0, 20) + '...' : 'N/A'}
+              </span>
+            </td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>
+              ${t.status === 'pendente' ? `
+                <button class="btn btn-sm btn-success" onclick="adminPanel.marcarRepasse(${t.id}, 'processado')" title="Marcar como pago">
+                  ✓ Pago
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="adminPanel.marcarRepasse(${t.id}, 'erro')" title="Marcar erro" style="margin-left: 5px;">
+                  ✗
+                </button>
+              ` : t.status === 'processado' ? `
+                <span style="color: #10b981;">✓ Concluído</span>
+              ` : `
+                <button class="btn btn-sm btn-warning" onclick="adminPanel.marcarRepasse(${t.id}, 'pendente')" title="Voltar para pendente">
+                  Reprocessar
+                </button>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('❌ Error loading repasses:', error);
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 40px; color: #ef4444;">
+            Erro ao carregar repasses: ${error.message}
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  async loadRepassesStats() {
+    try {
+      // Carregar estatísticas de repasses
+      const [pendentes, processados] = await Promise.all([
+        api.get('/super-admin/transacoes?tipo=repasse&status=pendente'),
+        api.get('/super-admin/transacoes?tipo=repasse&status=processado')
+      ]);
+
+      const taxasResponse = await api.get('/super-admin/transacoes?tipo=taxa');
+      const errosResponse = await api.get('/super-admin/transacoes?tipo=repasse&status=erro');
+
+      const transacoesPendentes = pendentes.transacoes || [];
+      const transacoesProcessadas = processados.transacoes || [];
+      const transacoesTaxas = taxasResponse.transacoes || [];
+      const transacoesErros = errosResponse.transacoes || [];
+
+      const totalPendente = transacoesPendentes.reduce((sum, t) => sum + (t.valor || 0), 0);
+      const totalProcessado = transacoesProcessadas.reduce((sum, t) => sum + (t.valor || 0), 0);
+      const totalTaxas = transacoesTaxas.reduce((sum, t) => sum + (t.valor || 0), 0);
+      const totalErros = transacoesErros.reduce((sum, t) => sum + (t.valor || 0), 0);
+
+      document.getElementById('statRepassesPendentes').textContent = formatters.currency(totalPendente);
+      document.getElementById('statQtdPendentes').textContent = `${transacoesPendentes.length} repasses`;
+
+      document.getElementById('statRepassesProcessados').textContent = formatters.currency(totalProcessado);
+      document.getElementById('statQtdProcessados').textContent = `${transacoesProcessadas.length} repasses`;
+
+      document.getElementById('statTaxaPlataforma').textContent = formatters.currency(totalTaxas);
+
+      document.getElementById('statRepassesErro').textContent = formatters.currency(totalErros);
+      document.getElementById('statQtdErro').textContent = `${transacoesErros.length} repasses`;
+
+      // Atualizar badge no menu
+      const badge = document.getElementById('badge-repasses');
+      if (badge && transacoesPendentes.length > 0) {
+        badge.textContent = transacoesPendentes.length;
+        badge.style.display = 'inline-flex';
+      } else if (badge) {
+        badge.style.display = 'none';
+      }
+
+    } catch (error) {
+      console.error('❌ Error loading repasses stats:', error);
+    }
+  }
+
+  async marcarRepasse(transacaoId, novoStatus) {
+    try {
+      const confirmMsg = novoStatus === 'processado'
+        ? 'Confirma que você já fez a transferência PIX para esta empresa?'
+        : novoStatus === 'erro'
+        ? 'Deseja marcar este repasse como erro?'
+        : 'Deseja reprocessar este repasse?';
+
+      if (!confirm(confirmMsg)) return;
+
+      console.log(`📝 Marcando repasse ${transacaoId} como ${novoStatus}...`);
+
+      await api.patch(`/super-admin/transacoes/${transacaoId}`, {
+        status: novoStatus,
+        pix_status: novoStatus === 'processado' ? 'pago' : novoStatus
+      });
+
+      alert(novoStatus === 'processado' ? 'Repasse marcado como pago!' : 'Status atualizado!');
+      await this.loadRepasses();
+
+    } catch (error) {
+      console.error('❌ Error updating repasse:', error);
+      alert('Erro ao atualizar repasse: ' + error.message);
     }
   }
 
