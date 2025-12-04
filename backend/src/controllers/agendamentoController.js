@@ -3,6 +3,7 @@ const Agendamento = require('../models/Agendamento');
 const Cliente = require('../models/Cliente');
 const Veiculo = require('../models/Veiculo');
 const Configuracao = require('../models/Configuracao');
+const Empresa = require('../models/Empresa');
 const AvailabilityService = require('../utils/availability');
 const emailService = require('../utils/emailService');
 
@@ -55,11 +56,33 @@ class AgendamentoController {
       }
       console.log('✅ Veículo processado:', veiculo?.id);
 
-      // Obter preço
+      // Obter preço - da empresa se empresa_id definido, senão da configuração global
       console.log('💰 Obtendo preços...');
-      const precos = await Configuracao.getPrices();
-      const preco = precos[tipo_vistoria] || precos.outros;
-      console.log('✅ Preço obtido:', preco, 'para tipo:', tipo_vistoria);
+      let preco;
+
+      if (empresa_id) {
+        // Buscar preço da empresa
+        const empresa = await Empresa.findById(empresa_id);
+        if (empresa) {
+          const precosEmpresa = {
+            cautelar: empresa.preco_cautelar,
+            transferencia: empresa.preco_transferencia,
+            outros: empresa.preco_outros
+          };
+          preco = precosEmpresa[tipo_vistoria] || precosEmpresa.outros;
+          console.log('✅ Preço da empresa:', preco, 'centavos para tipo:', tipo_vistoria);
+        } else {
+          // Fallback para configuração global se empresa não encontrada
+          const precos = await Configuracao.getPrices();
+          preco = precos[tipo_vistoria] || precos.outros;
+          console.log('⚠️ Empresa não encontrada, usando preço global:', preco);
+        }
+      } else {
+        // Usar configuração global (página principal)
+        const precos = await Configuracao.getPrices();
+        preco = precos[tipo_vistoria] || precos.outros;
+        console.log('✅ Preço global:', preco, 'para tipo:', tipo_vistoria);
+      }
 
       // Combinar data e horário em timestamp
       const data_hora = `${data} ${horario}:00`;
