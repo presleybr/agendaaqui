@@ -8,6 +8,8 @@ export class PaymentForm {
   }
 
   normalizeData(data) {
+    console.log('🔄 Normalizando dados do agendamento:', data);
+
     // Extrair data e horário de data_hora se necessário
     let dataAgendamento = data.data_agendamento || data.data;
     let horarioAgendamento = data.horario_agendamento || data.horario;
@@ -18,12 +20,26 @@ export class PaymentForm {
       horarioAgendamento = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     }
 
-    return {
+    const normalized = {
       ...data,
+      // Campos de data/hora
       data_agendamento: dataAgendamento,
       horario_agendamento: horarioAgendamento,
-      preco: data.preco || data.valor || 0
+      // Valor (pode vir como 'valor' ou 'preco')
+      preco: data.preco || data.valor || 0,
+      // Dados do cliente (podem vir com prefixo 'cliente_')
+      cliente_nome: data.cliente_nome || data.nome,
+      cliente_email: data.cliente_email || data.email,
+      cliente_telefone: data.cliente_telefone || data.telefone,
+      cliente_cpf: data.cliente_cpf || data.cpf,
+      // Dados do veículo (podem vir com prefixo 'veiculo_')
+      veiculo_placa: data.veiculo_placa || data.placa,
+      veiculo_marca: data.veiculo_marca || data.marca,
+      veiculo_modelo: data.veiculo_modelo || data.modelo
     };
+
+    console.log('✅ Dados normalizados:', normalized);
+    return normalized;
   }
 
   async render(containerId) {
