@@ -348,8 +348,15 @@ class Empresa {
       // Buscar chave PIX da empresa
       const empresa = await this.findById(empresaId);
 
-      if (!empresa || !empresa.chave_pix) {
-        throw new Error('Empresa não encontrada ou sem chave PIX configurada');
+      if (!empresa) {
+        console.warn(`⚠️ Empresa ${empresaId} não encontrada para registrar split`);
+        return null;
+      }
+
+      // Permitir split mesmo sem chave PIX (será preenchido depois)
+      const chavePix = empresa.chave_pix || null;
+      if (!chavePix) {
+        console.warn(`⚠️ Empresa ${empresa.nome} não tem chave PIX configurada - split será registrado sem destino`);
       }
 
       const result = await db.query(
@@ -364,7 +371,7 @@ class Empresa {
           splitData.valor_total,
           splitData.valor_plataforma,
           splitData.valor_empresa,
-          empresa.chave_pix
+          chavePix
         ]
       );
       return result.rows[0];

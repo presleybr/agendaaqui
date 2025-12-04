@@ -218,46 +218,70 @@ router.post('/card', async (req, res) => {
 router.get('/status/:paymentId', async (req, res) => {
   try {
     const { paymentId } = req.params;
+    console.log(`📡 Verificando status do pagamento: ${paymentId}`);
 
     // Get payment from Mercado Pago
-    const mpPayment = await payment.get({ id: paymentId });
+    let mpPayment;
+    try {
+      mpPayment = await payment.get({ id: paymentId });
+      console.log(`📦 Status MP: ${mpPayment.status} (${mpPayment.status_detail})`);
+    } catch (mpError) {
+      console.error('❌ Erro ao buscar pagamento no MP:', mpError.message);
 
-    // Update payment in database
-    const pagamentoRecord = await Pagamento.findByMpPaymentId(paymentId);
+      // Se for erro 404 do MP, retornar status pending (pagamento ainda não processado)
+      if (mpError.status === 404 || mpError.cause?.[0]?.code === 2000) {
+        return res.json({
+          payment_id: paymentId,
+          status: 'pending',
+          status_detail: 'waiting_for_payment'
+        });
+      }
+      throw mpError;
+    }
 
-    if (pagamentoRecord) {
-      await Pagamento.update(pagamentoRecord.id, {
-        status: mpPayment.status,
-        dados_pagamento: mpPayment,
-        data_pagamento: mpPayment.status === 'approved' ? new Date().toISOString() : pagamentoRecord.data_pagamento
-      });
+    // Update payment in database (com try/catch separado)
+    try {
+      const pagamentoRecord = await Pagamento.findByMpPaymentId(paymentId);
 
-      // Update agendamento status if payment is approved
-      if (mpPayment.status === 'approved') {
-        const agendamento = await Agendamento.findById(pagamentoRecord.agendamento_id);
-        if (agendamento && agendamento.status !== 'confirmado') {
-          await db.query(`
-            UPDATE agendamentos
-            SET status = 'confirmado', pagamento_confirmado = true
-            WHERE id = $1
-          `, [pagamentoRecord.agendamento_id]);
+      if (pagamentoRecord) {
+        await Pagamento.update(pagamentoRecord.id, {
+          status: mpPayment.status,
+          dados_pagamento: mpPayment,
+          data_pagamento: mpPayment.status === 'approved' ? new Date().toISOString() : pagamentoRecord.data_pagamento
+        });
 
-          // Process payment split if agendamento has empresa_id
-          if (agendamento.empresa_id) {
-            try {
-              await PaymentSplitService.processarPagamento(
-                pagamentoRecord.id,
-                agendamento.empresa_id,
-                pagamentoRecord.valor
-              );
-              console.log(`✅ Split processado via status check para pagamento ${pagamentoRecord.id}`);
-            } catch (splitError) {
-              console.error('⚠️ Erro ao processar split (status check):', splitError);
-              // Não bloqueia o fluxo se split falhar
+        // Update agendamento status if payment is approved
+        if (mpPayment.status === 'approved') {
+          const agendamento = await Agendamento.findById(pagamentoRecord.agendamento_id);
+          if (agendamento && agendamento.status !== 'confirmado') {
+            await db.query(`
+              UPDATE agendamentos
+              SET status = 'confirmado', pagamento_confirmado = true
+              WHERE id = $1
+            `, [pagamentoRecord.agendamento_id]);
+            console.log(`✅ Agendamento ${pagamentoRecord.agendamento_id} confirmado`);
+
+            // Process payment split if agendamento has empresa_id
+            const valorPagamento = pagamentoRecord.valor_total || pagamentoRecord.valor;
+            if (agendamento.empresa_id && valorPagamento) {
+              try {
+                await PaymentSplitService.processarPagamento(
+                  pagamentoRecord.id,
+                  agendamento.empresa_id,
+                  valorPagamento
+                );
+                console.log(`✅ Split processado via status check para pagamento ${pagamentoRecord.id}`);
+              } catch (splitError) {
+                console.error('⚠️ Erro ao processar split (status check):', splitError.message);
+                // Não bloqueia o fluxo se split falhar
+              }
             }
           }
         }
       }
+    } catch (dbError) {
+      console.error('⚠️ Erro ao atualizar banco (não crítico):', dbError.message);
+      // Não bloqueia - retorna status do MP mesmo assim
     }
 
     res.json({
@@ -267,14 +291,14 @@ router.get('/status/:paymentId', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error checking payment status:', error);
+    console.error('❌ Error checking payment status:', error.message);
 
     // Se for um erro 404 do Mercado Pago (pagamento não encontrado)
     if (error.status === 404 || error.cause?.[0]?.code === 2000) {
-      return res.status(404).json({
-        error: 'Pagamento não encontrado',
-        message: 'Payment not found',
-        details: 'O pagamento ainda não foi criado ou não existe no Mercado Pago'
+      return res.json({
+        payment_id: req.params.paymentId,
+        status: 'pending',
+        status_detail: 'waiting_for_payment'
       });
     }
 
