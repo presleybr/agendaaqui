@@ -2,13 +2,13 @@ const db = require('../config/database');
 
 class Pagamento {
   static async create(data) {
+    // Query compatível com o schema atual (valor_total, metodo_pagamento, pago_em)
     const query = `
       INSERT INTO pagamentos (
-        agendamento_id, empresa_id, mp_payment_id, tipo_pagamento, valor, status,
-        qr_code, qr_code_base64, payment_method_id, installments,
-        dados_pagamento, data_pagamento
+        agendamento_id, empresa_id, mp_payment_id, metodo_pagamento, valor_total, status,
+        qr_code, qr_code_base64, dados_pagamento, pago_em
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING id
     `;
 
@@ -16,15 +16,13 @@ class Pagamento {
       data.agendamento_id,
       data.empresa_id || null,
       data.mp_payment_id || null,
-      data.tipo_pagamento,
-      data.valor,
+      data.tipo_pagamento || data.metodo_pagamento || 'pix',
+      data.valor || data.valor_total,
       data.status || 'pending',
       data.qr_code || null,
       data.qr_code_base64 || null,
-      data.payment_method_id || null,
-      data.installments || 1,
       data.dados_pagamento ? JSON.stringify(data.dados_pagamento) : null,
-      data.data_pagamento || null
+      data.data_pagamento || data.pago_em || null
     ]);
 
     return await this.findById(result.rows[0].id);
