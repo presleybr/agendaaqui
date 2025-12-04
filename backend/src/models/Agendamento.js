@@ -48,9 +48,7 @@ class Agendamento {
         v.marca as veiculo_marca,
         v.modelo as veiculo_modelo,
         v.ano as veiculo_ano,
-        p.status as pagamento_status,
-        p.metodo_pagamento as pagamento_tipo,
-        p.data_pagamento as pagamento_data
+        p.status as pagamento_status
       FROM agendamentos a
       JOIN clientes c ON a.cliente_id = c.id
       JOIN veiculos v ON a.veiculo_id = v.id
