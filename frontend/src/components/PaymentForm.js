@@ -2,7 +2,28 @@ import api from '../services/api.js';
 
 export class PaymentForm {
   constructor(agendamentoData) {
-    this.agendamentoData = agendamentoData;
+    // Normalizar dados do agendamento para compatibilidade
+    this.agendamentoData = this.normalizeData(agendamentoData);
+    console.log('💳 PaymentForm data:', this.agendamentoData);
+  }
+
+  normalizeData(data) {
+    // Extrair data e horário de data_hora se necessário
+    let dataAgendamento = data.data_agendamento || data.data;
+    let horarioAgendamento = data.horario_agendamento || data.horario;
+
+    if (data.data_hora && (!dataAgendamento || !horarioAgendamento)) {
+      const dataHora = new Date(data.data_hora);
+      dataAgendamento = dataHora.toISOString().split('T')[0];
+      horarioAgendamento = dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    return {
+      ...data,
+      data_agendamento: dataAgendamento,
+      horario_agendamento: horarioAgendamento,
+      preco: data.preco || data.valor || 0
+    };
   }
 
   async render(containerId) {
