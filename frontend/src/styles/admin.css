@@ -899,12 +899,76 @@
 .action-buttons {
   display: flex;
   gap: var(--spacing-2);
+  justify-content: flex-start;
 }
 
 .btn-small {
   padding: var(--spacing-2) var(--spacing-3);
   font-size: var(--text-xs);
   border-radius: var(--radius-sm);
+}
+
+/* Botões de ação minimalistas para tabelas */
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-action svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-action:hover {
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.btn-action:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Variantes de cores para ações */
+.btn-action-view {
+  color: var(--brand-primary);
+}
+
+.btn-action-view:hover {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: white;
+}
+
+.btn-action-edit {
+  color: #3b82f6;
+}
+
+.btn-action-edit:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.btn-action-delete {
+  color: var(--status-danger);
+}
+
+.btn-action-delete:hover {
+  background: var(--status-danger);
+  border-color: var(--status-danger);
+  color: white;
 }
 
 /* ============================================
