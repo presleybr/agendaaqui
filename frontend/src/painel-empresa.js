@@ -452,7 +452,7 @@ class PainelEmpresa {
               </button>
             ` : ''}
             ${ap.status === 'confirmado' ? `
-              <button class="btn-action btn-action-success" onclick="painel.updateStatus(${ap.id}, 'concluido')" title="Concluir">
+              <button class="btn-action btn-action-success" onclick="painel.updateStatus(${ap.id}, 'realizado')" title="Concluir">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                   <polyline points="22 4 12 14.01 9 11.01"></polyline>
@@ -631,14 +631,14 @@ class PainelEmpresa {
       tbody.innerHTML = appointments.map(ap => `
         <tr>
           <td>#${ap.id}</td>
-          <td>${this.formatDate(ap.data_agendamento)}</td>
+          <td>${this.formatDate(ap.data_hora)}</td>
           <td>${ap.horario || '-'}</td>
           <td>${ap.nome_cliente || '-'}</td>
           <td>${ap.telefone || '-'}</td>
           <td>${ap.placa || '-'}</td>
           <td>${ap.tipo_servico || '-'}</td>
           <td>${this.formatCurrency(ap.valor || 0)}</td>
-          <td><span class="payment-badge ${this.getPaymentClass(ap.pagamento_status)}">${this.getPaymentLabel(ap.pagamento_status)}</span></td>
+          <td><span class="payment-badge ${this.getPaymentClass(ap.status_pagamento)}">${this.getPaymentLabel(ap.status_pagamento)}</span></td>
           <td><span class="status-badge ${ap.status}">${ap.status}</span></td>
           <td>
             <div class="action-buttons">
@@ -652,7 +652,7 @@ class PainelEmpresa {
                 <option value="">Status...</option>
                 <option value="pendente" ${ap.status === 'pendente' ? 'disabled' : ''}>Pendente</option>
                 <option value="confirmado" ${ap.status === 'confirmado' ? 'disabled' : ''}>Confirmado</option>
-                <option value="concluido" ${ap.status === 'concluido' ? 'disabled' : ''}>Concluido</option>
+                <option value="realizado" ${ap.status === 'realizado' ? 'disabled' : ''}>Realizado</option>
                 <option value="cancelado" ${ap.status === 'cancelado' ? 'disabled' : ''}>Cancelado</option>
               </select>
             </div>
@@ -690,7 +690,7 @@ class PainelEmpresa {
           </div>
           <div class="detail-row">
             <span class="detail-label">Data</span>
-            <span class="detail-value">${this.formatDate(ap.data_agendamento)}</span>
+            <span class="detail-value">${this.formatDate(ap.data_hora)}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Horario</span>
@@ -737,16 +737,16 @@ class PainelEmpresa {
             <span class="detail-value">${ap.placa || '-'}</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Modelo</span>
-            <span class="detail-value">${ap.modelo_veiculo || '-'}</span>
+            <span class="detail-label">Marca/Modelo</span>
+            <span class="detail-value">${ap.marca || ''} ${ap.modelo || '-'}</span>
           </div>
           <div class="detail-row">
             <span class="detail-label">Ano</span>
-            <span class="detail-value">${ap.ano_veiculo || '-'}</span>
+            <span class="detail-value">${ap.ano || '-'}</span>
           </div>
           <div class="detail-row">
-            <span class="detail-label">Renavam</span>
-            <span class="detail-value">${ap.renavam || '-'}</span>
+            <span class="detail-label">Cor</span>
+            <span class="detail-value">${ap.cor || '-'}</span>
           </div>
         </div>
 
@@ -1500,18 +1500,20 @@ class PainelEmpresa {
 
   getPaymentClass(status) {
     const classes = {
-      'approved': 'approved',
-      'pending': 'pending',
-      'rejected': 'rejected'
+      'aprovado': 'approved',
+      'pendente': 'pending',
+      'recusado': 'rejected',
+      'estornado': 'rejected'
     };
     return classes[status] || 'none';
   }
 
   getPaymentLabel(status) {
     const labels = {
-      'approved': 'Pago',
-      'pending': 'Pendente',
-      'rejected': 'Rejeitado'
+      'aprovado': 'Pago',
+      'pendente': 'Pendente',
+      'recusado': 'Recusado',
+      'estornado': 'Estornado'
     };
     return labels[status] || 'N/A';
   }
