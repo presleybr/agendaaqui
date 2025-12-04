@@ -96,13 +96,13 @@ class EmpresaPage {
       logoContainer.innerHTML = `<img src="${this.empresa.logo_url}" alt="${this.empresa.nome}" style="height: 50px;">`;
     }
 
-    // Hero
-    if (this.empresa.foto_capa_url) {
-      const heroSection = document.getElementById('hero');
-      heroSection.style.backgroundImage = `url('${this.empresa.foto_capa_url}')`;
-      heroSection.style.backgroundSize = 'cover';
-      heroSection.style.backgroundPosition = 'center';
-    }
+    // Hero - usar foto da empresa ou foto padrão
+    const heroSection = document.getElementById('hero');
+    const backgroundUrl = this.empresa.foto_capa_url || '/bgnew.png';
+    heroSection.style.backgroundImage = `url('${backgroundUrl}')`;
+    heroSection.style.backgroundSize = 'cover';
+    heroSection.style.backgroundPosition = 'center';
+    heroSection.style.backgroundAttachment = 'fixed';
 
     document.getElementById('heroTitle').textContent = `Agende Sua Vistoria com ${this.empresa.nome}`;
     document.getElementById('heroSubtitle').textContent = this.empresa.descricao || 'Rápido, fácil e com o melhor preço.';
@@ -241,37 +241,63 @@ class EmpresaPage {
   renderPricing() {
     const pricingGrid = document.getElementById('pricingGrid');
 
+    // Formatar preço em reais (valores estão em centavos)
+    const formatPrice = (valor) => {
+      return (valor / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
     const precos = [
       {
         tipo: 'Vistoria Cautelar',
-        preco: this.empresa.preco_cautelar || 0,
-        descricao: 'Laudo completo de vistoria cautelar'
+        preco: this.empresa.preco_cautelar || 15000,
+        descricao: 'Laudo completo de vistoria cautelar',
+        featured: true,
+        items: ['Laudo completo', 'Validade jurídica', 'Proteção contra multas', 'Atendimento rápido']
       },
       {
         tipo: 'Transferência',
-        preco: this.empresa.preco_transferencia || 0,
-        descricao: 'Vistoria para transferência de veículo'
+        preco: this.empresa.preco_transferencia || 12000,
+        descricao: 'Vistoria para transferência de veículo',
+        featured: false,
+        items: ['Laudo técnico', 'Documentação completa', 'Reconhecido DETRAN', 'Processo rápido']
       },
       {
         tipo: 'Outros Serviços',
-        preco: this.empresa.preco_outros || 0,
-        descricao: 'Consulte outros tipos de vistoria'
+        preco: this.empresa.preco_outros || 10000,
+        descricao: 'Consulte outros tipos de vistoria',
+        featured: false,
+        items: ['Pré Cautelar', 'Vistoria periódica', 'Laudo para seguro', 'Outros laudos']
       }
     ];
 
-    pricingGrid.innerHTML = precos.map(item => `
-      <div class="pricing-card reveal-up">
-        <div class="pricing-header">
-          <h3 class="pricing-title">${item.tipo}</h3>
-          <div class="pricing-price">
-            <span class="currency">R$</span>
-            <span class="amount">${(item.preco / 100).toFixed(2)}</span>
-          </div>
-        </div>
-        <p class="pricing-description">${item.descricao}</p>
-        <a href="#agendamento" class="btn btn-primary btn-large">Agendar</a>
+    pricingGrid.innerHTML = precos.map((item, index) => `
+      <div class="pricing-card ${item.featured ? 'featured' : ''} stagger-item">
+        ${item.featured ? '<div class="discount-badge">Mais Popular</div>' : ''}
+        <h3>${item.tipo}</h3>
+        <div class="price">R$ ${formatPrice(item.preco)}</div>
+        <div class="price-detail">${item.descricao}</div>
+        <ul style="text-align: left; margin: 20px 0; list-style: none; padding: 0;">
+          ${item.items.map(i => `<li style="padding: 8px 0;">✓ ${i}</li>`).join('')}
+        </ul>
+        <a href="#agendamento" class="btn ${item.featured ? 'btn-primary' : 'btn-secondary'} btn-select-service" data-service="${index === 0 ? 'cautelar' : index === 1 ? 'transferencia' : 'outros'}" style="width: 100%;">Agendar</a>
       </div>
     `).join('');
+
+    // Adicionar event listeners aos botões
+    setTimeout(() => {
+      pricingGrid.querySelectorAll('.btn-select-service').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const serviceType = btn.dataset.service;
+          sessionStorage.setItem('selectedService', serviceType);
+
+          const agendamentoSection = document.getElementById('agendamento');
+          if (agendamentoSection) {
+            agendamentoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+    }, 100);
   }
 
   renderCarrossel(imagens) {
