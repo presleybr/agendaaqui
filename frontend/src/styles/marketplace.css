@@ -12,7 +12,7 @@
 }
 
 .marketplace-hero .hero-overlay {
-  background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 100%);
+  display: none;
 }
 
 .marketplace-hero .hero-content {
