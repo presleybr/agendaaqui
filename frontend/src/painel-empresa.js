@@ -247,14 +247,29 @@ class PainelEmpresa {
     // Atualizar header
     if (this.empresa) {
       document.getElementById('sidebarEmpresaNome').textContent = this.empresa.nome || 'Minha Empresa';
-      if (this.empresa.logo) {
+
+      // Logo da empresa (verificar logo_url ou logo)
+      const logoUrl = this.empresa.logo_url || this.empresa.logo;
+      if (logoUrl) {
         const logo = document.getElementById('sidebarLogo');
-        logo.src = this.empresa.logo;
+        logo.src = logoUrl;
         logo.style.display = 'block';
       }
+
       // Aplicar cores da empresa
       if (this.empresa.cor_primaria) {
         document.documentElement.style.setProperty('--brand-primary', this.empresa.cor_primaria);
+      }
+
+      // Atualizar avatar do usuário com foto de perfil da empresa
+      const userAvatarImg = document.getElementById('userAvatarImg');
+      const userAvatarPlaceholder = document.getElementById('userAvatarPlaceholder');
+      const fotoPerfilUrl = this.empresa.foto_perfil_url || this.empresa.logo_url;
+
+      if (userAvatarImg && fotoPerfilUrl) {
+        userAvatarImg.src = fotoPerfilUrl;
+        userAvatarImg.style.display = 'block';
+        if (userAvatarPlaceholder) userAvatarPlaceholder.style.display = 'none';
       }
     }
 
@@ -1230,10 +1245,27 @@ class PainelEmpresa {
       }
 
       // Atualizar preview
+      preview.innerHTML = `<img src="${data.url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+
+      // Atualizar dados da empresa em memória
       if (tipo === 'logo') {
-        preview.innerHTML = `<img src="${data.url}" style="width: 100%; height: 100%; object-fit: cover;">`;
-      } else {
-        preview.innerHTML = `<img src="${data.url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        this.empresa.logo_url = data.url;
+        // Atualizar logo na sidebar
+        const sidebarLogo = document.getElementById('sidebarLogo');
+        if (sidebarLogo) {
+          sidebarLogo.src = data.url;
+          sidebarLogo.style.display = 'block';
+        }
+      } else if (tipo === 'capa') {
+        this.empresa.foto_capa_url = data.url;
+      } else if (tipo === 'perfil') {
+        this.empresa.foto_perfil_url = data.url;
+        // Atualizar avatar na sidebar
+        const userAvatarImg = document.getElementById('userAvatarImg');
+        if (userAvatarImg) {
+          userAvatarImg.src = data.url;
+          userAvatarImg.style.display = 'block';
+        }
       }
 
       alert('Imagem enviada com sucesso!');

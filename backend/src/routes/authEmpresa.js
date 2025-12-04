@@ -127,7 +127,8 @@ router.get('/me', authEmpresa, async (req, res) => {
       SELECT
         u.id, u.nome, u.email, u.role, u.primeiro_acesso, u.ultimo_acesso,
         e.id as empresa_id, e.nome as empresa_nome, e.slug,
-        e.logo_url, e.cor_primaria, e.cor_secundaria
+        e.logo_url, e.foto_capa_url, e.foto_perfil_url, e.banner_url,
+        e.cor_primaria, e.cor_secundaria
       FROM usuarios_empresa u
       JOIN empresas e ON u.empresa_id = e.id
       WHERE u.id = $1
@@ -152,7 +153,10 @@ router.get('/me', authEmpresa, async (req, res) => {
         id: data.empresa_id,
         nome: data.empresa_nome,
         slug: data.slug,
-        logo: data.logo_url,
+        logo_url: data.logo_url,
+        foto_capa_url: data.foto_capa_url,
+        foto_perfil_url: data.foto_perfil_url,
+        banner_url: data.banner_url,
         cor_primaria: data.cor_primaria,
         cor_secundaria: data.cor_secundaria
       }
