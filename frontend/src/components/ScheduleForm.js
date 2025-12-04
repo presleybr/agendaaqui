@@ -4,8 +4,22 @@ import { format, addDays } from 'date-fns';
 import { PaymentForm } from './PaymentForm.js';
 
 export class ScheduleForm {
-  constructor(containerId) {
-    this.container = document.getElementById(containerId);
+  constructor(containerOrId, options = {}) {
+    // Aceita tanto um ID (string) quanto um elemento DOM
+    if (typeof containerOrId === 'string') {
+      this.container = document.getElementById(containerOrId);
+    } else if (containerOrId instanceof HTMLElement) {
+      this.container = containerOrId;
+    } else {
+      console.error('ScheduleForm: container inválido', containerOrId);
+      return;
+    }
+
+    if (!this.container) {
+      console.error('ScheduleForm: container não encontrado');
+      return;
+    }
+
     this.currentStep = 1;
     this.formData = {
       cliente: {},
@@ -16,6 +30,7 @@ export class ScheduleForm {
       endereco_vistoria: ''
     };
     this.prices = {};
+    this.options = options; // { empresaId, precos }
     this.init();
   }
 
@@ -31,8 +46,26 @@ export class ScheduleForm {
         sessionStorage.removeItem('selectedService'); // Clear after using
       }
 
-      this.prices = await scheduleService.getPrices();
-      console.log('✅ Prices loaded:', this.prices);
+      // Se foi passado empresa_id nas opções, guardar para o agendamento
+      if (this.options.empresaId) {
+        this.formData.empresa_id = this.options.empresaId;
+        console.log('🏢 Empresa ID:', this.options.empresaId);
+      }
+
+      // Se foram passados preços nas opções, usar eles (página de empresa)
+      if (this.options.precos) {
+        this.prices = {
+          cautelar: { valor: this.options.precos.cautelar || 15000 },
+          transferencia: { valor: this.options.precos.transferencia || 12000 },
+          outros: { valor: this.options.precos.outros || 10000 }
+        };
+        console.log('💰 Using empresa prices:', this.prices);
+      } else {
+        // Senão, carregar da API (página principal)
+        this.prices = await scheduleService.getPrices();
+        console.log('✅ Prices loaded from API:', this.prices);
+      }
+
       this.render();
       this.attachEventListeners();
     } catch (error) {
