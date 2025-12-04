@@ -1541,41 +1541,52 @@ html {
 }
 
 /* ============================================
-   SCHEDULING FORM - COMPLETE MOBILE STYLES
+   SCHEDULING FORM - COMPLETE STYLES (OVERRIDE MAIN.CSS)
    ============================================ */
 
-/* Desktop styles */
-#scheduleApp .steps-indicator {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-  position: relative;
+/* Reset and override main.css styles completely */
+.scheduling-card .steps-indicator,
+#scheduleApp .steps-indicator,
+.content-card .steps-indicator {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  margin-bottom: 24px !important;
+  position: relative !important;
+  gap: 4px !important;
 }
 
-#scheduleApp .steps-indicator::before {
-  content: '';
-  position: absolute;
-  top: 20px;
-  left: 24px;
-  right: 24px;
-  height: 2px;
-  background: #e4e6eb;
-  z-index: 0;
+.scheduling-card .steps-indicator::before,
+#scheduleApp .steps-indicator::before,
+.content-card .steps-indicator::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 20px !important;
+  left: 10% !important;
+  right: 10% !important;
+  height: 2px !important;
+  background: #e4e6eb !important;
+  z-index: 0 !important;
+  display: block !important;
 }
 
-#scheduleApp .step {
+.scheduling-card .step,
+#scheduleApp .step,
+.content-card .step {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   gap: 8px !important;
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  min-width: 80px;
+  position: relative !important;
+  z-index: 1 !important;
+  flex: 1 !important;
+  min-width: 0 !important;
 }
 
-#scheduleApp .step-number {
+.scheduling-card .step-number,
+#scheduleApp .step-number,
+.content-card .step-number {
   width: 40px !important;
   height: 40px !important;
   min-width: 40px !important;
@@ -1583,47 +1594,61 @@ html {
   max-width: 40px !important;
   max-height: 40px !important;
   border-radius: 50% !important;
-  background: white;
-  border: 2px solid #e4e6eb;
+  background: white !important;
+  border: 2px solid #e4e6eb !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-weight: 600;
-  color: #65676b;
-  font-size: 0.9rem !important;
-  transition: all 0.2s;
+  font-weight: 600 !important;
+  color: #65676b !important;
+  font-size: 1rem !important;
+  line-height: 1 !important;
+  transition: all 0.2s !important;
   flex-shrink: 0 !important;
   flex-grow: 0 !important;
   overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
 }
 
-#scheduleApp .step.active .step-number {
-  background: var(--brand-primary);
-  border-color: var(--brand-primary);
-  color: white;
+.scheduling-card .step.active .step-number,
+#scheduleApp .step.active .step-number,
+.content-card .step.active .step-number {
+  background: #1877f2 !important;
+  border-color: #1877f2 !important;
+  color: white !important;
 }
 
-#scheduleApp .step.completed .step-number {
-  background: #22c55e;
-  border-color: #22c55e;
-  color: white;
+.scheduling-card .step.completed .step-number,
+#scheduleApp .step.completed .step-number,
+.content-card .step.completed .step-number {
+  background: #22c55e !important;
+  border-color: #22c55e !important;
+  color: white !important;
 }
 
-#scheduleApp .step-label {
+.scheduling-card .step-label,
+#scheduleApp .step-label,
+.content-card .step-label {
   display: block !important;
-  font-size: 0.7rem !important;
-  color: #65676b;
+  font-size: 0.65rem !important;
+  color: #65676b !important;
   text-align: center !important;
-  font-weight: 500;
+  font-weight: 500 !important;
   line-height: 1.2 !important;
-  margin-top: 4px !important;
-  word-wrap: break-word;
-  max-width: 70px;
+  margin: 0 !important;
+  padding: 0 !important;
+  max-width: 70px !important;
+  word-wrap: break-word !important;
+  white-space: normal !important;
 }
 
-#scheduleApp .step.active .step-label {
-  color: var(--text-primary);
-  font-weight: 600;
+.scheduling-card .step.active .step-label,
+#scheduleApp .step.active .step-label,
+.content-card .step.active .step-label {
+  color: #050505 !important;
+  font-weight: 600 !important;
 }
 
 /* Form wizard and steps */
@@ -1811,33 +1836,58 @@ html {
     right: 20px;
   }
 
-  #scheduleApp .step {
-    min-width: 56px !important;
+  /* Mobile steps - MUST override main.css */
+  .scheduling-card .steps-indicator,
+  #scheduleApp .steps-indicator,
+  .content-card .steps-indicator {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 2px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .scheduling-card .steps-indicator::before,
+  #scheduleApp .steps-indicator::before,
+  .content-card .steps-indicator::before {
+    top: 16px !important;
+  }
+
+  .scheduling-card .step,
+  #scheduleApp .step,
+  .content-card .step {
+    min-width: 54px !important;
     flex: 0 0 auto !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 4px !important;
   }
 
-  #scheduleApp .step-number {
+  .scheduling-card .step-number,
+  #scheduleApp .step-number,
+  .content-card .step-number {
     width: 32px !important;
     height: 32px !important;
     min-width: 32px !important;
     min-height: 32px !important;
     max-width: 32px !important;
     max-height: 32px !important;
-    font-size: 0.75rem !important;
+    font-size: 0.85rem !important;
   }
 
-  #scheduleApp .step-label {
+  .scheduling-card .step-label,
+  #scheduleApp .step-label,
+  .content-card .step-label {
     display: block !important;
-    font-size: 0.55rem !important;
-    white-space: nowrap;
-    max-width: 56px !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 2px !important;
+    font-size: 0.5rem !important;
+    white-space: nowrap !important;
+    max-width: 54px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   /* Form step title */
