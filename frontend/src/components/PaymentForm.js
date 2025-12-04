@@ -220,27 +220,34 @@ export class PaymentForm {
   }
 
   async startPaymentPolling(paymentId) {
+    console.log('🔄 Starting payment polling for ID:', paymentId);
+
     const checkPayment = async () => {
       try {
+        console.log(`📡 Checking payment status for: ${paymentId}`);
         const response = await api.get(`/payment/status/${paymentId}`);
+        console.log('📦 Payment status response:', response);
 
         if (response.status === 'approved') {
+          console.log('✅ Payment approved!');
           this.showPaymentSuccess();
           return true;
         } else if (response.status === 'rejected' || response.status === 'cancelled') {
+          console.log('❌ Payment rejected/cancelled:', response.status);
           alert('Pagamento não foi aprovado. Tente novamente.');
           location.reload();
           return true;
         }
 
+        console.log('⏳ Payment still pending:', response.status);
         return false;
       } catch (error) {
-        console.error('Error checking payment:', error);
+        console.error('❌ Error checking payment:', error);
 
         // Se o pagamento não foi encontrado (404), pode ser que ainda não tenha sido criado no MP
         // ou foi removido. Continuar tentando por algumas vezes antes de desistir
         if (error.response?.status === 404) {
-          console.log('Payment not found yet, will retry...');
+          console.log('⚠️ Payment not found yet, will retry...');
           return false;
         }
 
@@ -255,10 +262,16 @@ export class PaymentForm {
 
     const interval = setInterval(async () => {
       attempts++;
+      console.log(`🔄 Polling attempt ${attempts}/${maxAttempts}`);
       const completed = await checkPayment();
 
-      if (completed || attempts >= maxAttempts) {
+      if (completed) {
+        console.log('✅ Payment completed, stopping polling');
         clearInterval(interval);
+      } else if (attempts >= maxAttempts) {
+        console.log('⚠️ Max attempts reached, stopping polling');
+        clearInterval(interval);
+        alert('Tempo limite excedido. Verifique seu extrato bancário ou tente novamente.');
       }
     }, 3000);
   }
