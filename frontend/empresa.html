@@ -12,276 +12,412 @@
 
   <!-- CSS -->
   <link rel="stylesheet" href="/src/styles/main.css">
-  <link rel="stylesheet" href="/src/styles/empresa.css">
+  <link rel="stylesheet" href="/src/styles/empresa-social.css">
 
   <style id="dynamicStyles">
     /* Estilos dinâmicos baseados nas cores da empresa */
   </style>
 </head>
-<body>
+<body class="empresa-profile-page">
   <!-- Loading -->
-  <div id="pageLoading" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; display: flex; align-items: center; justify-content: center;">
-    <div style="text-align: center;">
+  <div id="pageLoading" class="page-loading">
+    <div class="loading-content">
       <div class="spinner"></div>
       <p>Carregando...</p>
     </div>
   </div>
 
-  <!-- Navigation Header -->
-  <header class="site-header" id="siteHeader">
-    <div class="container">
-      <div class="header-content">
-        <div class="logo" id="empresaLogo">
-          <h1 class="logo-text" id="empresaNome">Vistoria Express</h1>
-        </div>
-        <nav class="main-nav">
-          <a href="#hero" class="nav-link">Início</a>
-          <a href="#precos" class="nav-link">Preços</a>
-          <a href="#beneficios" class="nav-link">Benefícios</a>
-          <a href="#depoimentos" class="nav-link">Depoimentos</a>
-          <a href="#localizacao" class="nav-link" id="navLocalizacao" style="display: none;">Localização</a>
-          <a href="#agendamento" class="nav-link">Agendar</a>
-        </nav>
-        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Menu">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-      </div>
+  <!-- Header Fixo -->
+  <header class="profile-header" id="siteHeader">
+    <div class="header-container">
+      <a href="/" class="header-logo">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+        <span>AgendaAqui</span>
+      </a>
+      <nav class="header-nav">
+        <a href="#sobre" class="nav-link">Sobre</a>
+        <a href="#servicos" class="nav-link">Servicos</a>
+        <a href="#fotos" class="nav-link">Fotos</a>
+        <a href="#avaliacoes" class="nav-link">Avaliacoes</a>
+        <a href="#agendamento" class="nav-link nav-cta">Agendar</a>
+      </nav>
+      <button class="mobile-menu-btn" id="mobileMenuToggle" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section id="hero" class="hero-section">
-    <div class="hero-overlay"></div>
-    <div class="container">
-      <div class="hero-content">
-        <h1 class="hero-title" id="heroTitle">Agende Sua Vistoria Veicular Online</h1>
-        <p class="hero-subtitle" id="heroSubtitle">Rápido, fácil e com o melhor preço. Proteção e tranquilidade para seu veículo.</p>
-        <div class="hero-buttons">
-          <a href="#agendamento" class="btn btn-primary btn-large">Agendar Agora</a>
-          <a href="#precos" class="btn btn-secondary btn-large">Ver Preços</a>
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#sobre" class="mobile-nav-link">Sobre</a>
+    <a href="#servicos" class="mobile-nav-link">Servicos</a>
+    <a href="#fotos" class="mobile-nav-link">Fotos</a>
+    <a href="#avaliacoes" class="mobile-nav-link">Avaliacoes</a>
+    <a href="#agendamento" class="mobile-nav-link mobile-nav-cta">Agendar Agora</a>
+  </div>
+
+  <!-- Profile Cover Section -->
+  <section class="profile-cover-section">
+    <!-- Cover Photo -->
+    <div class="cover-photo" id="coverPhoto">
+      <div class="cover-gradient"></div>
+      <img src="/cover-default.jpg" alt="Capa" id="coverImage" onerror="this.style.display='none'">
+    </div>
+
+    <!-- Profile Info Overlay -->
+    <div class="profile-info-container">
+      <div class="profile-main">
+        <!-- Profile Picture -->
+        <div class="profile-picture" id="profilePicture">
+          <img src="" alt="Logo" id="profileImage" onerror="this.parentElement.classList.add('no-image')">
+          <span class="profile-initial" id="profileInitial">V</span>
         </div>
+
+        <!-- Profile Details -->
+        <div class="profile-details">
+          <h1 class="profile-name" id="empresaNome">Vistoria Express</h1>
+          <div class="profile-meta">
+            <span class="profile-category">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+              </svg>
+              Vistoria Veicular
+            </span>
+            <span class="profile-location" id="profileLocation">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              <span id="cidadeEstado">Carregando...</span>
+            </span>
+          </div>
+
+          <!-- Rating -->
+          <div class="profile-rating" id="profileRating">
+            <div class="rating-stars">
+              <span class="star filled">&#9733;</span>
+              <span class="star filled">&#9733;</span>
+              <span class="star filled">&#9733;</span>
+              <span class="star filled">&#9733;</span>
+              <span class="star filled">&#9733;</span>
+            </div>
+            <span class="rating-value" id="ratingValue">5.0</span>
+            <span class="rating-count">(<span id="reviewCount">0</span> avaliacoes)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="profile-actions">
+        <a href="#agendamento" class="action-btn action-primary">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
+          </svg>
+          Agendar Vistoria
+        </a>
+        <a href="#" id="whatsappBtn" class="action-btn action-whatsapp" target="_blank">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          WhatsApp
+        </a>
+        <button class="action-btn action-secondary" id="shareBtn">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+          </svg>
+          Compartilhar
+        </button>
       </div>
     </div>
   </section>
 
-  <!-- Sobre a Empresa -->
-  <section id="sobre" class="sobre-section" style="display: none;">
-    <div class="container">
-      <div class="sobre-content">
-        <div class="sobre-texto">
-          <h2 id="sobreTitulo">Sobre Nós</h2>
-          <div id="sobreDescricao"></div>
-        </div>
-        <div class="sobre-info">
-          <div class="info-card">
-            <h3>📍 Localização</h3>
-            <p id="empresaEndereco"></p>
-          </div>
-          <div class="info-card">
-            <h3>📞 Contato</h3>
-            <p id="empresaTelefone"></p>
-            <p id="empresaEmail"></p>
-          </div>
-          <div class="info-card">
-            <h3>🕐 Horário</h3>
-            <p id="empresaHorario"></p>
-          </div>
-        </div>
-      </div>
+  <!-- Navigation Tabs -->
+  <nav class="profile-tabs" id="profileTabs">
+    <div class="tabs-container">
+      <a href="#sobre" class="tab-item active" data-tab="sobre">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        </svg>
+        Sobre
+      </a>
+      <a href="#servicos" class="tab-item" data-tab="servicos">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+          <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+        </svg>
+        Servicos
+      </a>
+      <a href="#fotos" class="tab-item" data-tab="fotos">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+        </svg>
+        Fotos
+      </a>
+      <a href="#avaliacoes" class="tab-item" data-tab="avaliacoes">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+        </svg>
+        Avaliacoes
+      </a>
+      <a href="#localizacao" class="tab-item" data-tab="localizacao">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+        </svg>
+        Localizacao
+      </a>
     </div>
-  </section>
+  </nav>
 
-  <!-- Carrossel de Fotos -->
-  <section id="galeria" class="galeria-section" style="display: none;">
-    <div class="container">
-      <h2>Nossa Galeria</h2>
-      <div class="carousel-container" id="empresaCarrossel">
-        <!-- Será preenchido dinamicamente -->
-      </div>
-    </div>
-  </section>
+  <!-- Main Content -->
+  <main class="profile-content">
+    <div class="content-container">
+      <!-- Left Column -->
+      <aside class="content-sidebar">
+        <!-- About Card -->
+        <div class="sidebar-card" id="sobre">
+          <h3 class="card-title">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+            Sobre
+          </h3>
+          <p class="about-text" id="empresaDescricao">Carregando informacoes...</p>
 
-  <!-- Interactive Menu Section -->
-  <section id="beneficios" class="interactive-menu">
-    <div class="container">
-      <div class="menu-grid">
-        <!-- SEÇÃO 1: VISTORIA CAUTELAR -->
-        <div class="menu-card menu-card-white">
-          <div class="card-header">
-            <h2 class="card-title">VISTORIA CAUTELAR</h2>
-            <div class="triangle-decorator"></div>
-          </div>
-          <p class="card-text">A vistoria cautelar é a única ferramenta eficiente o bastante para impedir que o consumidor venha adquirir um veículo com adulterações. A vistoria cautelar veicular consiste na análise da originalidade dos pontos de fixação e numeração dos vidros (chassi, motor, câmbio, vidros, etiquetas de identificação, placas, entre outros), além de verificar se existem reparos estruturais significativos nas longarinas, colunas e traseiras, painel dash, painel dianteiro, painel traseiro, teto e demais peças.</p>
-        </div>
-
-        <!-- SEÇÃO 2: VANTAGENS -->
-        <div class="menu-card menu-card-blue">
-          <div class="card-header">
-            <h2 class="card-title">VANTAGENS</h2>
-            <div class="triangle-decorator"></div>
-          </div>
-          <ul class="advantages-list">
-            <li class="advantage-item">
-              <span class="advantage-number">1</span>
-              <span class="advantage-text">Ao realizar a vistoria veicular o comprador exime-se de problemas com a originalidade do veículo (chassi, motor e agregados)</span>
-            </li>
-            <li class="advantage-item">
-              <span class="advantage-number">2</span>
-              <span class="advantage-text">Valoriza e facilita a comercialização do veículo examinado, uma vez que se comprova sua qualidade e originalidade por meio de Laudo Técnico ilustrado fotograficamente, que é reconhecido em âmbito nacional.</span>
-            </li>
-            <li class="advantage-item">
-              <span class="advantage-number">3</span>
-              <span class="advantage-text">Ficam perpetuadas as condições em que se encontrava o veículo no momento de sua comercialização, isentando o vendedor de quaisquer modificações ou adulterações realizadas posteriormente a este evento.</span>
-            </li>
-          </ul>
-          <div class="social-icons" id="empresaSocial">
-            <!-- Será preenchido dinamicamente -->
-          </div>
-        </div>
-
-        <!-- SEÇÃO 3: SERVIÇOS -->
-        <div class="menu-card menu-card-services">
-          <div class="card-header">
-            <h2 class="card-title">SERVIÇOS</h2>
-            <div class="title-underline"></div>
-          </div>
-          <ul class="services-list">
-            <li class="service-item">
-              <svg class="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>LAUDO PARA TRANSFERÊNCIA</span>
-            </li>
-            <li class="service-item">
-              <svg class="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>LAUDO PARA 2ª VIA DO CRV</span>
-            </li>
-            <li class="service-item">
-              <svg class="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>LAUDO PARA LICENCIAMENTO</span>
-            </li>
-            <li class="service-item">
-              <svg class="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>ALIENAÇÃO E DESALIENAÇÃO</span>
-            </li>
-            <li class="service-item">
-              <svg class="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>LAUDO CAUTELAR</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Pricing Section -->
-  <section id="precos" class="pricing" style="background: #f8f9fa;">
-    <div class="container">
-      <h2 style="color: #1a1a1a; text-align: center; font-size: 2.5rem; margin-bottom: 0.5rem;">Nossos Preços</h2>
-      <p style="color: #666; text-align: center; margin-bottom: 2rem;">Escolha o serviço ideal para você</p>
-      <div class="pricing-grid" id="pricingGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; max-width: 1100px; margin: 0 auto;">
-        <!-- Será preenchido via JavaScript -->
-      </div>
-    </div>
-  </section>
-
-  <!-- Depoimentos Section -->
-  <section id="depoimentos" class="google-reviews">
-    <div class="container">
-      <h2>O Que Nossos Clientes Dizem</h2>
-      <div class="reviews-carousel-wrapper" id="reviewsContainer">
-        <!-- Será preenchido dinamicamente -->
-      </div>
-    </div>
-  </section>
-
-  <!-- Localização Section -->
-  <section id="localizacao" class="localizacao-section" style="display: none;">
-    <div class="container">
-      <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 0.5rem; color: #1a1a1a;">Nossa Localização</h2>
-      <p style="text-align: center; color: #666; margin-bottom: 2rem;">Venha nos visitar ou agende uma vistoria</p>
-
-      <div class="localizacao-content">
-        <div class="localizacao-info">
-          <div class="info-item">
-            <div class="info-icon">📍</div>
-            <div class="info-text">
-              <h4>Endereço</h4>
-              <p id="locEndereco">-</p>
+          <div class="info-list">
+            <div class="info-item">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              <div class="info-content">
+                <span class="info-label">Endereco</span>
+                <span class="info-value" id="empresaEndereco">-</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+              </svg>
+              <div class="info-content">
+                <span class="info-label">Telefone</span>
+                <span class="info-value" id="empresaTelefone">-</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+              </svg>
+              <div class="info-content">
+                <span class="info-label">Horario</span>
+                <span class="info-value" id="empresaHorario">-</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+              </svg>
+              <div class="info-content">
+                <span class="info-label">Email</span>
+                <span class="info-value" id="empresaEmail">-</span>
+              </div>
             </div>
           </div>
 
-          <div class="info-item">
-            <div class="info-icon">📞</div>
-            <div class="info-text">
-              <h4>Telefone</h4>
-              <p id="locTelefone">-</p>
-            </div>
+          <!-- Social Links -->
+          <div class="social-links" id="socialLinks" style="display: none;">
+            <a href="#" id="linkFacebook" class="social-link" target="_blank" title="Facebook">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href="#" id="linkInstagram" class="social-link" target="_blank" title="Instagram">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </a>
+            <a href="#" id="linkSite" class="social-link" target="_blank" title="Site">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            </a>
           </div>
+        </div>
 
-          <div class="info-item">
-            <div class="info-icon">🕐</div>
-            <div class="info-text">
-              <h4>Horário de Funcionamento</h4>
-              <p id="locHorario">-</p>
-            </div>
-          </div>
-
-          <a href="#" id="locDirections" class="btn btn-primary btn-directions" target="_blank" rel="noopener noreferrer">
-            🗺️ Como Chegar
+        <!-- Quick Actions Card (Mobile) -->
+        <div class="sidebar-card mobile-actions">
+          <a href="#agendamento" class="quick-action-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+              <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+            </svg>
+            Agendar Vistoria
           </a>
+          <a href="#" id="whatsappBtnMobile" class="quick-action-btn whatsapp" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            WhatsApp
+          </a>
+          <button class="quick-action-btn" id="callBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+              <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+            </svg>
+            Ligar
+          </button>
         </div>
+      </aside>
 
-        <div class="localizacao-mapa">
-          <div id="empresaMapa" class="mapa-container">
-            <!-- Mapa será carregado aqui -->
+      <!-- Main Column -->
+      <div class="content-main">
+        <!-- Services Section -->
+        <section class="content-card" id="servicos">
+          <h3 class="card-title">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/>
+            </svg>
+            Nossos Servicos
+          </h3>
+          <div class="services-grid" id="servicesGrid">
+            <!-- Será preenchido via JS -->
           </div>
-        </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section class="content-card" id="precos">
+          <h3 class="card-title">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+            </svg>
+            Precos
+          </h3>
+          <div class="pricing-grid" id="pricingGrid">
+            <!-- Será preenchido via JS -->
+          </div>
+        </section>
+
+        <!-- Photos Section -->
+        <section class="content-card" id="fotos">
+          <h3 class="card-title">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+            </svg>
+            Fotos
+          </h3>
+          <div class="photos-grid" id="photosGrid">
+            <div class="photo-placeholder">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+              </svg>
+              <p>Nenhuma foto disponivel</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Reviews Section -->
+        <section class="content-card" id="avaliacoes">
+          <h3 class="card-title">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </svg>
+            Avaliacoes
+          </h3>
+          <div class="reviews-summary" id="reviewsSummary">
+            <div class="rating-big">
+              <span class="rating-number" id="ratingBig">5.0</span>
+              <div class="rating-stars-big">
+                <span class="star filled">&#9733;</span>
+                <span class="star filled">&#9733;</span>
+                <span class="star filled">&#9733;</span>
+                <span class="star filled">&#9733;</span>
+                <span class="star filled">&#9733;</span>
+              </div>
+              <span class="rating-total"><span id="totalReviews">0</span> avaliacoes no Google</span>
+            </div>
+          </div>
+          <div class="reviews-list" id="reviewsList">
+            <!-- Será preenchido via JS -->
+          </div>
+        </section>
+
+        <!-- Location Section -->
+        <section class="content-card" id="localizacao">
+          <h3 class="card-title">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            Localizacao
+          </h3>
+          <div class="location-content">
+            <div class="map-container" id="empresaMapa">
+              <!-- Mapa será carregado aqui -->
+            </div>
+            <div class="location-info">
+              <p id="locEndereco">-</p>
+              <a href="#" id="locDirections" class="directions-btn" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                  <path d="M21.71 11.29l-9-9c-.39-.39-1.02-.39-1.41 0l-9 9c-.39.39-.39 1.02 0 1.41l9 9c.39.39 1.02.39 1.41 0l9-9c.39-.38.39-1.01 0-1.41zM14 14.5V12h-4v3H8v-4c0-.55.45-1 1-1h5V7.5l3.5 3.5-3.5 3.5z"/>
+                </svg>
+                Como chegar
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Scheduling Section -->
+        <section class="content-card scheduling-card" id="agendamento">
+          <h3 class="card-title">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+            </svg>
+            Agendar Vistoria
+          </h3>
+          <div id="scheduleApp">
+            <!-- Será renderizado via JavaScript -->
+          </div>
+        </section>
       </div>
     </div>
-  </section>
-
-  <!-- Scheduling Section -->
-  <section id="agendamento" class="scheduling" style="background-image: url('/bgnew.png'); background-size: cover; background-position: center; background-attachment: fixed;">
-    <div class="container">
-      <h2 style="color: white; text-align: center; font-size: 2.5rem; margin-bottom: 0.5rem; text-shadow: 0 2px 10px rgba(0,0,0,0.3);">Agende Sua Vistoria</h2>
-      <p style="color: rgba(255,255,255,0.9); text-align: center; margin-bottom: 2rem;">Preencha os dados abaixo e receba a confirmação instantânea</p>
-
-      <div id="scheduleApp" style="opacity: 1;">
-        <!-- Será renderizado via JavaScript -->
-      </div>
-    </div>
-  </section>
+  </main>
 
   <!-- WhatsApp Float Button -->
   <a href="#" id="whatsappFloat" class="whatsapp-float" target="_blank" title="Fale conosco no WhatsApp" style="display: none;">
     <svg viewBox="0 0 32 32" fill="currentColor">
-      <path d="M16 0c-8.837 0-16 7.163-16 16 0 2.825 0.737 5.607 2.137 8.048l-2.137 7.952 7.933-2.127c2.42 1.37 5.173 2.127 8.067 2.127 8.837 0 16-7.163 16-16s-7.163-16-16-16zM16 29.467c-2.482 0-4.908-0.646-7.07-1.87l-0.507-0.292-4.713 1.262 1.262-4.669-0.292-0.508c-1.207-2.100-1.847-4.507-1.847-6.927 0-7.384 6.083-13.467 13.467-13.467s13.467 6.083 13.467 13.467c0 7.384-6.083 13.467-13.467 13.467zM21.9 18.305c-0.292-0.146-1.727-0.857-1.995-0.952-0.268-0.095-0.463-0.146-0.658 0.146s-0.755 0.952-0.926 1.146c-0.171 0.195-0.341 0.22-0.633 0.073-0.292-0.146-1.231-0.452-2.344-1.446-0.866-0.772-1.45-1.725-1.621-2.017s-0.018-0.45 0.128-0.595c0.131-0.131 0.292-0.341 0.438-0.512s0.195-0.292 0.292-0.487c0.098-0.195 0.049-0.366-0.024-0.512s-0.658-1.588-0.902-2.176c-0.238-0.571-0.479-0.494-0.658-0.503-0.171-0.008-0.366-0.010-0.561-0.010s-0.512 0.073-0.78 0.366c-0.268 0.292-1.024 1.002-1.024 2.444s1.049 2.835 1.195 3.029c0.146 0.195 2.059 3.138 4.987 4.403 0.696 0.301 1.239 0.481 1.663 0.616 0.699 0.223 1.336 0.191 1.839 0.116 0.561-0.084 1.727-0.706 1.971-1.389s0.244-1.268 0.171-1.389c-0.073-0.12-0.268-0.195-0.561-0.341z"/>
+      <path d="M16 0c-8.837 0-16 7.163-16 16 0 2.825 0.737 5.607 2.137 8.048l-2.137 7.952 7.933-2.127c2.42 1.37 5.173 2.127 8.067 2.127 8.837 0 16-7.163 16-16s-7.163-16-16-16zM16 29.467c-2.482 0-4.908-0.646-7.07-1.87l-0.507-0.292-4.713 1.262 1.262-4.669-0.292-0.508c-1.207-2.100-1.847-4.507-1.847-6.927 0-7.384 6.083-13.467 13.467-13.467s13.467 6.083 13.467 13.467c0 7.384-6.083 13.467-13.467 13.467z"/>
     </svg>
   </a>
 
   <!-- Footer -->
-  <footer class="footer" style="background-image: url('/bgnew.png'); background-size: cover; background-position: center; background-attachment: fixed;">
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-section">
-          <h3 style="color: var(--brand-primary);" id="footerNome">Vistoria Express</h3>
-          <p id="footerDescricao">Seu parceiro de confiança em vistorias veiculares</p>
+  <footer class="profile-footer">
+    <div class="footer-container">
+      <div class="footer-main">
+        <div class="footer-brand">
+          <h3 id="footerNome">Vistoria Express</h3>
+          <p id="footerDescricao">Sua empresa de confianca em vistorias veiculares</p>
         </div>
-        <div class="footer-section" id="footerContato">
-          <h4>Contato</h4>
-          <!-- Será preenchido dinamicamente -->
-        </div>
-        <div class="footer-section" id="footerHorario">
-          <h4>Horário de Atendimento</h4>
-          <!-- Será preenchido dinamicamente -->
+        <div class="footer-links">
+          <div class="footer-col">
+            <h4>Contato</h4>
+            <p id="footerTelefone">-</p>
+            <p id="footerEmail">-</p>
+          </div>
+          <div class="footer-col">
+            <h4>Horario</h4>
+            <p id="footerHorario">-</p>
+          </div>
+          <div class="footer-col">
+            <h4>Endereco</h4>
+            <p id="footerEndereco">-</p>
+          </div>
         </div>
       </div>
       <div class="footer-bottom">
-        <p id="footerCopyright">&copy; 2024 Vistoria Veicular Express. Todos os direitos reservados.</p>
+        <p>Powered by <a href="/" class="footer-link">AgendaAqui Vistorias</a></p>
+        <p id="footerCopyright">&copy; 2024 Todos os direitos reservados.</p>
       </div>
     </div>
   </footer>
+
+  <!-- Photo Modal -->
+  <div class="photo-modal" id="photoModal">
+    <button class="modal-close" id="modalClose">&times;</button>
+    <img src="" alt="Foto" id="modalImage">
+    <button class="modal-nav modal-prev" id="modalPrev">&#10094;</button>
+    <button class="modal-nav modal-next" id="modalNext">&#10095;</button>
+  </div>
 
   <script type="module" src="/src/empresa.js"></script>
 </body>
