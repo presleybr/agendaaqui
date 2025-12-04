@@ -1,5 +1,9 @@
 # Redirects/Rewrites para Render Static Site
-# Atualizado em 27/11/2025 - Ordem importa: regras mais específicas primeiro
+# Atualizado em 04/12/2025 - Ordem importa: regras mais específicas primeiro
+
+# IMPORTANTE: Proxy de API para o backend
+# Todas as chamadas /api/* devem ir para o backend (api.agendaaquivistorias.com.br)
+/api/*      https://api.agendaaquivistorias.com.br/api/:splat  200
 
 # Páginas específicas (REWRITE - mantém URL)
 /admin      /admin.html             200
