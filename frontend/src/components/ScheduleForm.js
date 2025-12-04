@@ -183,16 +183,15 @@ export class ScheduleForm {
         justify-content: space-between;
         align-items: flex-start;
         width: 100%;
-        padding: 16px 8px;
-        margin-bottom: 24px;
+        padding: 8px 0 16px 0;
+        margin-bottom: 20px;
         position: relative;
-        background: #f8fafc;
-        border-radius: 12px;
+        border-bottom: 1px solid #e5e7eb;
       ">
         <!-- Linha conectora -->
         <div style="
           position: absolute;
-          top: 34px;
+          top: 26px;
           left: 10%;
           right: 10%;
           height: 2px;
