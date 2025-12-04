@@ -239,8 +239,12 @@ class AdminPanel {
           console.log('Navigating to Configuracoes - loading settings...');
           await this.loadConfiguracoes();
         } else if (sectionId === 'empresas') {
-          console.log('Navigating to Empresas - loading stats...');
+          console.log('Navigating to Empresas - loading stats and empresas...');
           await this.loadEmpresasStats();
+          // Recarregar empresas na tabela
+          if (this.empresasManager) {
+            await this.empresasManager.loadEmpresas();
+          }
         } else if (sectionId === 'repasses') {
           console.log('Navigating to Repasses - loading data...');
           await this.loadRepasses();
