@@ -93,7 +93,7 @@ class Marketplace {
 
   async loadCidades() {
     try {
-      const response = await fetch(`${API_URL}/api/empresas/cidades`);
+      const response = await fetch(`${API_URL}/empresas/cidades`);
       const data = await response.json();
 
       this.cidades = data.cidades || [];
@@ -112,7 +112,7 @@ class Marketplace {
 
   async loadFeaturedEmpresas() {
     try {
-      const response = await fetch(`${API_URL}/api/empresas/buscar`);
+      const response = await fetch(`${API_URL}/empresas/buscar`);
       const data = await response.json();
 
       const empresas = data.empresas || [];
@@ -261,7 +261,7 @@ class Marketplace {
     this.showLoading();
 
     try {
-      const response = await fetch(`${API_URL}/api/empresas/buscar?${params}`);
+      const response = await fetch(`${API_URL}/empresas/buscar?${params}`);
       const data = await response.json();
 
       this.empresas = data.empresas || [];
