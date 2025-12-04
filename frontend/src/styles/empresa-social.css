@@ -1608,7 +1608,7 @@ html {
   flex-grow: 0 !important;
   overflow: hidden !important;
   padding: 0 !important;
-  margin: 0 !important;
+  margin-top: 20px !important;
   box-sizing: border-box !important;
 }
 
@@ -1877,6 +1877,7 @@ html {
     max-width: 32px !important;
     max-height: 32px !important;
     font-size: 0.85rem !important;
+    margin-top: 16px !important;
   }
 
   .scheduling-card .step-label,
