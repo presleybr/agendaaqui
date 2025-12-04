@@ -267,6 +267,26 @@ app.get('/admin', (req, res) => {
   }
 });
 
+// Serve Cliente Panel at /cliente route (Painel da Empresa/Vistoriador)
+app.get('/cliente', (req, res) => {
+  const fs = require('fs');
+  const prodPath = path.join(__dirname, '../../frontend/dist/cliente.html');
+  const devPath = path.join(__dirname, '../../frontend/cliente.html');
+
+  let clientePath = process.env.NODE_ENV === 'production' ? prodPath : devPath;
+
+  // Fallback se não encontrar no caminho de produção
+  if (!fs.existsSync(clientePath) && process.env.NODE_ENV === 'production') {
+    clientePath = devPath;
+  }
+
+  if (fs.existsSync(clientePath)) {
+    res.sendFile(clientePath);
+  } else {
+    res.status(404).send('Cliente panel not found');
+  }
+});
+
 // Rota para páginas de empresas (URLs amigáveis)
 // Deve vir ANTES do catch-all do SPA
 // Exemplos: /vistoriapremium, /vistoria-express-sp
@@ -277,6 +297,7 @@ app.get('/:slug([a-z0-9-]+)', (req, res, next) => {
   // Lista de rotas reservadas que NÃO são slugs de empresas
   const reservedRoutes = [
     'admin',
+    'cliente',
     'api',
     'assets',
     'uploads',

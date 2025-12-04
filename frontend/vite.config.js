@@ -40,6 +40,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         admin: resolve(__dirname, 'admin.html'),
         empresa: resolve(__dirname, 'empresa.html'),
+        cliente: resolve(__dirname, 'cliente.html'),
         painelEmpresa: resolve(__dirname, 'painel-empresa.html')
       }
     }
