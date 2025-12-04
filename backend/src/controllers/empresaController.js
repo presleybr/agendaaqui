@@ -3,7 +3,148 @@ const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 
+/**
+ * Calcula distância entre dois pontos usando fórmula Haversine
+ */
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Raio da Terra em km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c * 10) / 10; // Retorna em km com 1 casa decimal
+}
+
 class EmpresaController {
+  /**
+   * Buscar empresas por cidade/estado para o marketplace (público)
+   */
+  static async buscarEmpresas(req, res) {
+    try {
+      const { cidade, estado, lat, lng, raio = 50 } = req.query;
+
+      let query = `
+        SELECT
+          id, nome, slug, cidade, estado, bairro, endereco,
+          telefone, whatsapp, logo_url, foto_perfil_url,
+          preco_cautelar, preco_transferencia, preco_outros,
+          horario_inicio, horario_fim, horario_funcionamento,
+          google_rating, google_reviews_count,
+          latitude, longitude, descricao
+        FROM empresas
+        WHERE status = 'ativo'
+      `;
+      const params = [];
+      let paramIndex = 1;
+
+      // Filtrar por cidade
+      if (cidade) {
+        params.push(`%${cidade}%`);
+        query += ` AND LOWER(cidade) LIKE LOWER($${paramIndex})`;
+        paramIndex++;
+      }
+
+      // Filtrar por estado
+      if (estado) {
+        params.push(estado.toUpperCase());
+        query += ` AND UPPER(estado) = $${paramIndex}`;
+        paramIndex++;
+      }
+
+      // Ordenar por distância se coordenadas foram fornecidas
+      if (lat && lng) {
+        // Fórmula Haversine simplificada para ordenação
+        query += `
+          ORDER BY
+            CASE WHEN latitude IS NOT NULL AND longitude IS NOT NULL
+            THEN (
+              6371 * acos(
+                cos(radians($${paramIndex})) * cos(radians(latitude)) *
+                cos(radians(longitude) - radians($${paramIndex + 1})) +
+                sin(radians($${paramIndex})) * sin(radians(latitude))
+              )
+            )
+            ELSE 999999 END ASC,
+            google_rating DESC NULLS LAST
+        `;
+        params.push(parseFloat(lat), parseFloat(lng));
+      } else {
+        query += ` ORDER BY google_rating DESC NULLS LAST, nome ASC`;
+      }
+
+      query += ` LIMIT 50`;
+
+      const result = await db.query(query, params);
+
+      // Calcular distância para cada empresa se coordenadas foram fornecidas
+      let empresas = result.rows.map(empresa => {
+        const empresaData = {
+          ...empresa,
+          preco_minimo: Math.min(
+            empresa.preco_cautelar || 99999,
+            empresa.preco_transferencia || 99999,
+            empresa.preco_outros || 99999
+          ),
+          url: `/${empresa.slug}`
+        };
+
+        // Calcular distância se temos coordenadas
+        if (lat && lng && empresa.latitude && empresa.longitude) {
+          empresaData.distancia_km = calcularDistancia(
+            parseFloat(lat), parseFloat(lng),
+            parseFloat(empresa.latitude), parseFloat(empresa.longitude)
+          );
+        }
+
+        return empresaData;
+      });
+
+      // Filtrar por raio se temos coordenadas e distância calculada
+      if (lat && lng && raio) {
+        empresas = empresas.filter(e => !e.distancia_km || e.distancia_km <= parseFloat(raio));
+      }
+
+      res.json({
+        total: empresas.length,
+        empresas
+      });
+    } catch (error) {
+      console.error('Erro ao buscar empresas:', error);
+      res.status(500).json({ error: 'Erro ao buscar empresas' });
+    }
+  }
+
+  /**
+   * Listar cidades disponíveis com empresas ativas (público)
+   */
+  static async listarCidades(req, res) {
+    try {
+      const result = await db.query(`
+        SELECT
+          cidade,
+          estado,
+          COUNT(*) as total_empresas
+        FROM empresas
+        WHERE status = 'ativo'
+          AND cidade IS NOT NULL
+          AND cidade != ''
+        GROUP BY cidade, estado
+        ORDER BY total_empresas DESC, cidade ASC
+      `);
+
+      res.json({
+        total: result.rows.length,
+        cidades: result.rows
+      });
+    } catch (error) {
+      console.error('Erro ao listar cidades:', error);
+      res.status(500).json({ error: 'Erro ao listar cidades' });
+    }
+  }
+
   /**
    * Buscar empresa por slug (público)
    */

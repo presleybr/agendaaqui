@@ -9,6 +9,19 @@ const { authenticateToken, requireSuperAdmin } = require('../middleware/auth');
  */
 
 /**
+ * GET /api/empresas/buscar
+ * Buscar empresas por cidade/estado para o marketplace
+ * Query params: ?cidade=&estado=&lat=&lng=
+ */
+router.get('/buscar', EmpresaController.buscarEmpresas);
+
+/**
+ * GET /api/empresas/cidades
+ * Listar cidades disponíveis com empresas ativas
+ */
+router.get('/cidades', EmpresaController.listarCidades);
+
+/**
  * GET /api/empresas/public/:slug
  * Buscar empresa por slug - rota explícita com /public/
  */
