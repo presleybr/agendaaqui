@@ -162,6 +162,29 @@ class PrecoVistoria {
     return null;
   }
 
+  // Criar novo preço
+  static async create(empresaId, data) {
+    if (usePostgres) {
+      const result = await db.query(
+        `INSERT INTO precos_vistoria
+         (empresa_id, categoria, nome_exibicao, descricao, preco, ordem, ativo)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *`,
+        [
+          empresaId,
+          data.categoria,
+          data.nome_exibicao,
+          data.descricao || null,
+          data.preco,
+          data.ordem || 99,
+          data.ativo !== false
+        ]
+      );
+      return result.rows[0];
+    }
+    return null;
+  }
+
   // Deletar preço
   static async delete(id) {
     if (usePostgres) {

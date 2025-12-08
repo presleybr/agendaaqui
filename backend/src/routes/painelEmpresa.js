@@ -740,13 +740,70 @@ router.put('/precos-vistoria', requireRole('admin', 'gerente'), async (req, res)
 });
 
 /**
+ * POST /api/empresa/painel/precos-vistoria
+ * Cria uma nova categoria de preço
+ */
+router.post('/precos-vistoria', requireRole('admin', 'gerente'), async (req, res) => {
+  try {
+    const { categoria, nome_exibicao, descricao, preco, ordem } = req.body;
+
+    if (!categoria || !nome_exibicao) {
+      return res.status(400).json({ error: 'Categoria e nome de exibição são obrigatórios' });
+    }
+
+    if (typeof preco !== 'number' || preco < 0) {
+      return res.status(400).json({ error: 'Preço deve ser um número positivo' });
+    }
+
+    // Verificar se categoria já existe para esta empresa
+    const existente = await PrecoVistoria.findByCategoria(req.empresa_id, categoria);
+    if (existente) {
+      return res.status(400).json({ error: 'Esta categoria já existe' });
+    }
+
+    const novo = await PrecoVistoria.create(req.empresa_id, {
+      categoria,
+      nome_exibicao,
+      descricao,
+      preco,
+      ordem: ordem || 99
+    });
+
+    // Log (não bloqueante)
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, dados_extras)
+        VALUES ($1, $2, 'criar_preco', $3, $4)
+      `, [
+        req.empresa_id,
+        req.usuarioEmpresa.id,
+        `Nova categoria criada: ${nome_exibicao}`,
+        JSON.stringify({ categoria, preco })
+      ]);
+    } catch (logErr) {
+      console.error('Erro ao registrar log (não bloqueante):', logErr.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Categoria criada com sucesso',
+      preco: novo
+    });
+
+  } catch (err) {
+    console.error('Erro ao criar preço:', err);
+    res.status(500).json({ error: 'Erro ao criar categoria' });
+  }
+});
+
+/**
  * PUT /api/empresa/painel/precos-vistoria/:id
  * Atualiza um preço específico
  */
 router.put('/precos-vistoria/:id', requireRole('admin', 'gerente'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { nome_exibicao, descricao, preco, ativo } = req.body;
+    const { nome_exibicao, descricao, preco, ativo, ordem } = req.body;
 
     // Verificar se o preço pertence à empresa
     const precoExistente = await PrecoVistoria.findById(id);
@@ -766,7 +823,8 @@ router.put('/precos-vistoria/:id', requireRole('admin', 'gerente'), async (req, 
       nome_exibicao,
       descricao,
       preco,
-      ativo
+      ativo,
+      ordem
     });
 
     res.json({
@@ -778,6 +836,50 @@ router.put('/precos-vistoria/:id', requireRole('admin', 'gerente'), async (req, 
   } catch (err) {
     console.error('Erro ao atualizar preço:', err);
     res.status(500).json({ error: 'Erro ao atualizar preço' });
+  }
+});
+
+/**
+ * DELETE /api/empresa/painel/precos-vistoria/:id
+ * Remove uma categoria de preço
+ */
+router.delete('/precos-vistoria/:id', requireRole('admin', 'gerente'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verificar se o preço pertence à empresa
+    const precosDaEmpresa = await PrecoVistoria.findByEmpresa(req.empresa_id);
+    const preco = precosDaEmpresa.find(p => p.id === parseInt(id));
+
+    if (!preco) {
+      return res.status(404).json({ error: 'Preço não encontrado' });
+    }
+
+    await PrecoVistoria.delete(id);
+
+    // Log (não bloqueante)
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, dados_extras)
+        VALUES ($1, $2, 'excluir_preco', $3, $4)
+      `, [
+        req.empresa_id,
+        req.usuarioEmpresa.id,
+        `Categoria removida: ${preco.nome_exibicao}`,
+        JSON.stringify({ categoria: preco.categoria })
+      ]);
+    } catch (logErr) {
+      console.error('Erro ao registrar log (não bloqueante):', logErr.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Categoria removida com sucesso'
+    });
+
+  } catch (err) {
+    console.error('Erro ao excluir preço:', err);
+    res.status(500).json({ error: 'Erro ao excluir categoria' });
   }
 });
 

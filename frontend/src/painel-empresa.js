@@ -328,6 +328,7 @@ class PainelEmpresa {
       'clientes': 'Clientes',
       'calendario': 'Calendario',
       'relatorios': 'Relatorios',
+      'precos': 'Precos de Vistoria',
       'minha-empresa': 'Minha Empresa',
       'configuracoes': 'Configuracoes'
     };
@@ -353,6 +354,9 @@ class PainelEmpresa {
         break;
       case 'relatorios':
         this.initReportDates();
+        break;
+      case 'precos':
+        this.loadPrecosVistoria();
         break;
       case 'minha-empresa':
         this.loadMinhaEmpresa();
@@ -1372,9 +1376,6 @@ class PainelEmpresa {
       console.error('Erro ao carregar configuracoes:', err);
       container.innerHTML = '<div style="color: var(--status-danger);">Erro ao carregar configuracoes</div>';
     }
-
-    // Carregar precos de vistoria
-    this.loadPrecosVistoria();
   }
 
   async saveHorarios() {
@@ -1402,77 +1403,60 @@ class PainelEmpresa {
 
     container.innerHTML = '<div class="loading" style="padding: 40px; text-align: center;"><div class="spinner"></div></div>';
 
+    // Configurar event listeners do modal e botao adicionar
+    this.setupPrecosEventListeners();
+
     try {
       const response = await this.apiGet('/empresa/painel/precos-vistoria');
       const precos = response.precos || [];
-      const inicializado = response.inicializado;
 
-      // Icones para cada categoria
-      const icones = {
-        'moto_pequena': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px"><circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/><path d="M9 17h6m-9-3l3-6h3l2 6m4-3v3"/></svg>',
-        'moto_grande_automovel': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px"><rect x="2" y="8" width="20" height="8" rx="2"/><circle cx="7" cy="16" r="2"/><circle cx="17" cy="16" r="2"/><path d="M5 8l2-4h10l2 4"/></svg>',
-        'camionete': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px"><rect x="1" y="10" width="16" height="7" rx="1"/><rect x="17" y="13" width="6" height="4" rx="1"/><circle cx="5" cy="17" r="2"/><circle cx="14" cy="17" r="2"/><path d="M1 10l3-5h9l3 5"/></svg>',
-        'van_microonibus': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M2 10h20M6 6v4M12 6v4M18 6v4"/></svg>',
-        'caminhao_onibus': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px"><rect x="1" y="10" width="10" height="8" rx="1"/><rect x="11" y="6" width="12" height="12" rx="1"/><circle cx="5" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M11 6v12"/></svg>'
-      };
-
-      let html = '';
-
-      if (!inicializado) {
-        html += `
-          <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ffc107;">
-            <strong>Precos padrao</strong>
-            <p style="margin: 8px 0 0; font-size: 14px;">Os precos abaixo sao valores padrao. Clique em "Salvar Precos" para personalizar.</p>
+      if (precos.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5;">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            <p>Nenhuma categoria de preco cadastrada.</p>
+            <p style="font-size: 14px;">Clique em "Adicionar Categoria" para comecar.</p>
           </div>
         `;
+        return;
       }
 
-      html += '<div class="precos-grid" style="display: grid; gap: 16px;">';
+      let html = '<div class="precos-grid" style="display: grid; gap: 12px;">';
 
-      precos.forEach((preco, index) => {
-        const icone = icones[preco.categoria] || icones['moto_grande_automovel'];
+      precos.forEach((preco) => {
         const valorReais = (preco.preco / 100).toFixed(2);
 
         html += `
           <div class="preco-item" style="display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color);">
-            <div class="preco-icone" style="color: var(--brand-primary); flex-shrink: 0;">
-              ${icone}
-            </div>
             <div style="flex: 1; min-width: 0;">
-              <div style="font-weight: 600; color: var(--text-primary);">${preco.nome_exibicao}</div>
-              <div style="font-size: 12px; color: var(--text-secondary);">${preco.descricao || ''}</div>
+              <div style="font-weight: 600; color: var(--text-primary); font-size: 15px;">${preco.nome_exibicao}</div>
+              <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">${preco.descricao || 'Sem descricao'}</div>
             </div>
-            <div class="preco-input" style="display: flex; align-items: center; gap: 4px;">
-              <span style="color: var(--text-secondary);">R$</span>
-              <input type="number"
-                     id="preco_${preco.categoria}"
-                     data-categoria="${preco.categoria}"
-                     data-nome="${preco.nome_exibicao}"
-                     data-descricao="${preco.descricao || ''}"
-                     data-ordem="${preco.ordem}"
-                     value="${valorReais}"
-                     min="0"
-                     step="0.01"
-                     style="width: 100px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 16px; font-weight: 600; text-align: right;">
+            <div style="font-size: 18px; font-weight: 700; color: #059669; white-space: nowrap;">
+              R$ ${valorReais}
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary btn-sm" onclick="painel.editarPreco('${preco.id}', '${preco.categoria}', '${preco.nome_exibicao.replace(/'/g, "\\'")}', '${(preco.descricao || '').replace(/'/g, "\\'")}', ${preco.preco}, ${preco.ordem})" style="padding: 6px 10px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="painel.excluirPreco(${preco.id}, '${preco.nome_exibicao.replace(/'/g, "\\'")}')" style="padding: 6px 10px; background: #dc2626;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
             </div>
           </div>
         `;
       });
 
       html += '</div>';
-
-      html += `
-        <div style="margin-top: 20px; display: flex; gap: 12px;">
-          <button type="button" class="btn btn-primary" onclick="painel.savePrecosVistoria()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;vertical-align:middle;">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-              <polyline points="17 21 17 13 7 13 7 21"></polyline>
-              <polyline points="7 3 7 8 15 8"></polyline>
-            </svg>
-            Salvar Precos
-          </button>
-        </div>
-      `;
 
       container.innerHTML = html;
 
@@ -1487,29 +1471,128 @@ class PainelEmpresa {
     }
   }
 
-  async savePrecosVistoria() {
-    const inputs = document.querySelectorAll('[data-categoria]');
-    const precos = [];
+  setupPrecosEventListeners() {
+    // Botao adicionar categoria
+    const btnAdicionar = document.getElementById('btnAdicionarPreco');
+    if (btnAdicionar) {
+      btnAdicionar.onclick = () => this.abrirModalPreco();
+    }
 
-    inputs.forEach(input => {
-      const valorReais = parseFloat(input.value) || 0;
-      const valorCentavos = Math.round(valorReais * 100);
+    // Fechar modal
+    const closeModal = document.getElementById('closePrecoModal');
+    if (closeModal) {
+      closeModal.onclick = () => this.fecharModalPreco();
+    }
 
-      precos.push({
-        categoria: input.dataset.categoria,
-        nome_exibicao: input.dataset.nome,
-        descricao: input.dataset.descricao,
-        ordem: parseInt(input.dataset.ordem) || 0,
-        preco: valorCentavos
-      });
-    });
+    const btnCancelar = document.getElementById('btnCancelarPreco');
+    if (btnCancelar) {
+      btnCancelar.onclick = () => this.fecharModalPreco();
+    }
+
+    // Form submit
+    const formPreco = document.getElementById('formPreco');
+    if (formPreco) {
+      formPreco.onsubmit = (e) => {
+        e.preventDefault();
+        this.salvarPreco();
+      };
+    }
+
+    // Fechar ao clicar fora
+    const modal = document.getElementById('precoModal');
+    if (modal) {
+      modal.onclick = (e) => {
+        if (e.target === modal) this.fecharModalPreco();
+      };
+    }
+  }
+
+  abrirModalPreco() {
+    document.getElementById('precoModalTitle').textContent = 'Adicionar Categoria';
+    document.getElementById('precoId').value = '';
+    document.getElementById('precoCategoria').value = '';
+    document.getElementById('precoNome').value = '';
+    document.getElementById('precoDescricao').value = '';
+    document.getElementById('precoValor').value = '';
+    document.getElementById('precoOrdem').value = '0';
+    document.getElementById('precoModal').classList.add('active');
+  }
+
+  editarPreco(id, categoria, nome, descricao, precoCentavos, ordem) {
+    document.getElementById('precoModalTitle').textContent = 'Editar Categoria';
+    document.getElementById('precoId').value = id || '';
+    document.getElementById('precoCategoria').value = categoria || '';
+    document.getElementById('precoNome').value = nome || '';
+    document.getElementById('precoDescricao').value = descricao || '';
+    document.getElementById('precoValor').value = (precoCentavos / 100).toFixed(2);
+    document.getElementById('precoOrdem').value = ordem || 0;
+    document.getElementById('precoModal').classList.add('active');
+  }
+
+  fecharModalPreco() {
+    document.getElementById('precoModal').classList.remove('active');
+  }
+
+  async salvarPreco() {
+    const id = document.getElementById('precoId').value;
+    const categoriaExistente = document.getElementById('precoCategoria').value;
+    const nome = document.getElementById('precoNome').value.trim();
+    const descricao = document.getElementById('precoDescricao').value.trim();
+    const valorReais = parseFloat(document.getElementById('precoValor').value) || 0;
+    const ordem = parseInt(document.getElementById('precoOrdem').value) || 0;
+
+    if (!nome) {
+      alert('Nome da categoria e obrigatorio');
+      return;
+    }
+
+    if (valorReais <= 0) {
+      alert('Valor deve ser maior que zero');
+      return;
+    }
+
+    // Gerar categoria slug se for novo
+    const categoria = categoriaExistente || nome.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_|_$/g, '');
+
+    const precoData = {
+      categoria,
+      nome_exibicao: nome,
+      descricao,
+      preco: Math.round(valorReais * 100),
+      ordem
+    };
 
     try {
-      await this.apiPut('/empresa/painel/precos-vistoria', { precos });
-      alert('Precos salvos com sucesso!');
-      this.loadPrecosVistoria(); // Recarrega para mostrar status atualizado
+      if (id) {
+        // Atualizar existente
+        await this.apiPut(`/empresa/painel/precos-vistoria/${id}`, precoData);
+      } else {
+        // Criar novo
+        await this.apiPut('/empresa/painel/precos-vistoria', { precos: [precoData] });
+      }
+
+      this.fecharModalPreco();
+      this.loadPrecosVistoria();
+      alert('Preco salvo com sucesso!');
     } catch (err) {
-      alert(err.message || 'Erro ao salvar precos');
+      alert(err.message || 'Erro ao salvar preco');
+    }
+  }
+
+  async excluirPreco(id, nome) {
+    if (!confirm(`Deseja realmente excluir a categoria "${nome}"?`)) {
+      return;
+    }
+
+    try {
+      await this.apiDelete(`/empresa/painel/precos-vistoria/${id}`);
+      this.loadPrecosVistoria();
+      alert('Categoria excluida com sucesso!');
+    } catch (err) {
+      alert(err.message || 'Erro ao excluir categoria');
     }
   }
 
