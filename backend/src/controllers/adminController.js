@@ -140,10 +140,9 @@ class AdminController {
         email,
         telefone,
         chave_pix,
-        preco_cautelar,
-        preco_transferencia,
-        preco_outros,
-        plano
+        precos_vistoria,
+        plano,
+        ...outrosDados
       } = req.body;
 
       // Validações
@@ -174,16 +173,32 @@ class AdminController {
         email,
         telefone,
         chave_pix,
-        preco_cautelar,
-        preco_transferencia,
-        preco_outros,
         status: 'ativo',
-        plano: plano || 'basico'
+        plano: plano || 'basico',
+        ...outrosDados
       });
+
+      // Criar preços de vistoria se fornecidos
+      if (precos_vistoria && Array.isArray(precos_vistoria) && precos_vistoria.length > 0) {
+        const db = require('../config/database');
+        for (const preco of precos_vistoria) {
+          await db.query(`
+            INSERT INTO precos_vistoria (empresa_id, categoria, nome_exibicao, descricao, preco, ordem, ativo)
+            VALUES ($1, $2, $3, $4, $5, $6, true)
+            ON CONFLICT (empresa_id, categoria) DO UPDATE SET
+              nome_exibicao = EXCLUDED.nome_exibicao,
+              descricao = EXCLUDED.descricao,
+              preco = EXCLUDED.preco,
+              ordem = EXCLUDED.ordem
+          `, [empresa.id, preco.categoria, preco.nome_exibicao, preco.descricao, preco.preco, preco.ordem]);
+        }
+      }
 
       res.status(201).json({
         message: 'Empresa criada com sucesso',
+        mensagem: 'Empresa criada com sucesso',
         empresa,
+        url: `https://agendaaquivistorias.com.br/${slug}`,
         subdominio: `${slug}.${req.get('host')}`
       });
     } catch (error) {

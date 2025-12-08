@@ -358,10 +358,18 @@ export class EmpresasManager {
     if (corSecundariaText) corSecundariaText.value = '#1e40af';
     this.updateColorPreview();
 
-    // Resetar valores padrão
-    document.getElementById('empresaPrecoCautelar').value = '150.00';
-    document.getElementById('empresaPrecoTransferencia').value = '120.00';
-    document.getElementById('empresaPrecoOutros').value = '100.00';
+    // Resetar valores padrão de preços por tipo de veículo
+    const campoMoto200 = document.getElementById('empresaPrecoMoto200');
+    const campoAutomovel = document.getElementById('empresaPrecoAutomovel');
+    const campoCamionete = document.getElementById('empresaPrecoCamionete');
+    const campoVan = document.getElementById('empresaPrecoVan');
+    const campoCaminhao = document.getElementById('empresaPrecoCaminhao');
+
+    if (campoMoto200) campoMoto200.value = '190.00';
+    if (campoAutomovel) campoAutomovel.value = '220.00';
+    if (campoCamionete) campoCamionete.value = '230.00';
+    if (campoVan) campoVan.value = '250.00';
+    if (campoCaminhao) campoCaminhao.value = '280.00';
     document.getElementById('empresaHorarioInicio').value = '08:00';
     document.getElementById('empresaHorarioFim').value = '18:00';
     document.getElementById('empresaTaxaPlataforma').value = '5.00';
@@ -423,10 +431,26 @@ export class EmpresasManager {
       this.setFieldValue('empresaLatitude', empresa.latitude);
       this.setFieldValue('empresaLongitude', empresa.longitude);
 
-      // Preços (convertendo de centavos para reais)
-      this.setFieldValue('empresaPrecoCautelar', (empresa.preco_cautelar / 100).toFixed(2));
-      this.setFieldValue('empresaPrecoTransferencia', (empresa.preco_transferencia / 100).toFixed(2));
-      this.setFieldValue('empresaPrecoOutros', (empresa.preco_outros / 100).toFixed(2));
+      // Preços por tipo de veículo (carregar do precos_vistoria se disponível, senão usar defaults)
+      if (empresa.precos_vistoria && empresa.precos_vistoria.length > 0) {
+        const precos = empresa.precos_vistoria;
+        const getPreco = (cat) => {
+          const p = precos.find(x => x.categoria === cat);
+          return p ? (p.preco / 100).toFixed(2) : null;
+        };
+        this.setFieldValue('empresaPrecoMoto200', getPreco('moto_pequena') || '190.00');
+        this.setFieldValue('empresaPrecoAutomovel', getPreco('moto_grande_automovel') || '220.00');
+        this.setFieldValue('empresaPrecoCamionete', getPreco('camionete') || '230.00');
+        this.setFieldValue('empresaPrecoVan', getPreco('van_microonibus') || '250.00');
+        this.setFieldValue('empresaPrecoCaminhao', getPreco('caminhao_onibus') || '280.00');
+      } else {
+        // Valores padrão se não houver preços cadastrados
+        this.setFieldValue('empresaPrecoMoto200', '190.00');
+        this.setFieldValue('empresaPrecoAutomovel', '220.00');
+        this.setFieldValue('empresaPrecoCamionete', '230.00');
+        this.setFieldValue('empresaPrecoVan', '250.00');
+        this.setFieldValue('empresaPrecoCaminhao', '280.00');
+      }
       this.setFieldValue('empresaHorarioInicio', empresa.horario_inicio?.substring(0, 5) || '08:00');
       this.setFieldValue('empresaHorarioFim', empresa.horario_fim?.substring(0, 5) || '18:00');
       this.setFieldValue('empresaIntervalo', empresa.intervalo_minutos);
@@ -527,10 +551,44 @@ export class EmpresasManager {
         latitude: document.getElementById('empresaLatitude')?.value || null,
         longitude: document.getElementById('empresaLongitude')?.value || null,
 
-        // Preços (convertendo para centavos)
-        preco_cautelar: Math.round(parseFloat(document.getElementById('empresaPrecoCautelar')?.value || 0) * 100),
-        preco_transferencia: Math.round(parseFloat(document.getElementById('empresaPrecoTransferencia')?.value || 0) * 100),
-        preco_outros: Math.round(parseFloat(document.getElementById('empresaPrecoOutros')?.value || 0) * 100),
+        // Preços por tipo de veículo (convertendo para centavos)
+        precos_vistoria: [
+          {
+            categoria: 'moto_pequena',
+            nome_exibicao: 'Motos até 200cc',
+            descricao: 'Motocicletas com cilindrada até 200cc',
+            preco: Math.round(parseFloat(document.getElementById('empresaPrecoMoto200')?.value || 190) * 100),
+            ordem: 1
+          },
+          {
+            categoria: 'moto_grande_automovel',
+            nome_exibicao: 'Motos +200cc / Automóveis',
+            descricao: 'Motocicletas acima de 200cc e automóveis',
+            preco: Math.round(parseFloat(document.getElementById('empresaPrecoAutomovel')?.value || 220) * 100),
+            ordem: 2
+          },
+          {
+            categoria: 'camionete',
+            nome_exibicao: 'Camionetes / Camionetas',
+            descricao: 'Picapes e SUVs',
+            preco: Math.round(parseFloat(document.getElementById('empresaPrecoCamionete')?.value || 230) * 100),
+            ordem: 3
+          },
+          {
+            categoria: 'van_microonibus',
+            nome_exibicao: 'Vans / Micro-ônibus',
+            descricao: 'Vans, motorhomes e micro-ônibus',
+            preco: Math.round(parseFloat(document.getElementById('empresaPrecoVan')?.value || 250) * 100),
+            ordem: 4
+          },
+          {
+            categoria: 'caminhao_onibus',
+            nome_exibicao: 'Caminhões / Ônibus',
+            descricao: 'Caminhões, carretas e ônibus',
+            preco: Math.round(parseFloat(document.getElementById('empresaPrecoCaminhao')?.value || 280) * 100),
+            ordem: 5
+          }
+        ],
         horario_inicio: document.getElementById('empresaHorarioInicio')?.value || '08:00',
         horario_fim: document.getElementById('empresaHorarioFim')?.value || '18:00',
         intervalo_minutos: parseInt(document.getElementById('empresaIntervalo')?.value) || 60,

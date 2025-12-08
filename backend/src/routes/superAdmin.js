@@ -221,6 +221,14 @@ router.get('/empresas/:id', authAdmin, async (req, res) => {
       WHERE empresa_id = $1
     `, [id]);
 
+    // Preços de vistoria da empresa
+    const precosResult = await db.query(`
+      SELECT id, categoria, nome_exibicao, descricao, preco, ordem, ativo
+      FROM precos_vistoria
+      WHERE empresa_id = $1
+      ORDER BY ordem
+    `, [id]);
+
     // Calcular dias desde início
     const dataInicio = new Date(empresa.data_inicio || empresa.created_at);
     const hoje = new Date();
@@ -233,7 +241,8 @@ router.get('/empresas/:id', authAdmin, async (req, res) => {
       metricas: metricasResult.rows,
       usuarios: usuariosResult.rows,
       ultimos_agendamentos: agendamentosResult.rows,
-      stats: statsResult.rows[0]
+      stats: statsResult.rows[0],
+      precos_vistoria: precosResult.rows
     });
   } catch (error) {
     console.error('Erro ao buscar empresa:', error);
@@ -248,7 +257,7 @@ router.get('/empresas/:id', authAdmin, async (req, res) => {
 router.put('/empresas/:id', authAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const dados = req.body;
+    const { precos_vistoria, ...dados } = req.body;
 
     const empresa = await Empresa.findById(id);
     if (!empresa) {
@@ -264,6 +273,23 @@ router.put('/empresas/:id', authAdmin, async (req, res) => {
     }
 
     const empresaAtualizada = await Empresa.update(id, dados);
+
+    // Atualizar preços de vistoria se fornecidos
+    if (precos_vistoria && Array.isArray(precos_vistoria)) {
+      for (const preco of precos_vistoria) {
+        await db.query(`
+          INSERT INTO precos_vistoria (empresa_id, categoria, nome_exibicao, descricao, preco, ordem, ativo)
+          VALUES ($1, $2, $3, $4, $5, $6, true)
+          ON CONFLICT (empresa_id, categoria)
+          DO UPDATE SET
+            nome_exibicao = EXCLUDED.nome_exibicao,
+            descricao = EXCLUDED.descricao,
+            preco = EXCLUDED.preco,
+            ordem = EXCLUDED.ordem,
+            updated_at = CURRENT_TIMESTAMP
+        `, [id, preco.categoria, preco.nome_exibicao, preco.descricao, preco.preco, preco.ordem]);
+      }
+    }
 
     res.json({
       ...empresaAtualizada,
