@@ -1684,6 +1684,23 @@ class PainelEmpresa {
     return data;
   }
 
+  async apiDelete(endpoint) {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${this.token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Erro na requisicao');
+    }
+
+    return data;
+  }
+
   // ============================================
   // FORMATTERS
   // ============================================
