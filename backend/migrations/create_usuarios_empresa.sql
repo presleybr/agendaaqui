@@ -72,10 +72,22 @@ COMMENT ON TABLE sessoes_empresa IS 'Controle de sessões ativas para invalidaç
 COMMENT ON TABLE log_atividades_empresa IS 'Auditoria de ações realizadas no painel da empresa';
 
 -- ============================================
+-- USUÁRIO ADMIN PARA EMPRESA DEMO
+-- Senha: 123456 (hash bcrypt)
+-- ============================================
+INSERT INTO usuarios_empresa (empresa_id, nome, email, senha_hash, role, ativo, primeiro_acesso)
+SELECT id, 'Admin Demo', 'demo@vistoriaexpress.com', '$2a$10$PV14CJEbNUpXltB3iaRVYuYlVfiYL6JsOM1aEMLKlfpSLY94Qr/wO', 'admin', true, false
+FROM empresas WHERE slug = 'demo'
+ON CONFLICT (email) DO UPDATE SET
+  senha_hash = EXCLUDED.senha_hash,
+  primeiro_acesso = false;
+
+-- ============================================
 -- VERIFICAÇÃO
 -- ============================================
 DO $$
 BEGIN
   RAISE NOTICE 'Migration executada com sucesso!';
   RAISE NOTICE 'Tabelas criadas: usuarios_empresa, sessoes_empresa, log_atividades_empresa';
+  RAISE NOTICE 'Usuario demo criado: demo@vistoriaexpress.com / 123456';
 END $$;
