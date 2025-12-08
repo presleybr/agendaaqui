@@ -1372,6 +1372,9 @@ class PainelEmpresa {
       console.error('Erro ao carregar configuracoes:', err);
       container.innerHTML = '<div style="color: var(--status-danger);">Erro ao carregar configuracoes</div>';
     }
+
+    // Carregar precos de vistoria
+    this.loadPrecosVistoria();
   }
 
   async saveHorarios() {
@@ -1386,6 +1389,127 @@ class PainelEmpresa {
       alert('Horarios salvos com sucesso!');
     } catch (err) {
       alert(err.message || 'Erro ao salvar horarios');
+    }
+  }
+
+  // ============================================
+  // PRECOS DE VISTORIA
+  // ============================================
+
+  async loadPrecosVistoria() {
+    const container = document.getElementById('precosVistoriaContainer');
+    if (!container) return;
+
+    container.innerHTML = '<div class="loading" style="padding: 40px; text-align: center;"><div class="spinner"></div></div>';
+
+    try {
+      const response = await this.apiGet('/empresa/painel/precos-vistoria');
+      const precos = response.precos || [];
+      const inicializado = response.inicializado;
+
+      // Icones para cada categoria
+      const icones = {
+        'moto_pequena': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px"><circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/><path d="M9 17h6m-9-3l3-6h3l2 6m4-3v3"/></svg>',
+        'moto_grande_automovel': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px"><rect x="2" y="8" width="20" height="8" rx="2"/><circle cx="7" cy="16" r="2"/><circle cx="17" cy="16" r="2"/><path d="M5 8l2-4h10l2 4"/></svg>',
+        'camionete': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px"><rect x="1" y="10" width="16" height="7" rx="1"/><rect x="17" y="13" width="6" height="4" rx="1"/><circle cx="5" cy="17" r="2"/><circle cx="14" cy="17" r="2"/><path d="M1 10l3-5h9l3 5"/></svg>',
+        'van_microonibus': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M2 10h20M6 6v4M12 6v4M18 6v4"/></svg>',
+        'caminhao_onibus': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px"><rect x="1" y="10" width="10" height="8" rx="1"/><rect x="11" y="6" width="12" height="12" rx="1"/><circle cx="5" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M11 6v12"/></svg>'
+      };
+
+      let html = '';
+
+      if (!inicializado) {
+        html += `
+          <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin-bottom: 16px; border-left: 4px solid #ffc107;">
+            <strong>Precos padrao</strong>
+            <p style="margin: 8px 0 0; font-size: 14px;">Os precos abaixo sao valores padrao. Clique em "Salvar Precos" para personalizar.</p>
+          </div>
+        `;
+      }
+
+      html += '<div class="precos-grid" style="display: grid; gap: 16px;">';
+
+      precos.forEach((preco, index) => {
+        const icone = icones[preco.categoria] || icones['moto_grande_automovel'];
+        const valorReais = (preco.preco / 100).toFixed(2);
+
+        html += `
+          <div class="preco-item" style="display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color);">
+            <div class="preco-icone" style="color: var(--brand-primary); flex-shrink: 0;">
+              ${icone}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-weight: 600; color: var(--text-primary);">${preco.nome_exibicao}</div>
+              <div style="font-size: 12px; color: var(--text-secondary);">${preco.descricao || ''}</div>
+            </div>
+            <div class="preco-input" style="display: flex; align-items: center; gap: 4px;">
+              <span style="color: var(--text-secondary);">R$</span>
+              <input type="number"
+                     id="preco_${preco.categoria}"
+                     data-categoria="${preco.categoria}"
+                     data-nome="${preco.nome_exibicao}"
+                     data-descricao="${preco.descricao || ''}"
+                     data-ordem="${preco.ordem}"
+                     value="${valorReais}"
+                     min="0"
+                     step="0.01"
+                     style="width: 100px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 16px; font-weight: 600; text-align: right;">
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+
+      html += `
+        <div style="margin-top: 20px; display: flex; gap: 12px;">
+          <button type="button" class="btn btn-primary" onclick="painel.savePrecosVistoria()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;vertical-align:middle;">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            Salvar Precos
+          </button>
+        </div>
+      `;
+
+      container.innerHTML = html;
+
+    } catch (err) {
+      console.error('Erro ao carregar precos de vistoria:', err);
+      container.innerHTML = `
+        <div style="color: var(--status-danger); text-align: center; padding: 20px;">
+          <p>Erro ao carregar precos de vistoria</p>
+          <button class="btn btn-secondary" onclick="painel.loadPrecosVistoria()" style="margin-top: 10px;">Tentar Novamente</button>
+        </div>
+      `;
+    }
+  }
+
+  async savePrecosVistoria() {
+    const inputs = document.querySelectorAll('[data-categoria]');
+    const precos = [];
+
+    inputs.forEach(input => {
+      const valorReais = parseFloat(input.value) || 0;
+      const valorCentavos = Math.round(valorReais * 100);
+
+      precos.push({
+        categoria: input.dataset.categoria,
+        nome_exibicao: input.dataset.nome,
+        descricao: input.dataset.descricao,
+        ordem: parseInt(input.dataset.ordem) || 0,
+        preco: valorCentavos
+      });
+    });
+
+    try {
+      await this.apiPut('/empresa/painel/precos-vistoria', { precos });
+      alert('Precos salvos com sucesso!');
+      this.loadPrecosVistoria(); // Recarrega para mostrar status atualizado
+    } catch (err) {
+      alert(err.message || 'Erro ao salvar precos');
     }
   }
 

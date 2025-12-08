@@ -7,16 +7,17 @@ class Agendamento {
 
     const result = await db.query(`
       INSERT INTO agendamentos (
-        protocolo, cliente_id, veiculo_id, tipo_vistoria,
+        protocolo, cliente_id, veiculo_id, tipo_vistoria, categoria_veiculo,
         data_hora, endereco_vistoria, valor, status, observacoes, empresa_id
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING id
     `, [
       protocolo,
       data.cliente_id,
       data.veiculo_id,
       data.tipo_vistoria,
+      data.categoria_veiculo || null,
       data.data_hora || data.data, // Accept both data_hora and data for backward compatibility
       data.endereco_vistoria || null,
       data.valor || data.preco, // Accept both valor and preco for backward compatibility

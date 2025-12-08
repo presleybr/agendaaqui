@@ -4,6 +4,7 @@ const Cliente = require('../models/Cliente');
 const Veiculo = require('../models/Veiculo');
 const Configuracao = require('../models/Configuracao');
 const Empresa = require('../models/Empresa');
+const PrecoVistoria = require('../models/PrecoVistoria');
 const AvailabilityService = require('../utils/availability');
 const emailService = require('../utils/emailService');
 
@@ -15,10 +16,11 @@ class AgendamentoController {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { cliente: clienteData, veiculo: veiculoData, tipo_vistoria, data, horario, endereco_vistoria, observacoes, empresa_id } = req.body;
+      const { cliente: clienteData, veiculo: veiculoData, tipo_vistoria, categoria_veiculo, data, horario, endereco_vistoria, observacoes, empresa_id } = req.body;
 
       console.log('📝 Dados recebidos para criar agendamento:', {
         tipo_vistoria,
+        categoria_veiculo,
         data,
         horario,
         empresa_id,
@@ -56,12 +58,16 @@ class AgendamentoController {
       }
       console.log('✅ Veículo processado:', veiculo?.id);
 
-      // Obter preço - da empresa se empresa_id definido, senão da configuração global
+      // Obter preço - da categoria de veículo se disponível, senão usa o tipo_vistoria legado
       console.log('💰 Obtendo preços...');
       let preco;
 
-      if (empresa_id) {
-        // Buscar preço da empresa
+      if (categoria_veiculo && empresa_id) {
+        // Novo sistema: preço por categoria de veículo
+        preco = await PrecoVistoria.getPrecoParaAgendamento(empresa_id, categoria_veiculo);
+        console.log('✅ Preço por categoria de veículo:', preco, 'centavos para categoria:', categoria_veiculo);
+      } else if (empresa_id) {
+        // Sistema legado: preço por tipo de vistoria da empresa
         const empresa = await Empresa.findById(empresa_id);
         if (empresa) {
           const precosEmpresa = {
@@ -70,7 +76,7 @@ class AgendamentoController {
             outros: empresa.preco_outros
           };
           preco = precosEmpresa[tipo_vistoria] || precosEmpresa.outros;
-          console.log('✅ Preço da empresa:', preco, 'centavos para tipo:', tipo_vistoria);
+          console.log('✅ Preço da empresa (legado):', preco, 'centavos para tipo:', tipo_vistoria);
         } else {
           // Fallback para configuração global se empresa não encontrada
           const precos = await Configuracao.getPrices();
@@ -93,7 +99,8 @@ class AgendamentoController {
       const agendamento = await Agendamento.create({
         cliente_id: cliente.id,
         veiculo_id: veiculo.id,
-        tipo_vistoria,
+        tipo_vistoria: tipo_vistoria || 'vistoria_veicular',
+        categoria_veiculo: categoria_veiculo || null,
         data_hora,
         endereco_vistoria,
         valor: preco,

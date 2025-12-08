@@ -24,13 +24,15 @@ export class ScheduleForm {
     this.formData = {
       cliente: {},
       veiculo: {},
-      tipo_vistoria: '',
+      tipo_vistoria: 'vistoria_veicular', // Tipo fixo
+      categoria_veiculo: '', // Categoria do veículo (define o preço)
       data: '',
       horario: '',
       endereco_vistoria: ''
     };
     this.prices = {};
-    this.options = options; // { empresaId, precos }
+    this.precosVeiculo = []; // Preços por categoria de veículo
+    this.options = options; // { empresaId, precos, slug }
     this.init();
   }
 
@@ -41,8 +43,8 @@ export class ScheduleForm {
       // Check if a service was pre-selected from pricing table
       const selectedService = sessionStorage.getItem('selectedService');
       if (selectedService) {
-        this.formData.tipo_vistoria = selectedService;
-        console.log('📌 Pre-selected service:', selectedService);
+        this.formData.categoria_veiculo = selectedService;
+        console.log('📌 Pre-selected category:', selectedService);
         sessionStorage.removeItem('selectedService'); // Clear after using
       }
 
@@ -52,14 +54,17 @@ export class ScheduleForm {
         console.log('🏢 Empresa ID:', this.options.empresaId);
       }
 
-      // Se foram passados preços nas opções, usar eles (página de empresa)
+      // Carregar preços por categoria de veículo
+      await this.loadPrecosVeiculo();
+
+      // Fallback para preços antigos (compatibilidade)
       if (this.options.precos) {
         this.prices = {
           cautelar: { valor: this.options.precos.cautelar || 15000 },
           transferencia: { valor: this.options.precos.transferencia || 12000 },
           outros: { valor: this.options.precos.outros || 10000 }
         };
-        console.log('💰 Using empresa prices:', this.prices);
+        console.log('💰 Using empresa prices (legacy):', this.prices);
       } else {
         // Senão, carregar da API (página principal)
         this.prices = await scheduleService.getPrices();
@@ -91,6 +96,44 @@ export class ScheduleForm {
         </div>
       `;
     }
+  }
+
+  async loadPrecosVeiculo() {
+    try {
+      const API_URL = import.meta.env?.VITE_API_URL || 'https://agendaaqui-backend.onrender.com/api';
+      const slug = this.options.slug || window.empresaSlug || 'demo';
+
+      console.log('🔄 Loading vehicle prices for slug:', slug);
+
+      const response = await fetch(`${API_URL}/tenant/precos-vistoria?slug=${slug}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        this.precosVeiculo = data.precos || [];
+        console.log('✅ Vehicle prices loaded:', this.precosVeiculo);
+      } else {
+        console.warn('⚠️ Could not load vehicle prices, using defaults');
+        this.precosVeiculo = this.getDefaultPrecosVeiculo();
+      }
+    } catch (error) {
+      console.warn('⚠️ Error loading vehicle prices:', error);
+      this.precosVeiculo = this.getDefaultPrecosVeiculo();
+    }
+  }
+
+  getDefaultPrecosVeiculo() {
+    return [
+      { categoria: 'moto_pequena', nome_exibicao: 'Motos até 200cc', descricao: 'Motocicletas com cilindrada até 200cc', preco: 19000, ordem: 1 },
+      { categoria: 'moto_grande_automovel', nome_exibicao: 'Motos +200cc / Automóveis', descricao: 'Motocicletas acima de 200cc e automóveis', preco: 22000, ordem: 2 },
+      { categoria: 'camionete', nome_exibicao: 'Camionetes / Camionetas', descricao: 'Picapes e SUVs', preco: 23000, ordem: 3 },
+      { categoria: 'van_microonibus', nome_exibicao: 'Vans / Micro-ônibus', descricao: 'Vans, motorhomes e micro-ônibus', preco: 25000, ordem: 4 },
+      { categoria: 'caminhao_onibus', nome_exibicao: 'Caminhões / Ônibus', descricao: 'Caminhões, carretas e ônibus', preco: 28000, ordem: 5 }
+    ];
+  }
+
+  getPrecoByCategoria(categoria) {
+    const item = this.precosVeiculo.find(p => p.categoria === categoria);
+    return item ? item.preco : 22000; // Default para automóvel
   }
 
   render() {
@@ -242,25 +285,45 @@ export class ScheduleForm {
   }
 
   renderStep2() {
+    // Gerar opções de categoria de veículo
+    const categoriasHtml = this.precosVeiculo.map(cat => {
+      const isSelected = this.formData.categoria_veiculo === cat.categoria;
+      return `
+        <div class="categoria-veiculo-card ${isSelected ? 'selected' : ''}"
+             data-categoria="${cat.categoria}"
+             style="
+               padding: 16px;
+               border: 2px solid ${isSelected ? '#3B82F6' : '#e5e7eb'};
+               border-radius: 12px;
+               cursor: pointer;
+               transition: all 0.2s ease;
+               background: ${isSelected ? '#eff6ff' : '#fff'};
+               margin-bottom: 12px;
+             ">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 600; color: #1f2937; font-size: 15px;">${cat.nome_exibicao}</div>
+              <div style="font-size: 13px; color: #6b7280; margin-top: 4px;">${cat.descricao || ''}</div>
+            </div>
+            <div style="font-size: 18px; font-weight: 700; color: ${isSelected ? '#3B82F6' : '#059669'};">
+              ${formatters.currency(cat.preco)}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
     return `
       <div class="form-step ${this.currentStep === 2 ? 'active' : ''}" data-step="2">
         <h3>Dados do Veículo</h3>
 
         <div class="form-group">
-          <label for="tipo_vistoria">Tipo de Vistoria *</label>
-          <select id="tipo_vistoria" name="tipo_vistoria" required>
-            <option value="">Selecione...</option>
-            <option value="cautelar" ${this.formData.tipo_vistoria === 'cautelar' ? 'selected' : ''}>
-              Vistoria Cautelar - ${formatters.currency(this.prices.cautelar?.valor || 15000)}
-            </option>
-            <option value="transferencia" ${this.formData.tipo_vistoria === 'transferencia' ? 'selected' : ''}>
-              Vistoria Transferência - ${formatters.currency(this.prices.transferencia?.valor || 12000)}
-            </option>
-            <option value="outros" ${this.formData.tipo_vistoria === 'outros' ? 'selected' : ''}>
-              Outros - ${formatters.currency(this.prices.outros?.valor || 10000)}
-            </option>
-          </select>
-          <div class="error-message">Selecione o tipo de vistoria</div>
+          <label style="margin-bottom: 12px; display: block;">Tipo de Veículo *</label>
+          <div id="categoriasVeiculoContainer">
+            ${categoriasHtml}
+          </div>
+          <input type="hidden" id="categoria_veiculo" name="categoria_veiculo" value="${this.formData.categoria_veiculo || ''}" required>
+          <div class="error-message">Selecione o tipo de veículo</div>
         </div>
 
         <div class="form-row">
@@ -394,6 +457,37 @@ export class ScheduleForm {
       });
     });
 
+    // Categoria de veículo selection
+    const categoriasContainer = document.getElementById('categoriasVeiculoContainer');
+    if (categoriasContainer) {
+      categoriasContainer.querySelectorAll('.categoria-veiculo-card').forEach(card => {
+        card.addEventListener('click', () => {
+          // Remove seleção anterior
+          categoriasContainer.querySelectorAll('.categoria-veiculo-card').forEach(c => {
+            c.classList.remove('selected');
+            c.style.borderColor = '#e5e7eb';
+            c.style.background = '#fff';
+          });
+
+          // Seleciona o card clicado
+          card.classList.add('selected');
+          card.style.borderColor = '#3B82F6';
+          card.style.background = '#eff6ff';
+
+          // Atualiza o valor do input hidden
+          const categoria = card.dataset.categoria;
+          document.getElementById('categoria_veiculo').value = categoria;
+          this.formData.categoria_veiculo = categoria;
+
+          // Remove classe de erro se existir
+          const formGroup = card.closest('.form-group');
+          if (formGroup) {
+            formGroup.classList.remove('error');
+          }
+        });
+      });
+    }
+
     // Date change
     const dateInput = document.getElementById('data');
     if (dateInput) {
@@ -475,7 +569,7 @@ export class ScheduleForm {
         ano: parseInt(document.getElementById('ano').value),
         chassi: document.getElementById('chassi').value || null
       };
-      this.formData.tipo_vistoria = document.getElementById('tipo_vistoria').value;
+      this.formData.categoria_veiculo = document.getElementById('categoria_veiculo').value;
       this.formData.endereco_vistoria = document.getElementById('endereco_vistoria').value;
     } else if (step === 3) {
       this.formData.data = document.getElementById('data').value;
@@ -559,8 +653,10 @@ export class ScheduleForm {
   }
 
   renderSummary() {
-    const priceKey = this.formData.tipo_vistoria;
-    const price = this.prices[priceKey]?.valor || 0;
+    // Buscar preço pela categoria de veículo
+    const categoriaInfo = this.precosVeiculo.find(p => p.categoria === this.formData.categoria_veiculo);
+    const price = categoriaInfo?.preco || this.getPrecoByCategoria(this.formData.categoria_veiculo);
+    const categoriaNome = categoriaInfo?.nome_exibicao || 'Não selecionado';
     const dataFormatada = new Date(this.formData.data + 'T00:00:00').toLocaleDateString('pt-BR');
 
     const summaryHtml = `
@@ -574,6 +670,7 @@ export class ScheduleForm {
 
       <div class="summary-box">
         <h4>Dados do Veículo</h4>
+        <p><strong>Tipo:</strong> ${categoriaNome}</p>
         <p><strong>Placa:</strong> ${this.formData.veiculo.placa}</p>
         <p><strong>Veículo:</strong> ${this.formData.veiculo.marca} ${this.formData.veiculo.modelo}</p>
         <p><strong>Ano:</strong> ${this.formData.veiculo.ano}</p>
@@ -582,7 +679,6 @@ export class ScheduleForm {
 
       <div class="summary-box">
         <h4>Agendamento</h4>
-        <p><strong>Tipo:</strong> ${this.formData.tipo_vistoria === 'cautelar' ? 'Vistoria Cautelar' : this.formData.tipo_vistoria === 'transferencia' ? 'Vistoria Transferência' : 'Outros'}</p>
         <p><strong>Data:</strong> ${dataFormatada}</p>
         <p><strong>Horário:</strong> ${this.formData.horario}</p>
         ${this.formData.endereco_vistoria ? `<p><strong>Local:</strong> ${this.formData.endereco_vistoria}</p>` : ''}
@@ -617,12 +713,12 @@ export class ScheduleForm {
 
       // Track conversion with Facebook Pixel
       if (typeof fbq !== 'undefined') {
-        const priceValue = this.prices[this.formData.tipo_vistoria]?.valor || 0;
+        const priceValue = this.getPrecoByCategoria(this.formData.categoria_veiculo);
         fbq('track', 'InitiateCheckout', {
           value: priceValue / 100,
           currency: 'BRL',
           content_name: 'Vistoria Agendada',
-          content_category: this.formData.tipo_vistoria
+          content_category: this.formData.categoria_veiculo
         });
       }
 

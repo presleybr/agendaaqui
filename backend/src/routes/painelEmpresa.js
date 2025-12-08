@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { authEmpresa, requireRole } = require('../middleware/authEmpresa');
+const PrecoVistoria = require('../models/PrecoVistoria');
 
 // Todas as rotas requerem autenticação
 router.use(authEmpresa);
@@ -609,6 +610,174 @@ router.get('/log-atividades', requireRole('admin'), async (req, res) => {
 
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar log' });
+  }
+});
+
+// ==================== PREÇOS DE VISTORIA POR TIPO DE VEÍCULO ====================
+
+/**
+ * GET /api/empresa/painel/precos-vistoria
+ * Lista todos os preços de vistoria da empresa
+ */
+router.get('/precos-vistoria', async (req, res) => {
+  try {
+    const precos = await PrecoVistoria.findByEmpresa(req.empresa_id);
+
+    // Se não tem preços cadastrados, retorna os padrões
+    if (precos.length === 0) {
+      return res.json({
+        precos: PrecoVistoria.CATEGORIAS_PADRAO.map(c => ({
+          ...c,
+          empresa_id: req.empresa_id,
+          ativo: true,
+          id: null // indica que ainda não foi salvo no banco
+        })),
+        inicializado: false
+      });
+    }
+
+    res.json({
+      precos,
+      inicializado: true
+    });
+
+  } catch (err) {
+    console.error('Erro ao buscar preços de vistoria:', err);
+    res.status(500).json({ error: 'Erro ao buscar preços' });
+  }
+});
+
+/**
+ * POST /api/empresa/painel/precos-vistoria/inicializar
+ * Inicializa os preços padrão para a empresa
+ */
+router.post('/precos-vistoria/inicializar', requireRole('admin', 'gerente'), async (req, res) => {
+  try {
+    // Verificar se já tem preços
+    const temPrecos = await PrecoVistoria.temPrecos(req.empresa_id);
+
+    if (temPrecos) {
+      return res.status(400).json({ error: 'Preços já foram inicializados' });
+    }
+
+    // Inicializar com preços padrão
+    const precos = await PrecoVistoria.inicializarPadrao(req.empresa_id);
+
+    // Log (não bloqueante)
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao)
+        VALUES ($1, $2, 'inicializar_precos', 'Preços de vistoria inicializados com valores padrão')
+      `, [req.empresa_id, req.usuarioEmpresa.id]);
+    } catch (logErr) {
+      console.error('Erro ao registrar log (não bloqueante):', logErr.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Preços inicializados com sucesso',
+      precos
+    });
+
+  } catch (err) {
+    console.error('Erro ao inicializar preços:', err);
+    res.status(500).json({ error: 'Erro ao inicializar preços' });
+  }
+});
+
+/**
+ * PUT /api/empresa/painel/precos-vistoria
+ * Atualiza todos os preços de vistoria da empresa
+ */
+router.put('/precos-vistoria', requireRole('admin', 'gerente'), async (req, res) => {
+  try {
+    const { precos } = req.body;
+
+    if (!precos || !Array.isArray(precos)) {
+      return res.status(400).json({ error: 'Lista de preços é obrigatória' });
+    }
+
+    // Validar cada preço
+    for (const preco of precos) {
+      if (!preco.categoria) {
+        return res.status(400).json({ error: 'Categoria é obrigatória' });
+      }
+      if (!preco.nome_exibicao) {
+        return res.status(400).json({ error: 'Nome de exibição é obrigatório' });
+      }
+      if (typeof preco.preco !== 'number' || preco.preco < 0) {
+        return res.status(400).json({ error: 'Preço deve ser um número positivo' });
+      }
+    }
+
+    // Atualizar ou criar cada preço
+    const resultados = await PrecoVistoria.atualizarMultiplos(req.empresa_id, precos);
+
+    // Log (não bloqueante)
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, dados_extras)
+        VALUES ($1, $2, 'atualizar_precos', 'Preços de vistoria atualizados', $3)
+      `, [
+        req.empresa_id,
+        req.usuarioEmpresa.id,
+        JSON.stringify({ precos_atualizados: precos.length })
+      ]);
+    } catch (logErr) {
+      console.error('Erro ao registrar log (não bloqueante):', logErr.message);
+    }
+
+    res.json({
+      success: true,
+      message: 'Preços atualizados com sucesso',
+      precos: resultados
+    });
+
+  } catch (err) {
+    console.error('Erro ao atualizar preços:', err);
+    res.status(500).json({ error: 'Erro ao atualizar preços' });
+  }
+});
+
+/**
+ * PUT /api/empresa/painel/precos-vistoria/:id
+ * Atualiza um preço específico
+ */
+router.put('/precos-vistoria/:id', requireRole('admin', 'gerente'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nome_exibicao, descricao, preco, ativo } = req.body;
+
+    // Verificar se o preço pertence à empresa
+    const precoExistente = await PrecoVistoria.findById(id);
+    if (!precoExistente) {
+      return res.status(404).json({ error: 'Preço não encontrado' });
+    }
+
+    // Verificar se pertence à empresa do usuário
+    const precosDaEmpresa = await PrecoVistoria.findByEmpresa(req.empresa_id);
+    const pertence = precosDaEmpresa.some(p => p.id === parseInt(id));
+
+    if (!pertence) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    const atualizado = await PrecoVistoria.update(id, {
+      nome_exibicao,
+      descricao,
+      preco,
+      ativo
+    });
+
+    res.json({
+      success: true,
+      message: 'Preço atualizado com sucesso',
+      preco: atualizado
+    });
+
+  } catch (err) {
+    console.error('Erro ao atualizar preço:', err);
+    res.status(500).json({ error: 'Erro ao atualizar preço' });
   }
 });
 

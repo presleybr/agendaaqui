@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { requireTenant } = require('../middleware/tenantMiddleware');
+const PrecoVistoria = require('../models/PrecoVistoria');
 
 /**
  * GET /api/tenant/config
@@ -143,6 +144,68 @@ router.get('/info', requireTenant, async (req, res) => {
   } catch (error) {
     console.error('❌ Erro ao buscar info do tenant:', error);
     res.status(500).json({ error: 'Erro ao buscar informações' });
+  }
+});
+
+/**
+ * GET /api/tenant/precos-vistoria
+ * Retorna os preços de vistoria por categoria de veículo
+ * Suporta: subdomínio OU query parameter ?slug=empresa1
+ */
+router.get('/precos-vistoria', async (req, res) => {
+  try {
+    let empresa = req.tenant; // Do middleware (subdomínio)
+
+    // Se não tem tenant do subdomínio, tentar buscar por slug query parameter
+    if (!empresa && req.query.slug) {
+      const Empresa = require('../models/Empresa');
+      empresa = await Empresa.findBySlug(req.query.slug);
+
+      if (!empresa) {
+        return res.status(404).json({
+          error: 'Empresa não encontrada',
+          slug: req.query.slug
+        });
+      }
+
+      if (empresa.status !== 'ativo') {
+        return res.status(403).json({
+          error: 'Empresa inativa ou suspensa'
+        });
+      }
+    }
+
+    // Se ainda não tem empresa, retornar erro
+    if (!empresa) {
+      return res.status(400).json({
+        error: 'Informe o slug da empresa via subdomínio ou query parameter ?slug=...'
+      });
+    }
+
+    // Buscar preços de vistoria da empresa
+    let precos = await PrecoVistoria.findAtivos(empresa.id);
+
+    // Se não tem preços cadastrados, retornar os padrões
+    if (precos.length === 0) {
+      precos = PrecoVistoria.CATEGORIAS_PADRAO.map(c => ({
+        id: null,
+        categoria: c.categoria,
+        nome_exibicao: c.nome_exibicao,
+        descricao: c.descricao,
+        preco: c.preco,
+        ordem: c.ordem
+      }));
+    }
+
+    res.json({
+      empresa_id: empresa.id,
+      empresa_nome: empresa.nome,
+      precos: precos
+    });
+
+  } catch (error) {
+    console.error('❌ Erro ao buscar preços de vistoria:', error);
+    res.status(500).json({ error: 'Erro ao buscar preços de vistoria' });
   }
 });
 
