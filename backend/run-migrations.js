@@ -4,9 +4,25 @@ const path = require('path');
 const { Pool } = require('pg');
 
 /**
- * Script para executar migrations incrementais sem recriar tabelas.
- * Use este script para aplicar novas migrations em um banco existente.
+ * Script SEGURO para executar migrations incrementais sem recriar tabelas.
+ * Este script é executado automaticamente no deploy (postinstall).
+ *
+ * SEGURANÇA: Este script NUNCA executa DROP TABLE, TRUNCATE ou DELETE.
  */
+
+// Comandos perigosos que NUNCA devem ser executados
+const DANGEROUS_COMMANDS = [
+  'DROP TABLE',
+  'DROP DATABASE',
+  'TRUNCATE',
+  'DELETE FROM'
+];
+
+const containsDangerousCommand = (sql) => {
+  const upperSql = sql.toUpperCase();
+  return DANGEROUS_COMMANDS.some(cmd => upperSql.includes(cmd));
+};
+
 const runMigrations = async () => {
   if (!process.env.DATABASE_URL) {
     console.error('❌ ERRO: DATABASE_URL não configurada!');
@@ -19,7 +35,7 @@ const runMigrations = async () => {
   });
 
   try {
-    console.log('🚀 Executando migrations incrementais...\n');
+    console.log('🚀 Executando migrations incrementais (SEGURO)...\n');
 
     // Executar migrations da pasta migrations/
     const migrationsDir = path.join(__dirname, 'migrations');
@@ -45,6 +61,14 @@ const runMigrations = async () => {
 
       try {
         const migrationSql = fs.readFileSync(migrationPath, 'utf8');
+
+        // PROTEÇÃO: Verificar se contém comandos perigosos
+        if (containsDangerousCommand(migrationSql)) {
+          console.log(`   🚫 BLOQUEADO: Migration contém comandos perigosos (DROP/TRUNCATE/DELETE)`);
+          console.log(`   ⚠️  Para executar migrations destrutivas, use outro método.`);
+          continue;
+        }
+
         await pool.query(migrationSql);
         console.log(`   ✅ Concluída!`);
       } catch (error) {

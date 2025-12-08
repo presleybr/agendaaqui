@@ -4,6 +4,34 @@ const path = require('path');
 const { Pool } = require('pg');
 
 const runMigration = async () => {
+  // ============================================
+  // PROTEÇÃO: BLOQUEAR EM PRODUÇÃO
+  // ============================================
+  if (process.env.NODE_ENV === 'production') {
+    console.error('');
+    console.error('🚫 ════════════════════════════════════════════════════════════');
+    console.error('🚫  BLOQUEADO: Este script NÃO pode ser executado em produção!');
+    console.error('🚫 ════════════════════════════════════════════════════════════');
+    console.error('');
+    console.error('⚠️  Este script executa DROP TABLE e APAGA TODOS OS DADOS!');
+    console.error('');
+    console.error('📝 Para aplicar migrations em produção, use:');
+    console.error('   npm run migrate:incremental');
+    console.error('');
+    console.error('💡 Se você REALMENTE precisa recriar o banco em produção:');
+    console.error('   1. Faça backup dos dados primeiro');
+    console.error('   2. Execute: FORCE_DANGEROUS_MIGRATION=true npm run migrate:postgres');
+    console.error('');
+
+    if (process.env.FORCE_DANGEROUS_MIGRATION !== 'true') {
+      process.exit(1);
+    }
+
+    console.warn('⚠️  FORCE_DANGEROUS_MIGRATION=true detectado. Continuando...');
+    console.warn('⚠️  Você tem 10 segundos para cancelar (Ctrl+C)...');
+    await new Promise(resolve => setTimeout(resolve, 10000));
+  }
+
   if (!process.env.DATABASE_URL) {
     console.error('❌ ERRO: DATABASE_URL não configurada!');
     console.error('📝 Configure a variável de ambiente DATABASE_URL no arquivo .env');
@@ -18,6 +46,7 @@ const runMigration = async () => {
 
   try {
     console.log('🚀 Iniciando migração para PostgreSQL...\n');
+    console.warn('⚠️  ATENÇÃO: Este script vai APAGAR e RECRIAR todas as tabelas!\n');
 
     // Ler o arquivo SQL principal
     const sqlPath = path.join(__dirname, 'database', 'schema-postgres.sql');

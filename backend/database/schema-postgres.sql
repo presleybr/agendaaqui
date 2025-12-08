@@ -2,8 +2,21 @@
 -- SCHEMA POSTGRESQL - SISTEMA MULTI-TENANT
 -- Agendamento de Vistorias Veiculares
 -- =============================================
+--
+-- ╔═══════════════════════════════════════════════════════════════╗
+-- ║  🚫 ATENÇÃO: ESTE ARQUIVO APAGA TODOS OS DADOS! 🚫            ║
+-- ║                                                               ║
+-- ║  NUNCA execute este arquivo diretamente em produção!          ║
+-- ║  Use apenas para configuração inicial do banco.               ║
+-- ║                                                               ║
+-- ║  Para adicionar novas tabelas/colunas em produção:            ║
+-- ║  → Crie um arquivo .sql na pasta /migrations/                 ║
+-- ║  → Use CREATE TABLE IF NOT EXISTS                             ║
+-- ║  → Use ALTER TABLE ... ADD COLUMN IF NOT EXISTS               ║
+-- ╚═══════════════════════════════════════════════════════════════╝
+--
 
--- Limpar tabelas existentes (CUIDADO EM PRODUÇÃO!)
+-- Limpar tabelas existentes (SOMENTE PARA SETUP INICIAL!)
 DROP TABLE IF EXISTS horarios_bloqueados CASCADE;
 DROP TABLE IF EXISTS transacoes CASCADE;
 DROP TABLE IF EXISTS pagamentos CASCADE;
