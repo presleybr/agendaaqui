@@ -3,6 +3,11 @@ const Empresa = require('../models/Empresa');
 const Transacao = require('../models/Transacao');
 const Configuracao = require('../models/Configuracao');
 const { generateToken } = require('../middleware/authAdmin');
+const bcrypt = require('bcryptjs');
+const db = require('../config/database');
+
+// Senha padrão para novos usuários
+const SENHA_PADRAO = '123456';
 
 class AdminController {
   // ============ AUTENTICAÇÃO ============
@@ -180,7 +185,6 @@ class AdminController {
 
       // Criar preços de vistoria se fornecidos
       if (precos_vistoria && Array.isArray(precos_vistoria) && precos_vistoria.length > 0) {
-        const db = require('../config/database');
         for (const preco of precos_vistoria) {
           await db.query(`
             INSERT INTO precos_vistoria (empresa_id, categoria, nome_exibicao, descricao, preco, ordem, ativo)
@@ -194,10 +198,28 @@ class AdminController {
         }
       }
 
+      // Criar usuário admin automaticamente para a empresa
+      const senhaHash = await bcrypt.hash(SENHA_PADRAO, 10);
+      const nomeUsuario = nome.split(' ')[0] + ' Admin'; // Ex: "Vistoria Admin"
+
+      const usuarioResult = await db.query(`
+        INSERT INTO usuarios_empresa (empresa_id, nome, email, senha_hash, role, ativo, primeiro_acesso)
+        VALUES ($1, $2, $3, $4, 'admin', true, true)
+        ON CONFLICT (email) DO NOTHING
+        RETURNING id, nome, email, role
+      `, [empresa.id, nomeUsuario, email, senhaHash]);
+
+      const usuarioCriado = usuarioResult.rows[0];
+
       res.status(201).json({
         message: 'Empresa criada com sucesso',
         mensagem: 'Empresa criada com sucesso',
         empresa,
+        usuario: usuarioCriado ? {
+          ...usuarioCriado,
+          senha_padrao: SENHA_PADRAO,
+          aviso: 'Usuário deve alterar a senha no primeiro acesso'
+        } : null,
         url: `https://agendaaquivistorias.com.br/${slug}`,
         subdominio: `${slug}.${req.get('host')}`
       });

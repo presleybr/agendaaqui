@@ -643,14 +643,24 @@ export class EmpresasManager {
       let data;
       if (this.empresaSelecionada) {
         data = await empresasApi.atualizar(this.empresaSelecionada.id, formData);
+        alert(data.mensagem || 'Empresa atualizada com sucesso!');
       } else {
         data = await empresasApi.criar(formData);
-      }
 
-      alert(data.mensagem || 'Empresa salva com sucesso!');
+        // Mostrar dados de acesso da nova empresa
+        let mensagem = `✅ Empresa criada com sucesso!\n\n`;
+        mensagem += `🌐 URL: ${data.url}\n\n`;
 
-      if (data.url && !this.empresaSelecionada) {
-        const abrirPagina = confirm(`Empresa criada!\n\nDeseja abrir a página da empresa?\n${data.url}`);
+        if (data.usuario) {
+          mensagem += `👤 DADOS DE ACESSO DO PAINEL:\n`;
+          mensagem += `📧 Email: ${data.usuario.email}\n`;
+          mensagem += `🔑 Senha: ${data.usuario.senha_padrao}\n\n`;
+          mensagem += `⚠️ O cliente deve alterar a senha no primeiro acesso.`;
+        }
+
+        alert(mensagem);
+
+        const abrirPagina = confirm(`Deseja abrir a página da empresa?\n${data.url}`);
         if (abrirPagina) {
           window.open(data.url, '_blank');
         }

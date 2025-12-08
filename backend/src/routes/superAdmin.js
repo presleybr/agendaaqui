@@ -823,6 +823,9 @@ router.get('/empresas/:id/usuarios', authAdmin, async (req, res) => {
   }
 });
 
+// Senha padrão para novos usuários
+const SENHA_PADRAO = '123456';
+
 // Criar usuário para empresa
 router.post('/empresas/:id/usuarios', authAdmin, async (req, res) => {
   try {
@@ -846,10 +849,8 @@ router.post('/empresas/:id/usuarios', authAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Email já cadastrado' });
     }
 
-    // Gerar senha temporária
-    const senhaTemporaria = Math.random().toString(36).slice(-6).toUpperCase() +
-                            Math.random().toString(36).slice(-2) + '!';
-    const senhaHash = await bcrypt.hash(senhaTemporaria, 10);
+    // Usar senha padrão
+    const senhaHash = await bcrypt.hash(SENHA_PADRAO, 10);
 
     const result = await db.query(`
       INSERT INTO usuarios_empresa (empresa_id, nome, email, senha_hash, role, ativo, primeiro_acesso)
@@ -859,8 +860,8 @@ router.post('/empresas/:id/usuarios', authAdmin, async (req, res) => {
 
     res.status(201).json({
       usuario: result.rows[0],
-      senha_temporaria: senhaTemporaria,
-      mensagem: 'Usuário criado com sucesso'
+      senha_padrao: SENHA_PADRAO,
+      mensagem: 'Usuário criado com sucesso. Senha padrão: ' + SENHA_PADRAO
     });
   } catch (error) {
     console.error('Erro ao criar usuário:', error);
@@ -868,16 +869,14 @@ router.post('/empresas/:id/usuarios', authAdmin, async (req, res) => {
   }
 });
 
-// Resetar senha de usuário
+// Resetar senha de usuário (volta para senha padrão)
 router.post('/usuarios/:userId/reset-senha', authAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
     const bcrypt = require('bcryptjs');
 
-    // Gerar nova senha temporária
-    const senhaTemporaria = Math.random().toString(36).slice(-6).toUpperCase() +
-                            Math.random().toString(36).slice(-2) + '!';
-    const senhaHash = await bcrypt.hash(senhaTemporaria, 10);
+    // Usar senha padrão
+    const senhaHash = await bcrypt.hash(SENHA_PADRAO, 10);
 
     const result = await db.query(`
       UPDATE usuarios_empresa
@@ -892,8 +891,8 @@ router.post('/usuarios/:userId/reset-senha', authAdmin, async (req, res) => {
 
     res.json({
       usuario: result.rows[0],
-      senha_temporaria: senhaTemporaria,
-      mensagem: 'Senha resetada com sucesso'
+      senha_padrao: SENHA_PADRAO,
+      mensagem: 'Senha resetada para: ' + SENHA_PADRAO
     });
   } catch (error) {
     console.error('Erro ao resetar senha:', error);
