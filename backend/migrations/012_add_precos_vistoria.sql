@@ -28,13 +28,18 @@ CREATE TABLE IF NOT EXISTS precos_vistoria (
   UNIQUE(empresa_id, categoria)
 );
 
-CREATE INDEX idx_precos_vistoria_empresa ON precos_vistoria(empresa_id);
-CREATE INDEX idx_precos_vistoria_categoria ON precos_vistoria(categoria);
+CREATE INDEX IF NOT EXISTS idx_precos_vistoria_empresa ON precos_vistoria(empresa_id);
+CREATE INDEX IF NOT EXISTS idx_precos_vistoria_categoria ON precos_vistoria(categoria);
 
--- Trigger para atualizar updated_at
-CREATE TRIGGER update_precos_vistoria_updated_at
-BEFORE UPDATE ON precos_vistoria
-FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Trigger para atualizar updated_at (ignora se já existir)
+DO $$
+BEGIN
+  CREATE TRIGGER update_precos_vistoria_updated_at
+  BEFORE UPDATE ON precos_vistoria
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
+END $$;
 
 -- Adicionar coluna categoria_veiculo na tabela agendamentos para armazenar a categoria selecionada
 ALTER TABLE agendamentos
