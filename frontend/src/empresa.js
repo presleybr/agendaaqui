@@ -6,6 +6,7 @@ class EmpresaPage {
     this.empresa = null;
     this.slug = null;
     this.photos = [];
+    this.precosVistoria = [];
     this.currentPhotoIndex = 0;
     this.init();
   }
@@ -22,6 +23,7 @@ class EmpresaPage {
     try {
       await this.loadEmpresa();
       await this.loadPhotos();
+      await this.loadPrecosVistoria();
       this.customizePage();
       this.initScheduleForm();
       this.setupEventListeners();
@@ -75,6 +77,19 @@ class EmpresaPage {
       }
     } catch (error) {
       console.error('Erro ao carregar fotos:', error);
+    }
+  }
+
+  async loadPrecosVistoria() {
+    try {
+      const response = await fetch(`${scheduleService.API_URL}/tenant/precos-vistoria?slug=${this.slug}`);
+      if (response.ok) {
+        const data = await response.json();
+        this.precosVistoria = data.precos || [];
+        console.log('Precos carregados:', this.precosVistoria);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar precos:', error);
     }
   }
 
@@ -139,6 +154,7 @@ class EmpresaPage {
       if (!this.mobileFormInitialized && mobileScheduleApp && this.empresa) {
         this.mobileScheduleForm = new ScheduleForm(mobileScheduleApp, {
           empresaId: this.empresa.id,
+          precosVistoria: this.precosVistoria,
           precos: {
             cautelar: this.empresa.preco_cautelar,
             transferencia: this.empresa.preco_transferencia,
@@ -186,6 +202,7 @@ class EmpresaPage {
               if (!this.mobileFormInitialized && mobileScheduleApp && this.empresa) {
                 this.mobileScheduleForm = new ScheduleForm(mobileScheduleApp, {
                   empresaId: this.empresa.id,
+                  precosVistoria: this.precosVistoria,
                   precos: {
                     cautelar: this.empresa.preco_cautelar,
                     transferencia: this.empresa.preco_transferencia,
@@ -472,50 +489,74 @@ class EmpresaPage {
       return (valor / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
 
-    const precos = [
-      {
-        tipo: 'Vistoria Cautelar',
-        preco: this.empresa.preco_cautelar || 15000,
-        descricao: 'Laudo completo para compra segura',
-        featured: true,
-        items: ['Analise de chassi e motor', 'Verificacao de sinistros', 'Laudo fotografico', 'Validade juridica']
-      },
-      {
-        tipo: 'Transferencia',
-        preco: this.empresa.preco_transferencia || 12000,
-        descricao: 'Vistoria para transferencia',
-        featured: false,
-        items: ['Laudo tecnico', 'Reconhecido DETRAN', 'Processo rapido', 'Documentacao completa']
-      },
-      {
-        tipo: 'Outros Servicos',
-        preco: this.empresa.preco_outros || 10000,
-        descricao: 'Demais tipos de vistoria',
-        featured: false,
-        items: ['2a via CRV', 'Licenciamento', 'Alienacao', 'Pre cautelar']
-      }
-    ];
+    // Usar precos dinamicos se disponiveis
+    if (this.precosVistoria && this.precosVistoria.length > 0) {
+      const precosAtivos = this.precosVistoria.filter(p => p.ativo !== false);
 
-    pricingGrid.innerHTML = precos.map((item, index) => `
-      <div class="pricing-card ${item.featured ? 'featured' : ''}">
-        <h4>${item.tipo}</h4>
-        <div class="price">R$ ${formatPrice(item.preco)}</div>
-        <p style="color: var(--text-secondary); margin-bottom: 16px;">${item.descricao}</p>
-        <ul>
-          ${item.items.map(i => `<li>${i}</li>`).join('')}
-        </ul>
-        <a href="#agendamento" class="btn ${item.featured ? 'btn-primary' : 'btn-secondary'}" data-service="${index === 0 ? 'cautelar' : index === 1 ? 'transferencia' : 'outros'}">
-          Agendar
-        </a>
-      </div>
-    `).join('');
+      pricingGrid.innerHTML = precosAtivos.map((item, index) => `
+        <div class="pricing-card ${index === 0 ? 'featured' : ''}">
+          <h4>${item.nome_exibicao}</h4>
+          <div class="price">R$ ${formatPrice(item.preco)}</div>
+          <p style="color: var(--text-secondary); margin-bottom: 16px;">${item.descricao || ''}</p>
+          <a href="#agendamento" class="btn ${index === 0 ? 'btn-primary' : 'btn-secondary'}" data-categoria="${item.categoria}">
+            Agendar
+          </a>
+        </div>
+      `).join('');
 
-    // Add click handlers
-    pricingGrid.querySelectorAll('[data-service]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        sessionStorage.setItem('selectedService', btn.dataset.service);
+      // Add click handlers para precos dinamicos
+      pricingGrid.querySelectorAll('[data-categoria]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          sessionStorage.setItem('selectedCategoria', btn.dataset.categoria);
+        });
       });
-    });
+    } else {
+      // Fallback para precos antigos se nao houver precos dinamicos
+      const precos = [
+        {
+          tipo: 'Vistoria Cautelar',
+          preco: this.empresa.preco_cautelar || 15000,
+          descricao: 'Laudo completo para compra segura',
+          featured: true,
+          items: ['Analise de chassi e motor', 'Verificacao de sinistros', 'Laudo fotografico', 'Validade juridica']
+        },
+        {
+          tipo: 'Transferencia',
+          preco: this.empresa.preco_transferencia || 12000,
+          descricao: 'Vistoria para transferencia',
+          featured: false,
+          items: ['Laudo tecnico', 'Reconhecido DETRAN', 'Processo rapido', 'Documentacao completa']
+        },
+        {
+          tipo: 'Outros Servicos',
+          preco: this.empresa.preco_outros || 10000,
+          descricao: 'Demais tipos de vistoria',
+          featured: false,
+          items: ['2a via CRV', 'Licenciamento', 'Alienacao', 'Pre cautelar']
+        }
+      ];
+
+      pricingGrid.innerHTML = precos.map((item, index) => `
+        <div class="pricing-card ${item.featured ? 'featured' : ''}">
+          <h4>${item.tipo}</h4>
+          <div class="price">R$ ${formatPrice(item.preco)}</div>
+          <p style="color: var(--text-secondary); margin-bottom: 16px;">${item.descricao}</p>
+          <ul>
+            ${item.items.map(i => `<li>${i}</li>`).join('')}
+          </ul>
+          <a href="#agendamento" class="btn ${item.featured ? 'btn-primary' : 'btn-secondary'}" data-service="${index === 0 ? 'cautelar' : index === 1 ? 'transferencia' : 'outros'}">
+            Agendar
+          </a>
+        </div>
+      `).join('');
+
+      // Add click handlers
+      pricingGrid.querySelectorAll('[data-service]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          sessionStorage.setItem('selectedService', btn.dataset.service);
+        });
+      });
+    }
   }
 
   renderPhotos() {
@@ -702,6 +743,7 @@ class EmpresaPage {
     if (scheduleApp) {
       const scheduleForm = new ScheduleForm(scheduleApp, {
         empresaId: this.empresa.id,
+        precosVistoria: this.precosVistoria,
         precos: {
           cautelar: this.empresa.preco_cautelar,
           transferencia: this.empresa.preco_transferencia,

@@ -40,11 +40,12 @@ export class ScheduleForm {
     try {
       console.log('🔄 Initializing schedule form...');
 
-      // Check if a service was pre-selected from pricing table
-      const selectedService = sessionStorage.getItem('selectedService');
-      if (selectedService) {
-        this.formData.categoria_veiculo = selectedService;
-        console.log('📌 Pre-selected category:', selectedService);
+      // Check if a category was pre-selected from pricing table
+      const selectedCategoria = sessionStorage.getItem('selectedCategoria') || sessionStorage.getItem('selectedService');
+      if (selectedCategoria) {
+        this.formData.categoria_veiculo = selectedCategoria;
+        console.log('📌 Pre-selected category:', selectedCategoria);
+        sessionStorage.removeItem('selectedCategoria');
         sessionStorage.removeItem('selectedService'); // Clear after using
       }
 
@@ -99,6 +100,14 @@ export class ScheduleForm {
   }
 
   async loadPrecosVeiculo() {
+    // Se os preços já foram passados nas opções, usar diretamente
+    if (this.options.precosVistoria && this.options.precosVistoria.length > 0) {
+      this.precosVeiculo = this.options.precosVistoria;
+      console.log('✅ Using pre-loaded vehicle prices:', this.precosVeiculo);
+      return;
+    }
+
+    // Senão, carregar da API
     try {
       const API_URL = import.meta.env?.VITE_API_URL || 'https://agendaaqui-backend.onrender.com/api';
       const slug = this.options.slug || window.empresaSlug || 'demo';
