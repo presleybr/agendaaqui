@@ -86,18 +86,13 @@ const runMigrations = async () => {
 
     console.log('\n✅ Todas as migrations foram processadas!');
 
-    // Verificar estado do banco
-    const empresasResult = await pool.query('SELECT COUNT(*) FROM empresas');
-    console.log(`\n📊 Total de empresas: ${empresasResult.rows[0].count}`);
-
-    // Verificar se as novas colunas existem
-    const colCheck = await pool.query(`
-      SELECT column_name
-      FROM information_schema.columns
-      WHERE table_name = 'empresas'
-      AND column_name IN ('percentual_plataforma', 'cor_primaria', 'logo_url', 'template_id')
-    `);
-    console.log(`✅ Colunas de personalização: ${colCheck.rows.length}/4 verificadas`);
+    // Verificar estado do banco (opcional, não falha se tabela não existir)
+    try {
+      const empresasResult = await pool.query('SELECT COUNT(*) FROM empresas');
+      console.log(`\n📊 Total de empresas: ${empresasResult.rows[0].count}`);
+    } catch (e) {
+      console.log(`\n⚠️ Não foi possível verificar empresas: ${e.message}`);
+    }
 
   } catch (error) {
     console.error('\n❌ Erro ao executar migrations:', error.message);

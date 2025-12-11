@@ -6,7 +6,7 @@ services:
     region: oregon
     plan: free
     rootDir: backend
-    buildCommand: npm install && npm run migrate:postgres
+    buildCommand: npm install && npm run migrate:incremental
     startCommand: npm start
     envVars:
       - key: NODE_ENV
