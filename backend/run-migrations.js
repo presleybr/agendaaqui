@@ -10,17 +10,18 @@ const { Pool } = require('pg');
  * SEGURANÇA: Este script NUNCA executa DROP TABLE, TRUNCATE ou DELETE.
  */
 
-// Comandos perigosos que NUNCA devem ser executados
-const DANGEROUS_COMMANDS = [
-  'DROP TABLE',
-  'DROP DATABASE',
-  'TRUNCATE',
-  'DELETE FROM'
+// Padrões de comandos perigosos (usando regex para evitar falsos positivos)
+// "ON DELETE CASCADE" não é perigoso, mas "DELETE FROM tabela" é
+const DANGEROUS_PATTERNS = [
+  /DROP\s+TABLE/i,
+  /DROP\s+DATABASE/i,
+  /TRUNCATE\s+TABLE/i,
+  /TRUNCATE\s+\w+/i,
+  /(?<!ON\s)DELETE\s+FROM/i  // DELETE FROM, mas não ON DELETE
 ];
 
 const containsDangerousCommand = (sql) => {
-  const upperSql = sql.toUpperCase();
-  return DANGEROUS_COMMANDS.some(cmd => upperSql.includes(cmd));
+  return DANGEROUS_PATTERNS.some(pattern => pattern.test(sql));
 };
 
 const runMigrations = async () => {
