@@ -491,7 +491,7 @@ export class EmpresasManager {
       this.setFieldValue('empresaTipoPix', empresa.pix_type || empresa.tipo_pix);
 
       // Taxa da plataforma (convertendo de centavos para reais)
-      const taxaEmReais = (empresa.percentual_plataforma || 500) / 100;
+      const taxaEmReais = (empresa.percentual_plataforma || 1000) / 100;
       this.setFieldValue('empresaTaxaPlataforma', taxaEmReais.toFixed(2));
 
       // Reset tabs para primeira tab
@@ -618,7 +618,7 @@ export class EmpresasManager {
         pix_type: document.getElementById('empresaTipoPix')?.value || 'cpf',
 
         // Taxa da plataforma (em centavos)
-        percentual_plataforma: Math.round(parseFloat(document.getElementById('empresaTaxaPlataforma')?.value || 5) * 100)
+        percentual_plataforma: Math.round(parseFloat(document.getElementById('empresaTaxaPlataforma')?.value || 10) * 100)
       };
 
       // Validação básica
