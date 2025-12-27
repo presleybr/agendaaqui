@@ -482,6 +482,30 @@ function validarStep(step) {
     if (emailStatus && emailStatus.classList.contains('indisponivel')) {
       isValid = false;
     }
+
+    // Validar senha
+    const senha = document.getElementById('senha');
+    const confirmarSenha = document.getElementById('confirmar_senha');
+    const senhaError = senha.parentElement.querySelector('.error-message');
+    const confirmarError = confirmarSenha.parentElement.querySelector('.error-message');
+
+    if (senha.value.length < 6) {
+      senha.classList.add('error');
+      if (senhaError) senhaError.textContent = 'A senha deve ter no mínimo 6 caracteres';
+      isValid = false;
+    } else {
+      senha.classList.remove('error');
+      if (senhaError) senhaError.textContent = '';
+    }
+
+    if (senha.value !== confirmarSenha.value) {
+      confirmarSenha.classList.add('error');
+      if (confirmarError) confirmarError.textContent = 'As senhas não conferem';
+      isValid = false;
+    } else if (confirmarSenha.value) {
+      confirmarSenha.classList.remove('error');
+      if (confirmarError) confirmarError.textContent = '';
+    }
   }
 
   if (step === 7) {
@@ -509,6 +533,7 @@ function coletarDados() {
   dados.cnpj = formData.get('cnpj');
   dados.email = formData.get('email');
   dados.telefone = formData.get('telefone');
+  dados.senha = formData.get('senha'); // Senha criada pelo cliente
 
   // Endereço
   dados.cep = formData.get('cep');
@@ -753,19 +778,30 @@ function hideLoading() {
 function showSuccessModal(data) {
   const successInfo = document.getElementById('successInfo');
   const btnAcessarPagina = document.getElementById('btnAcessarPagina');
+  const btnAcessarPainel = document.querySelector('.success-actions .btn-secondary');
 
   successInfo.innerHTML = `
-    <p><strong>Sua página:</strong></p>
+    <p><strong>Sua página de agendamentos:</strong></p>
     <div class="url">${data.urls.pagina_publica}</div>
-    <p style="margin-top: 16px;"><strong>Acesso ao Painel:</strong></p>
-    <p>Email: ${data.acesso.email}</p>
-    <p>Senha: ${data.acesso.senha_temporaria}</p>
-    <p style="color: #d97706; font-size: 0.9em; margin-top: 8px;">
-      ⚠️ Altere sua senha no primeiro acesso
+
+    <p style="margin-top: 16px;"><strong>Painel Administrativo:</strong></p>
+    <div class="url">${data.urls.painel_admin || 'https://agendaaquivistorias.com.br/painel-empresa.html'}</div>
+
+    <p style="margin-top: 16px;"><strong>Seus dados de acesso:</strong></p>
+    <p>Email: <strong>${data.acesso.email}</strong></p>
+    <p>Senha: <strong>A que você criou no cadastro</strong></p>
+
+    <p style="color: #059669; font-size: 0.9em; margin-top: 12px;">
+      ✓ Você já pode acessar o painel com o email e senha que cadastrou!
     </p>
   `;
 
   btnAcessarPagina.href = data.urls.pagina_publica;
+
+  // Atualizar link do painel admin
+  if (btnAcessarPainel) {
+    btnAcessarPainel.href = data.urls.painel_admin || '/painel-empresa.html';
+  }
 
   elements.successModal.classList.add('active');
 }

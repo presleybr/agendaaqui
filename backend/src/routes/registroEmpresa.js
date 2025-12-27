@@ -13,9 +13,6 @@ const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 const Empresa = require('../models/Empresa');
 
-// Senha padrão para primeiro acesso
-const SENHA_PADRAO = '123456';
-
 /**
  * POST /api/registro/empresa
  * Cria uma nova empresa via auto-cadastro
@@ -29,6 +26,7 @@ router.post('/empresa', async (req, res) => {
       cnpj,
       email,
       telefone,
+      senha, // Senha criada pelo cliente
 
       // Etapa 2: Endereço
       cep,
@@ -67,15 +65,24 @@ router.post('/empresa', async (req, res) => {
     // ============ VALIDAÇÕES ============
 
     // Campos obrigatórios
-    if (!nome || !slug || !email || !chave_pix) {
+    if (!nome || !slug || !email || !chave_pix || !senha) {
       return res.status(400).json({
-        error: 'Campos obrigatórios: nome, slug, email, chave_pix',
+        error: 'Campos obrigatórios: nome, slug, email, chave_pix, senha',
         campos_faltando: {
           nome: !nome,
           slug: !slug,
           email: !email,
-          chave_pix: !chave_pix
+          chave_pix: !chave_pix,
+          senha: !senha
         }
+      });
+    }
+
+    // Validar senha
+    if (senha.length < 6) {
+      return res.status(400).json({
+        error: 'A senha deve ter no mínimo 6 caracteres',
+        campo: 'senha'
       });
     }
 
@@ -230,12 +237,12 @@ router.post('/empresa', async (req, res) => {
 
     // ============ CRIAR USUÁRIO ADMIN ============
 
-    const senhaHash = await bcrypt.hash(SENHA_PADRAO, 10);
+    const senhaHash = await bcrypt.hash(senha, 10);
     const nomeUsuario = nome.split(' ')[0] + ' Admin';
 
     const usuarioResult = await db.query(`
       INSERT INTO usuarios_empresa (empresa_id, nome, email, senha_hash, role, ativo, primeiro_acesso)
-      VALUES ($1, $2, $3, $4, 'admin', true, true)
+      VALUES ($1, $2, $3, $4, 'admin', true, false)
       ON CONFLICT (email) DO NOTHING
       RETURNING id, nome, email, role
     `, [empresa.id, nomeUsuario, email, senhaHash]);
@@ -260,8 +267,7 @@ router.post('/empresa', async (req, res) => {
       },
       acesso: {
         email: email,
-        senha_temporaria: SENHA_PADRAO,
-        aviso: 'Altere sua senha no primeiro acesso'
+        mensagem: 'Use a senha que você criou durante o cadastro'
       }
     });
 
