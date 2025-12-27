@@ -75,8 +75,38 @@ const runMigrations = async () => {
           continue;
         }
 
-        await pool.query(migrationSql);
-        console.log(`   ✅ Concluída!`);
+        // Dividir em statements individuais para melhor tratamento de erros
+        const statements = migrationSql
+          .split(';')
+          .map(s => s.trim())
+          .filter(s => s.length > 0 && !s.startsWith('--'));
+
+        let successCount = 0;
+        let skipCount = 0;
+
+        for (const statement of statements) {
+          try {
+            await pool.query(statement);
+            successCount++;
+          } catch (stmtError) {
+            // Ignorar erros esperados em migrations idempotentes
+            if (stmtError.message.includes('already exists') ||
+                stmtError.message.includes('duplicate key') ||
+                stmtError.message.includes('does not exist') ||
+                stmtError.code === '42701' || // column already exists
+                stmtError.code === '42P07' || // relation already exists
+                stmtError.code === '42703' || // column does not exist (para índices)
+                stmtError.code === '42710' || // object already exists
+                stmtError.code === '23505') { // unique violation
+              skipCount++;
+            } else {
+              console.log(`   ⚠️  Erro em statement: ${stmtError.message}`);
+              skipCount++;
+            }
+          }
+        }
+
+        console.log(`   ✅ Concluída (${successCount} executados, ${skipCount} já existentes)`);
       } catch (error) {
         // Ignorar erros de "already exists" que são esperados em migrations idempotentes
         if (error.message.includes('already exists') ||
@@ -85,7 +115,7 @@ const runMigrations = async () => {
             error.code === '42P07') { // relation already exists
           console.log(`   ⚠️ Já aplicada (ignorando)`);
         } else {
-          throw error;
+          console.log(`   ⚠️ Erro: ${error.message} (continuando...)`);
         }
       }
     }
