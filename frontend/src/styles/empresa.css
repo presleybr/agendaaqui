@@ -793,3 +793,331 @@
   opacity: 1;
   transform: scale(1);
 }
+
+/* ============================================
+   DARK MODE STYLES
+============================================ */
+
+/* Body background */
+html.dark body.empresa-profile-page {
+  background: #0a0a0a;
+  color: #f5f5f5;
+}
+
+/* Header */
+html.dark .profile-header {
+  background: rgba(26, 26, 26, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #2d2d2d;
+}
+
+html.dark .header-logo span {
+  color: #f5f5f5;
+}
+
+html.dark .header-nav .nav-link {
+  color: #a0a0a0;
+}
+
+html.dark .header-nav .nav-link:hover {
+  color: #f5f5f5;
+}
+
+html.dark .header-nav .nav-cta {
+  background: var(--brand-primary);
+  color: white;
+}
+
+/* Mobile menu */
+html.dark .mobile-menu {
+  background: rgba(26, 26, 26, 0.98);
+  border-bottom: 1px solid #2d2d2d;
+}
+
+html.dark .mobile-nav-link {
+  color: #d0d0d0;
+  border-bottom-color: #2d2d2d;
+}
+
+html.dark .mobile-menu-btn span {
+  background: #d0d0d0;
+}
+
+/* Profile section */
+html.dark .profile-info-container {
+  color: #f5f5f5;
+}
+
+html.dark .profile-name {
+  color: #f5f5f5;
+}
+
+html.dark .profile-location {
+  color: #a0a0a0;
+}
+
+html.dark .profile-rating-text {
+  color: #a0a0a0;
+}
+
+/* Sections */
+html.dark .section-title {
+  color: #f5f5f5;
+}
+
+html.dark .section-subtitle {
+  color: #a0a0a0;
+}
+
+/* About section */
+html.dark .about-section {
+  background: #1a1a1a;
+}
+
+html.dark .about-description {
+  color: #d0d0d0;
+}
+
+html.dark .info-item-label {
+  color: #888;
+}
+
+html.dark .info-item-value {
+  color: #f5f5f5;
+}
+
+/* Services section */
+html.dark .services-section {
+  background: #0a0a0a;
+}
+
+html.dark .service-card {
+  background: #1a1a1a;
+  border-color: #2d2d2d;
+}
+
+html.dark .service-card:hover {
+  border-color: var(--brand-primary);
+}
+
+html.dark .service-name {
+  color: #f5f5f5;
+}
+
+html.dark .service-description {
+  color: #a0a0a0;
+}
+
+html.dark .service-price {
+  color: var(--brand-primary);
+}
+
+/* Photos section */
+html.dark .photos-section {
+  background: #1a1a1a;
+}
+
+html.dark .photo-item {
+  border-color: #2d2d2d;
+}
+
+/* Reviews section */
+html.dark .reviews-section {
+  background: #0a0a0a;
+}
+
+html.dark .review-card {
+  background: #1a1a1a;
+  border-color: #2d2d2d;
+}
+
+html.dark .review-author {
+  color: #f5f5f5;
+}
+
+html.dark .review-date {
+  color: #666;
+}
+
+html.dark .review-text {
+  color: #d0d0d0;
+}
+
+/* Scheduling section */
+html.dark .scheduling-section {
+  background: #1a1a1a;
+}
+
+html.dark .schedule-form-container {
+  background: #262626;
+  border-color: #2d2d2d;
+}
+
+/* Form inputs */
+html.dark .form-group label {
+  color: #d0d0d0;
+}
+
+html.dark .form-group input,
+html.dark .form-group select,
+html.dark .form-group textarea {
+  background: #1a1a1a;
+  border-color: #404040;
+  color: #f5f5f5;
+}
+
+html.dark .form-group input:focus,
+html.dark .form-group select:focus,
+html.dark .form-group textarea:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(var(--brand-primary-rgb), 0.2);
+}
+
+html.dark .form-group input::placeholder,
+html.dark .form-group textarea::placeholder {
+  color: #666;
+}
+
+/* Time slots */
+html.dark .time-slot {
+  background: #1a1a1a;
+  border-color: #404040;
+  color: #d0d0d0;
+}
+
+html.dark .time-slot:hover:not(.unavailable):not(.selected) {
+  border-color: var(--brand-primary);
+  background: #262626;
+}
+
+html.dark .time-slot.selected {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: white;
+}
+
+html.dark .time-slot.unavailable {
+  background: #1a1a1a;
+  color: #444;
+}
+
+/* Date picker */
+html.dark .date-option {
+  background: #1a1a1a;
+  border-color: #404040;
+  color: #d0d0d0;
+}
+
+html.dark .date-option:hover:not(.selected) {
+  border-color: var(--brand-primary);
+}
+
+html.dark .date-option.selected {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: white;
+}
+
+/* Summary */
+html.dark .summary-box,
+html.dark .resumo-container {
+  background: #1a1a1a;
+  border-color: #2d2d2d;
+}
+
+html.dark .summary-item {
+  border-color: #2d2d2d;
+  color: #d0d0d0;
+}
+
+html.dark .summary-label {
+  color: #888;
+}
+
+html.dark .summary-value {
+  color: #f5f5f5;
+}
+
+/* Contact info */
+html.dark .contact-info {
+  background: #1a1a1a;
+  border-color: #2d2d2d;
+}
+
+html.dark .contact-item {
+  color: #d0d0d0;
+}
+
+/* Footer */
+html.dark .site-footer {
+  background: #0a0a0a;
+  border-top: 1px solid #2d2d2d;
+  color: #a0a0a0;
+}
+
+/* Modal */
+html.dark .modal-overlay {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+html.dark .modal-content {
+  background: #1a1a1a;
+  border: 1px solid #2d2d2d;
+}
+
+html.dark .modal-header {
+  border-bottom-color: #2d2d2d;
+  color: #f5f5f5;
+}
+
+html.dark .modal-body {
+  color: #d0d0d0;
+}
+
+html.dark .modal-close {
+  color: #888;
+}
+
+html.dark .modal-close:hover {
+  color: #f5f5f5;
+}
+
+/* Loading */
+html.dark .page-loading {
+  background: #0a0a0a;
+}
+
+html.dark .loading-content p {
+  color: #d0d0d0;
+}
+
+/* Buttons */
+html.dark .btn-secondary {
+  background: #262626;
+  border-color: #404040;
+  color: #d0d0d0;
+}
+
+html.dark .btn-secondary:hover {
+  background: #333;
+  border-color: #555;
+}
+
+/* Cards */
+html.dark .card {
+  background: #1a1a1a;
+  border-color: #2d2d2d;
+}
+
+/* Theme toggle in header */
+.header-nav .theme-toggle {
+  margin-left: 8px;
+}
+
+html.dark .header-nav .theme-toggle {
+  background: #262626;
+}
+
+html.dark .header-nav .theme-toggle:hover {
+  background: #333;
+}

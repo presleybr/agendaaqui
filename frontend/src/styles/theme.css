@@ -1,6 +1,7 @@
 /* ============================================
    DESIGN SYSTEM - PROFESSIONAL SAAS
    Modern, Minimalist, Professional
+   With Light/Dark Mode Support
 ============================================ */
 
 :root {
@@ -52,14 +53,14 @@
   --status-completed: #10b981;
   --status-canceled: #ef4444;
 
-  /* Text Colors */
+  /* Text Colors - Light Mode */
   --text-primary: #171717;
   --text-secondary: #525252;
   --text-tertiary: #a3a3a3;
   --text-inverse: #ffffff;
   --text-muted: #737373;
 
-  /* Background Colors */
+  /* Background Colors - Light Mode */
   --bg-primary: #ffffff;
   --bg-secondary: #fafafa;
   --bg-tertiary: #f5f5f5;
@@ -68,13 +69,13 @@
   --bg-hover: #f5f5f5;
   --bg-active: #e5e5e5;
 
-  /* Border Colors */
+  /* Border Colors - Light Mode */
   --border-subtle: #f5f5f5;
   --border-light: #e5e5e5;
   --border-medium: #d4d4d4;
   --border-strong: #a3a3a3;
 
-  /* Shadows - Subtle and Professional */
+  /* Shadows - Light Mode */
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.08);
@@ -85,6 +86,31 @@
   /* Focused State */
   --shadow-focus: 0 0 0 3px var(--brand-primary-lightest);
   --shadow-focus-error: 0 0 0 3px rgba(239, 68, 68, 0.1);
+
+  /* Glass Effect - Light Mode */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+
+  /* Input Colors - Light Mode */
+  --input-bg: #ffffff;
+  --input-border: #d4d4d4;
+  --input-text: #171717;
+  --input-placeholder: #a3a3a3;
+
+  /* Table Colors - Light Mode */
+  --table-header-bg: #f5f5f5;
+  --table-row-hover: #fafafa;
+  --table-border: #e5e5e5;
+
+  /* Modal Colors - Light Mode */
+  --modal-bg: #ffffff;
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+
+  /* Sidebar Colors - Light Mode */
+  --sidebar-bg: #ffffff;
+  --sidebar-hover: #f5f5f5;
+  --sidebar-active: #ffe8dc;
 
   /* Gradients - Subtle and Modern */
   --gradient-primary: linear-gradient(135deg, #ed6a2b 0%, #ff8c5a 100%);
@@ -160,6 +186,173 @@
   --z-modal: 1300;
   --z-popover: 1400;
   --z-tooltip: 1500;
+}
+
+/* ============================================
+   DARK MODE OVERRIDES
+============================================ */
+html.dark {
+  /* Text Colors - Dark Mode */
+  --text-primary: #f5f5f5;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #737373;
+  --text-inverse: #171717;
+  --text-muted: #737373;
+
+  /* Background Colors - Dark Mode */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #171717;
+  --bg-tertiary: #262626;
+  --bg-elevated: #1a1a1a;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --bg-hover: #262626;
+  --bg-active: #404040;
+
+  /* Border Colors - Dark Mode */
+  --border-subtle: #262626;
+  --border-light: #404040;
+  --border-medium: #525252;
+  --border-strong: #737373;
+
+  /* Shadows - Dark Mode (more subtle, using brand color glow) */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+
+  /* Status Colors - Adjusted for dark backgrounds */
+  --status-success-light: rgba(16, 185, 129, 0.15);
+  --status-warning-light: rgba(245, 158, 11, 0.15);
+  --status-danger-light: rgba(239, 68, 68, 0.15);
+  --status-info-light: rgba(237, 106, 43, 0.15);
+
+  /* Glass Effect - Dark Mode */
+  --glass-bg: rgba(26, 26, 26, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* Input Colors - Dark Mode */
+  --input-bg: #1a1a1a;
+  --input-border: #404040;
+  --input-text: #f5f5f5;
+  --input-placeholder: #737373;
+
+  /* Table Colors - Dark Mode */
+  --table-header-bg: #1a1a1a;
+  --table-row-hover: #262626;
+  --table-border: #404040;
+
+  /* Modal Colors - Dark Mode */
+  --modal-bg: #1a1a1a;
+  --modal-overlay: rgba(0, 0, 0, 0.8);
+
+  /* Sidebar Colors - Dark Mode */
+  --sidebar-bg: #0a0a0a;
+  --sidebar-hover: #1a1a1a;
+  --sidebar-active: rgba(237, 106, 43, 0.15);
+
+  /* Neutral adjustments for dark mode context */
+  --neutral-50: #171717;
+  --neutral-100: #262626;
+  --neutral-200: #404040;
+  --neutral-300: #525252;
+  --neutral-700: #d4d4d4;
+  --neutral-800: #e5e5e5;
+  --neutral-900: #f5f5f5;
+  --neutral-950: #ffffff;
+}
+
+/* ============================================
+   THEME TRANSITION
+============================================ */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.3s ease,
+              border-color 0.3s ease,
+              color 0.3s ease,
+              box-shadow 0.3s ease !important;
+}
+
+/* ============================================
+   THEME TOGGLE COMPONENT
+============================================ */
+.theme-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  overflow: hidden;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-hover);
+  transform: scale(1.05);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* Sun Icon (Light Mode) */
+.theme-toggle .sun-icon {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  color: #f59e0b;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: rotate(0deg) scale(1);
+  opacity: 1;
+}
+
+html.dark .theme-toggle .sun-icon {
+  transform: rotate(90deg) scale(0);
+  opacity: 0;
+}
+
+/* Moon Icon (Dark Mode) */
+.theme-toggle .moon-icon {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  color: #6366f1;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: rotate(-90deg) scale(0);
+  opacity: 0;
+}
+
+html.dark .theme-toggle .moon-icon {
+  transform: rotate(0deg) scale(1);
+  opacity: 1;
+}
+
+/* Dark mode toggle styling */
+html.dark .theme-toggle {
+  background: var(--bg-tertiary);
+}
+
+html.dark .theme-toggle:hover {
+  background: var(--bg-hover);
 }
 
 /* ============================================

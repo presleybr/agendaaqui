@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { ReportsManager } from './components/ReportsManager.js';
 import { EmpresasManager } from './components/EmpresasManager.js';
 import superAdminApi, { dashboardApi, empresasApi, agendamentosApi, clientesApi, relatoriosApi } from './services/superAdminApi.js';
+import ThemeManager from './themeManager.js';
 
 class AdminPanel {
   constructor() {

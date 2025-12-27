@@ -4,6 +4,9 @@
  * Controla o fluxo de cadastro por etapas
  */
 
+// Theme Manager - Dark/Light Mode
+import ThemeManager from './themeManager.js';
+
 // API Base URL
 const API_URL = import.meta.env.VITE_API_URL || 'https://agendaaquivistorias.com.br/api';
 
@@ -913,18 +916,24 @@ function initMobileNav() {
     </svg>`
   ];
 
-  // Criar itens de navegação
-  let navHTML = '';
+  // Criar itens de navegação com wrapper inner
+  let navItemsHTML = '';
   for (let i = 1; i <= state.totalSteps; i++) {
     const isActive = i === state.currentStep;
     const isCompleted = i < state.currentStep;
+    const isFuture = i > state.currentStep;
     const label = stepLabels[i - 1];
 
-    navHTML += `
-      <div class="mobile-nav-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}"
+    let classes = 'mobile-nav-item';
+    if (isActive) classes += ' active';
+    if (isCompleted) classes += ' completed';
+    if (isFuture) classes += ' future';
+
+    navItemsHTML += `
+      <div class="${classes}"
            data-step="${i}"
            role="button"
-           tabindex="0"
+           tabindex="${isCompleted ? '0' : '-1'}"
            aria-label="Etapa ${i}: ${label}">
         <div class="nav-icon">
           ${isCompleted ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>` : stepIcons[i - 1]}
@@ -934,7 +943,8 @@ function initMobileNav() {
     `;
   }
 
-  mobileNav.innerHTML = navHTML;
+  // Wrapper com efeito glassmorphism
+  mobileNav.innerHTML = `<div class="mobile-nav-inner">${navItemsHTML}</div>`;
 
   // Adicionar ao body
   document.body.appendChild(mobileNav);
@@ -1004,15 +1014,20 @@ function updateMobileNav() {
     const stepNum = parseInt(item.dataset.step);
     const navIcon = item.querySelector('.nav-icon');
 
-    item.classList.remove('active', 'completed');
+    // Limpar todas as classes de estado
+    item.classList.remove('active', 'completed', 'future');
 
     if (stepNum === state.currentStep) {
       item.classList.add('active');
+      item.setAttribute('tabindex', '-1');
       navIcon.innerHTML = stepIcons[stepNum - 1];
     } else if (stepNum < state.currentStep) {
       item.classList.add('completed');
+      item.setAttribute('tabindex', '0');
       navIcon.innerHTML = checkIcon;
     } else {
+      item.classList.add('future');
+      item.setAttribute('tabindex', '-1');
       navIcon.innerHTML = stepIcons[stepNum - 1];
     }
   });

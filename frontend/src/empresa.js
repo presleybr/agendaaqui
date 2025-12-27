@@ -1,5 +1,6 @@
 import { scheduleService, getImageUrl } from './services/api.js';
 import { ScheduleForm } from './components/ScheduleForm.js';
+import ThemeManager from './themeManager.js';
 
 class EmpresaPage {
   constructor() {

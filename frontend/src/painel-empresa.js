@@ -3,6 +3,9 @@
  * Sistema de gerenciamento para empresas parceiras
  */
 
+// Theme Manager - Dark/Light Mode
+import ThemeManager from './themeManager.js';
+
 // API Base URL
 const API_URL = import.meta.env?.VITE_API_URL || 'https://agendaaqui-backend.onrender.com/api';
 

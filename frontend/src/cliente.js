@@ -3,6 +3,9 @@
  * Painel CRM para empresas/vistoriadores
  */
 
+// Theme Manager - Dark/Light Mode
+import ThemeManager from './themeManager.js';
+
 // ============================================
 // CONFIGURACAO E VARIAVEIS GLOBAIS
 // ============================================
