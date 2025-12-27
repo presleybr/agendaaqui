@@ -892,80 +892,524 @@ body {
   font-weight: 500;
 }
 
-/* Responsive */
-@media (max-width: 600px) {
+/* ============================================
+   MOBILE APP STYLE - Bottom Navigation
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Reset body for app-like experience */
+  body {
+    background: #f5f7fa;
+    padding-bottom: 100px; /* Space for bottom nav */
+  }
+
   .cadastro-container {
-    padding: 12px;
+    padding: 0;
+    max-width: 100%;
   }
 
-  .form-container {
-    padding: 20px;
+  /* Header compacto mobile */
+  .cadastro-header {
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin: 0;
+    border-radius: 0 0 24px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
-  /* Steps mobile - mostrar apenas número */
-  .step-dot .step-label {
+  .cadastro-header .logo {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+  }
+
+  .cadastro-header .logo img {
+    height: 32px;
+  }
+
+  .cadastro-header .tagline {
+    font-size: 0.8rem;
+    opacity: 0.9;
+  }
+
+  /* Esconder progress bar original no mobile */
+  .progress-container {
     display: none;
   }
 
-  .step-dot .step-number {
-    width: 32px;
-    height: 32px;
-    font-size: 0.8rem;
+  /* Form container mobile */
+  .form-container {
+    margin: 16px;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 120px;
   }
 
-  .step-dot.completed .step-number::after {
+  .form-step h2 {
+    font-size: 1.3rem;
+    text-align: center;
+  }
+
+  .step-description {
+    text-align: center;
     font-size: 0.9rem;
   }
 
-  .steps-indicator {
-    gap: 4px;
-    padding: 0 10px;
+  /* Form fields mobile */
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 14px 16px;
+    font-size: 16px; /* Previne zoom no iOS */
+    border-radius: 12px;
   }
 
-  .steps-indicator::before {
-    left: 20px;
-    right: 20px;
-    top: 14px;
-  }
-
-  .progress-container {
-    padding: 16px;
-  }
-
-  .form-navigation {
+  .form-row {
     flex-direction: column;
-    gap: 12px;
+    gap: 0;
   }
 
-  .form-navigation .btn {
-    width: 100%;
-    justify-content: center;
+  .form-row .form-group {
+    flex: 1 1 100% !important;
   }
 
-  .success-actions {
-    flex-direction: column;
-  }
-
-  .success-actions .btn {
-    width: 100%;
-    justify-content: center;
-  }
-
+  /* Input with prefix mobile */
   .input-with-prefix {
     flex-direction: column;
+    border-radius: 12px;
   }
 
   .input-with-prefix .prefix {
     border-right: none;
     border-bottom: 2px solid #e5e7eb;
-    padding: 8px 14px;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .input-with-prefix input {
+    border-radius: 0 0 12px 12px;
+  }
+
+  /* Navigation buttons mobile - above bottom nav */
+  .form-navigation {
+    position: fixed;
+    bottom: 90px;
+    left: 16px;
+    right: 16px;
+    background: white;
+    padding: 12px;
+    border-radius: 16px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 99;
+    flex-direction: row;
+    gap: 10px;
+    margin: 0;
+    border-top: none;
+  }
+
+  .form-navigation .btn {
+    flex: 1;
+    padding: 14px 16px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+    justify-content: center;
+  }
+
+  #btnVoltar {
+    flex: 0.4;
+  }
+
+  #btnAvancar, #btnFinalizar {
+    flex: 0.6;
+  }
+
+  /* Preços mobile */
+  .preco-item {
+    padding: 14px;
+  }
+
+  .preco-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .preco-nome {
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .preco-valor {
+    width: 100%;
+  }
+
+  /* Dias semana mobile */
+  .dias-semana {
+    justify-content: center;
+  }
+
+  .dia-checkbox span {
+    padding: 12px 14px;
+    font-size: 0.85rem;
+  }
+
+  /* PIX info mobile */
+  .pix-info {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+  }
+
+  .pix-icon {
+    margin: 0 auto;
+  }
+
+  /* Taxa exemplo mobile */
+  .taxa-exemplo, .taxa-info {
+    padding: 14px;
+  }
+
+  /* Success modal mobile */
+  .modal-content {
+    padding: 24px;
+    margin: 16px;
+    border-radius: 20px;
+  }
+
+  .success-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .success-actions .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+  }
+
+  /* Resumo mobile */
+  .resumo-section {
+    padding: 14px;
+  }
+
+  .resumo-item {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .resumo-item .label {
+    font-size: 0.8rem;
+  }
+
+  .resumo-item .value {
+    font-size: 0.95rem;
+  }
+}
+
+/* ============================================
+   BOTTOM NAVIGATION - App Style
+   ============================================ */
+
+@media (max-width: 768px) {
+  /* Container do bottom nav - será criado via JS */
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 8px 12px 20px 12px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    border-radius: 24px 24px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .mobile-nav-items {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 4px;
+    position: relative;
+  }
+
+  .mobile-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .mobile-nav-item .nav-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .mobile-nav-item .nav-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke: #6b7280;
+    stroke-width: 2;
+  }
+
+  .mobile-nav-item .nav-label {
+    font-size: 0.6rem;
+    color: #9ca3af;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50px;
+  }
+
+  /* Step completado */
+  .mobile-nav-item.completed .nav-icon {
+    background: #10b981;
+    color: white;
+  }
+
+  .mobile-nav-item.completed .nav-icon svg {
+    stroke: white;
+    width: 16px;
+    height: 16px;
+  }
+
+  .mobile-nav-item.completed .nav-label {
+    color: #10b981;
+  }
+
+  /* Step ativo - destaque maior */
+  .mobile-nav-item.active {
+    transform: translateY(-8px);
+  }
+
+  .mobile-nav-item.active .nav-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 1rem;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    animation: pulse-active 2s infinite;
+  }
+
+  .mobile-nav-item.active .nav-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: white;
+  }
+
+  .mobile-nav-item.active .nav-label {
+    color: #667eea;
+    font-weight: 700;
+    font-size: 0.7rem;
+  }
+
+  @keyframes pulse-active {
+    0%, 100% {
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    }
+    50% {
+      box-shadow: 0 8px 35px rgba(102, 126, 234, 0.7);
+    }
+  }
+
+  /* Indicador de progresso no bottom nav */
+  .mobile-progress-bar {
+    position: absolute;
+    top: -2px;
+    left: 12px;
+    right: 12px;
+    height: 3px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .mobile-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+}
+
+/* ============================================
+   SMALL PHONES (< 380px)
+   ============================================ */
+
+@media (max-width: 380px) {
+  .cadastro-header {
+    padding: 12px;
+  }
+
+  .cadastro-header .logo {
+    font-size: 1rem;
+  }
+
+  .cadastro-header .tagline {
+    font-size: 0.75rem;
+  }
+
+  .form-container {
+    margin: 12px;
+    padding: 16px;
+  }
+
+  .form-step h2 {
+    font-size: 1.1rem;
+  }
+
+  .mobile-nav-item .nav-label {
+    font-size: 0.55rem;
+    max-width: 40px;
+  }
+
+  .mobile-nav-item .nav-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 0.65rem;
+  }
+
+  .mobile-nav-item .nav-icon svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .mobile-nav-item.active .nav-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .mobile-nav-item.active .nav-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .form-navigation {
+    bottom: 80px;
+    padding: 10px;
+  }
+
+  .form-navigation .btn {
+    padding: 12px;
+    font-size: 0.85rem;
+  }
+
+  .dia-checkbox span {
+    padding: 10px 12px;
     font-size: 0.8rem;
   }
 }
 
-/* Tablet */
-@media (max-width: 768px) and (min-width: 601px) {
-  .step-dot .step-label {
-    font-size: 0.65rem;
+/* ============================================
+   TABLET (601px - 768px)
+   ============================================ */
+
+@media (min-width: 601px) and (max-width: 768px) {
+  .mobile-nav-item .nav-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .mobile-nav-item .nav-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .mobile-nav-item.active .nav-icon {
+    width: 52px;
+    height: 52px;
+  }
+
+  .mobile-nav-item.active .nav-icon svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .mobile-nav-item .nav-label {
+    font-size: 0.7rem;
+    max-width: 70px;
+  }
+
+  .form-container {
+    margin: 20px;
+    padding: 24px;
+  }
+}
+
+/* ============================================
+   LANDSCAPE MODE
+   ============================================ */
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .cadastro-header {
+    padding: 10px 16px;
+  }
+
+  .cadastro-header .tagline {
+    display: none;
+  }
+
+  .form-container {
+    margin: 10px 16px;
+    margin-bottom: 100px;
+  }
+
+  .mobile-bottom-nav {
+    padding: 6px 12px 12px 12px;
+  }
+
+  .mobile-nav-item.active {
+    transform: translateY(-4px);
+  }
+
+  .mobile-nav-item.active .nav-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .mobile-nav-item.active .nav-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .form-navigation {
+    bottom: 70px;
+  }
+}
+
+/* ============================================
+   DESKTOP - Keep original styles
+   ============================================ */
+
+@media (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none !important;
   }
 }

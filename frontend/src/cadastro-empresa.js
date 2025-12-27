@@ -24,9 +24,23 @@ document.addEventListener('DOMContentLoaded', () => {
   initElements();
   initEventListeners();
   initMasks();
+  initMobileNav();
   updateProgress();
   updateHorariosPreview();
 });
+
+/**
+ * Labels das etapas
+ */
+const stepLabels = [
+  'Dados',
+  'Endereço',
+  'PIX',
+  'Visual',
+  'Preços',
+  'Horários',
+  'Confirmar'
+];
 
 /**
  * Inicializa referências aos elementos do DOM
@@ -705,6 +719,7 @@ function updateStep() {
   elements.btnFinalizar.style.display = state.currentStep === state.totalSteps ? 'flex' : 'none';
 
   updateProgress();
+  updateMobileNav();
 
   // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -811,4 +826,158 @@ async function handleSubmit(e) {
     console.error('Erro ao enviar cadastro:', error);
     alert('Erro de conexão. Verifique sua internet e tente novamente.');
   }
+}
+
+/**
+ * Inicializa navegação mobile inferior
+ */
+function initMobileNav() {
+  // Criar container da navegação mobile
+  const mobileNav = document.createElement('nav');
+  mobileNav.className = 'mobile-bottom-nav';
+  mobileNav.id = 'mobileBottomNav';
+
+  // Ícones SVG para cada etapa
+  const stepIcons = [
+    // 1. Dados
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+      <polyline points="17 21 17 13 7 13 7 21"/>
+      <polyline points="7 3 7 8 15 8"/>
+    </svg>`,
+    // 2. Endereço
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>`,
+    // 3. PIX
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+      <line x1="1" y1="10" x2="23" y2="10"/>
+    </svg>`,
+    // 4. Visual
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 2a4.5 4.5 0 0 0 0 9 4.5 4.5 0 0 1 0 9"/>
+      <path d="M12 2v20"/>
+    </svg>`,
+    // 5. Preços
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="12" y1="1" x2="12" y2="23"/>
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>`,
+    // 6. Horários
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12 6 12 12 16 14"/>
+    </svg>`,
+    // 7. Confirmar
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>`
+  ];
+
+  // Criar itens de navegação
+  let navHTML = '';
+  for (let i = 1; i <= state.totalSteps; i++) {
+    const isActive = i === state.currentStep;
+    const isCompleted = i < state.currentStep;
+    const label = stepLabels[i - 1];
+
+    navHTML += `
+      <div class="mobile-nav-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}"
+           data-step="${i}"
+           role="button"
+           tabindex="0"
+           aria-label="Etapa ${i}: ${label}">
+        <div class="nav-icon">
+          ${isCompleted ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>` : stepIcons[i - 1]}
+        </div>
+        <span class="nav-label">${label}</span>
+      </div>
+    `;
+  }
+
+  mobileNav.innerHTML = navHTML;
+
+  // Adicionar ao body
+  document.body.appendChild(mobileNav);
+
+  // Event listeners para navegação
+  mobileNav.querySelectorAll('.mobile-nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const targetStep = parseInt(item.dataset.step);
+      // Só permite ir para steps anteriores (completados)
+      if (targetStep < state.currentStep) {
+        goToStep(targetStep);
+      }
+    });
+
+    // Suporte a teclado
+    item.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        item.click();
+      }
+    });
+  });
+}
+
+/**
+ * Atualiza navegação mobile quando step muda
+ */
+function updateMobileNav() {
+  const mobileNav = document.getElementById('mobileBottomNav');
+  if (!mobileNav) return;
+
+  const stepIcons = [
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+      <polyline points="17 21 17 13 7 13 7 21"/>
+      <polyline points="7 3 7 8 15 8"/>
+    </svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+      <line x1="1" y1="10" x2="23" y2="10"/>
+    </svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 2a4.5 4.5 0 0 0 0 9 4.5 4.5 0 0 1 0 9"/>
+      <path d="M12 2v20"/>
+    </svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="12" y1="1" x2="12" y2="23"/>
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12 6 12 12 16 14"/>
+    </svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>`
+  ];
+
+  const checkIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+  mobileNav.querySelectorAll('.mobile-nav-item').forEach(item => {
+    const stepNum = parseInt(item.dataset.step);
+    const navIcon = item.querySelector('.nav-icon');
+
+    item.classList.remove('active', 'completed');
+
+    if (stepNum === state.currentStep) {
+      item.classList.add('active');
+      navIcon.innerHTML = stepIcons[stepNum - 1];
+    } else if (stepNum < state.currentStep) {
+      item.classList.add('completed');
+      navIcon.innerHTML = checkIcon;
+    } else {
+      navIcon.innerHTML = stepIcons[stepNum - 1];
+    }
+  });
 }
