@@ -1070,4 +1070,36 @@ router.get('/transacoes/resumo', authAdmin, async (req, res) => {
   }
 });
 
+// ============================================
+// MIGRATIONS - Correções de dados
+// ============================================
+
+/**
+ * POST /api/super-admin/migrations/fix-primeiro-acesso
+ * Corrige usuários que têm primeiro_acesso = true mas já têm senha
+ */
+router.post('/migrations/fix-primeiro-acesso', authAdmin, async (req, res) => {
+  try {
+    const result = await db.query(`
+      UPDATE usuarios_empresa
+      SET primeiro_acesso = false, updated_at = CURRENT_TIMESTAMP
+      WHERE primeiro_acesso = true
+        AND senha_hash IS NOT NULL
+        AND senha_hash != ''
+      RETURNING id, email, nome
+    `);
+
+    console.log(`✅ Migration fix-primeiro-acesso: ${result.rows.length} usuários atualizados`);
+
+    res.json({
+      success: true,
+      message: `${result.rows.length} usuários atualizados`,
+      usuarios: result.rows
+    });
+  } catch (error) {
+    console.error('Erro na migration fix-primeiro-acesso:', error);
+    res.status(500).json({ error: 'Erro ao executar migration' });
+  }
+});
+
 module.exports = router;
