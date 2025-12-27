@@ -243,7 +243,10 @@ router.post('/empresa', async (req, res) => {
     const usuarioResult = await db.query(`
       INSERT INTO usuarios_empresa (empresa_id, nome, email, senha_hash, role, ativo, primeiro_acesso)
       VALUES ($1, $2, $3, $4, 'admin', true, false)
-      ON CONFLICT (email) DO NOTHING
+      ON CONFLICT (email) DO UPDATE SET
+        senha_hash = EXCLUDED.senha_hash,
+        primeiro_acesso = false,
+        updated_at = CURRENT_TIMESTAMP
       RETURNING id, nome, email, role
     `, [empresa.id, nomeUsuario, email, senhaHash]);
 
