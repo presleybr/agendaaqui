@@ -4,7 +4,7 @@ import { formatters } from './utils/validators.js';
 import { format } from 'date-fns';
 import { ReportsManager } from './components/ReportsManager.js';
 import { EmpresasManager } from './components/EmpresasManager.js';
-import superAdminApi, { dashboardApi, empresasApi, agendamentosApi, clientesApi, relatoriosApi } from './services/superAdminApi.js';
+import superAdminApi, { dashboardApi, empresasApi, agendamentosApi, clientesApi, relatoriosApi, configuracoesApi } from './services/superAdminApi.js';
 import ThemeManager from './themeManager.js';
 
 class AdminPanel {
@@ -1643,31 +1643,34 @@ class AdminPanel {
 
   async loadConfiguracoes() {
     try {
-      console.log('📋 Loading configuracoes...');
-      const response = await api.get('/config');
+      console.log('📋 Loading configuracoes from Super Admin API...');
+      const response = await configuracoesApi.get();
       console.log('✅ Configuracoes loaded:', response);
 
+      // Extrair configurações do objeto retornado
+      const configs = response.configuracoes || response || {};
+
       // Horários (em formato HH:MM)
-      const horarioInicio = response.horario_inicio || '08:00';
-      const horarioFim = response.horario_fim || '18:00';
+      const horarioInicio = configs.horario_inicio || '08:00';
+      const horarioFim = configs.horario_fim || '18:00';
       document.getElementById('horarioInicio').value = horarioInicio;
       document.getElementById('horarioFim').value = horarioFim;
 
       // Preços (converter de centavos para reais)
-      const precoCautelar = (parseInt(response.preco_cautelar || 15000) / 100).toFixed(2);
-      const precoTransferencia = (parseInt(response.preco_transferencia || 12000) / 100).toFixed(2);
-      const precoOutros = (parseInt(response.preco_outros || 10000) / 100).toFixed(2);
+      const precoCautelar = (parseInt(configs.preco_cautelar || 15000) / 100).toFixed(2);
+      const precoTransferencia = (parseInt(configs.preco_transferencia || 12000) / 100).toFixed(2);
+      const precoOutros = (parseInt(configs.preco_outros || 10000) / 100).toFixed(2);
       document.getElementById('precoCautelar').value = precoCautelar;
       document.getElementById('precoTransferencia').value = precoTransferencia;
       document.getElementById('precoOutros').value = precoOutros;
 
       // Notificações (converter string "true"/"false" para boolean)
-      const emailConfirmacao = response.notificacao_email_confirmacao === 'true' || response.notificacao_email_confirmacao === true;
-      const lembrete24h = response.notificacao_lembrete_24h === 'true' || response.notificacao_lembrete_24h === true;
+      const emailConfirmacao = configs.notificacao_email_confirmacao === 'true' || configs.notificacao_email_confirmacao === true;
+      const lembrete24h = configs.notificacao_lembrete_24h === 'true' || configs.notificacao_lembrete_24h === true;
       document.getElementById('notifEmailConfirmacao').checked = emailConfirmacao;
       document.getElementById('notifLembrete24h').checked = lembrete24h;
 
-      console.log('✅ Configuracoes preenchidas no formulário');
+      console.log('✅ Configuracoes preenchidas no formulário (Super Admin API)');
     } catch (error) {
       console.error('❌ Error loading configuracoes:', error);
       alert('Erro ao carregar configurações');
@@ -1709,8 +1712,8 @@ class AdminPanel {
         horario_fim: horarioFim
       };
 
-      console.log('💾 Salvando horários:', data);
-      await api.put('/config', data);
+      console.log('💾 Salvando horários via Super Admin API:', data);
+      await configuracoesApi.salvar(data);
       alert('Horários salvos com sucesso!');
     } catch (error) {
       console.error('❌ Error saving horarios:', error);
@@ -1736,8 +1739,8 @@ class AdminPanel {
         preco_outros: Math.round(precoOutros * 100).toString()
       };
 
-      console.log('💾 Salvando preços:', data);
-      await api.put('/config', data);
+      console.log('💾 Salvando preços via Super Admin API:', data);
+      await configuracoesApi.salvar(data);
       alert('Preços salvos com sucesso!');
     } catch (error) {
       console.error('❌ Error saving precos:', error);
@@ -1755,8 +1758,8 @@ class AdminPanel {
         notificacao_lembrete_24h: lembrete24h.toString()
       };
 
-      console.log('💾 Salvando notificações:', data);
-      await api.put('/config', data);
+      console.log('💾 Salvando notificações via Super Admin API:', data);
+      await configuracoesApi.salvar(data);
       alert('Configurações de notificação salvadas com sucesso!');
     } catch (error) {
       console.error('❌ Error saving notificacoes:', error);
@@ -1796,9 +1799,13 @@ class AdminPanel {
 
     try {
       console.log(`📅 Loading appointments for calendar: ${format(firstDay, 'yyyy-MM-dd')} to ${format(lastDay, 'yyyy-MM-dd')}`);
-      const response = await api.get(`/agendamentos?data_inicio=${format(firstDay, 'yyyy-MM-dd')}&data_fim=${format(lastDay, 'yyyy-MM-dd')}`);
+      // Usar Super Admin API para puxar agendamentos de TODAS as empresas
+      const response = await agendamentosApi.listar({
+        data_inicio: format(firstDay, 'yyyy-MM-dd'),
+        data_fim: format(lastDay, 'yyyy-MM-dd')
+      });
       this.appointments = response.agendamentos || [];
-      console.log(`📅 Calendar loaded ${this.appointments.length} appointments`);
+      console.log(`📅 Calendar loaded ${this.appointments.length} appointments from Super Admin API`);
     } catch (error) {
       console.error('Error loading appointments for calendar:', error);
       this.appointments = [];

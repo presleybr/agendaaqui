@@ -768,34 +768,52 @@
 }
 
 .stat-card {
-  background: var(--bg-elevated);
+  background: var(--bg-elevated, #ffffff);
   padding: var(--spacing-6);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-light, #e5e5e5);
   transition: all var(--transition-base);
 }
 
 .stat-card:hover {
-  border-color: var(--border-medium);
+  border-color: var(--border-medium, #d4d4d4);
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
 
+/* Labels dos cards - DEVE ser escuro em fundo branco (light mode) */
 .stat-label {
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-  margin-bottom: var(--spacing-3);
-  font-weight: var(--font-medium);
+  color: #525252 !important; /* Cinza escuro - garante contraste */
+  font-size: var(--text-sm, 0.875rem);
+  margin-bottom: var(--spacing-3, 0.75rem);
+  font-weight: var(--font-medium, 500);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
+/* Dark mode: labels em cinza claro */
+html.dark .stat-label {
+  color: #a3a3a3 !important;
+}
+
+/* Valor dos cards - destaque em laranja */
 .stat-value {
-  font-size: var(--text-4xl);
-  font-weight: var(--font-bold);
-  color: var(--brand-primary);
+  font-size: var(--text-4xl, 2.25rem);
+  font-weight: var(--font-bold, 700);
+  color: var(--brand-primary, #ed6a2b);
   line-height: 1;
   letter-spacing: -0.02em;
+}
+
+/* Info adicional nos cards */
+.stat-info {
+  color: #737373;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+html.dark .stat-info {
+  color: #a3a3a3;
 }
 
 /* ============================================

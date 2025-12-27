@@ -1,4 +1,5 @@
 import api from '../services/api.js';
+import { relatoriosApi, agendamentosApi } from '../services/superAdminApi.js';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO, eachDayOfInterval } from 'date-fns';
 
 /**
@@ -140,70 +141,92 @@ export class ReportsManager {
   }
 
   /**
-   * Busca os dados do relatório da API
+   * Busca os dados do relatório da API do Super Admin
    */
   async fetchReportData() {
     const { startDate, endDate } = this.currentPeriod;
 
-    // Busca agendamentos do período
-    const appointmentsResponse = await api.get(`/agendamentos?data_inicio=${startDate}&data_fim=${endDate}`);
+    // Usar Super Admin API para dados consolidados de TODAS as empresas
+    console.log('📊 Buscando relatório do Super Admin API...');
 
-    // A API retorna { agendamentos: [...], total: X }
+    // Busca resumo do Super Admin (retorna dados consolidados do banco)
+    const resumo = await relatoriosApi.getResumo(startDate, endDate);
+
+    // Busca agendamentos de TODAS as empresas via Super Admin
+    const appointmentsResponse = await agendamentosApi.listar({
+      data_inicio: startDate,
+      data_fim: endDate,
+      limite: 1000
+    });
+
     const appointments = Array.isArray(appointmentsResponse?.agendamentos)
       ? appointmentsResponse.agendamentos
-      : (Array.isArray(appointmentsResponse) ? appointmentsResponse : []);
+      : [];
 
-    // Busca estatísticas
-    const stats = await api.get(`/agendamentos/stats?data_inicio=${startDate}&data_fim=${endDate}`);
-
-    console.log('📊 Dados do relatório:', {
+    console.log('📊 Dados do relatório (Super Admin):', {
       appointments: appointments.length,
-      stats
+      resumo
     });
 
     return {
       appointments,
-      stats: stats || {},
+      stats: resumo.stats || {},
+      por_tipo: resumo.por_tipo || [],
+      receita_diaria: resumo.receita_diaria || [],
+      top_empresas: resumo.top_empresas || [],
+      por_horario: resumo.por_horario || [],
+      novos_clientes: resumo.novos_clientes || 0,
       period: { startDate, endDate }
     };
   }
 
   /**
-   * Atualiza os cards de estatísticas
+   * Atualiza os cards de estatísticas usando dados do Super Admin
    */
   updateStatsCards(data) {
-    const { appointments, stats } = data;
+    const { appointments, stats, novos_clientes } = data;
 
     // Garante que appointments é um array
     const appointmentsList = Array.isArray(appointments) ? appointments : [];
 
-    // Total de agendamentos
-    const totalAppointments = appointmentsList.length;
+    // Total de agendamentos - usar stats do banco ou calcular
+    const totalAppointments = parseInt(stats.total_agendamentos) || appointmentsList.length;
     const totalAppointmentsEl = document.getElementById('reportTotalAppointments');
     if (totalAppointmentsEl) {
       totalAppointmentsEl.textContent = totalAppointments;
     }
 
-    // Receita total (preco está em centavos no BD)
-    const totalRevenue = appointmentsList.reduce((sum, app) => {
-      const preco = parseFloat(app.preco) || 0;
-      return sum + (preco / 100); // Converte de centavos para reais
-    }, 0);
+    // Receita total - usar stats do banco (já vem em centavos)
+    let totalRevenue = 0;
+    if (stats.receita_total) {
+      totalRevenue = parseFloat(stats.receita_total) / 100;
+    } else {
+      // Fallback: calcular a partir dos agendamentos
+      totalRevenue = appointmentsList.reduce((sum, app) => {
+        const preco = parseFloat(app.preco || app.valor) || 0;
+        return sum + (preco / 100);
+      }, 0);
+    }
     const totalRevenueEl = document.getElementById('reportTotalRevenue');
     if (totalRevenueEl) {
       totalRevenueEl.textContent = `R$ ${totalRevenue.toFixed(2)}`;
     }
 
-    // Novos clientes (clientes únicos)
-    const uniqueClients = new Set(appointmentsList.map(app => app.cliente_cpf || app.cliente_id)).size;
+    // Novos clientes - usar dados do Super Admin
     const uniqueClientsEl = document.getElementById('reportNewClients');
     if (uniqueClientsEl) {
-      uniqueClientsEl.textContent = uniqueClients;
+      uniqueClientsEl.textContent = novos_clientes || new Set(appointmentsList.map(app => app.cliente_cpf || app.cliente_id)).size;
     }
 
-    // Taxa de confirmação
-    const confirmed = appointmentsList.filter(app => app.status === 'confirmado' || app.status === 'realizado').length;
-    const confirmationRate = totalAppointments > 0 ? ((confirmed / totalAppointments) * 100).toFixed(1) : '0';
+    // Taxa de confirmação - usar stats do banco
+    let confirmationRate = 0;
+    if (stats.confirmados && stats.realizados && totalAppointments > 0) {
+      const confirmed = parseInt(stats.confirmados) + parseInt(stats.realizados);
+      confirmationRate = ((confirmed / totalAppointments) * 100).toFixed(1);
+    } else {
+      const confirmed = appointmentsList.filter(app => app.status === 'confirmado' || app.status === 'realizado').length;
+      confirmationRate = totalAppointments > 0 ? ((confirmed / totalAppointments) * 100).toFixed(1) : '0';
+    }
     const confirmationRateEl = document.getElementById('reportConfirmationRate');
     if (confirmationRateEl) {
       confirmationRateEl.textContent = `${confirmationRate}%`;
