@@ -62,8 +62,24 @@ function initEventListeners() {
   const nomeInput = document.getElementById('nome');
 
   nomeInput.addEventListener('input', (e) => {
+    const valor = e.target.value;
+    const errorEl = nomeInput.parentElement.querySelector('.error-message');
+
+    // Verificar se parece endereço
+    if (pareceEndereco(valor)) {
+      nomeInput.classList.add('error');
+      if (errorEl) {
+        errorEl.textContent = 'Isso parece um endereço. Digite o nome da sua empresa (ex: Vistoria Express)';
+      }
+      slugInput.value = '';
+      return;
+    } else {
+      nomeInput.classList.remove('error');
+      if (errorEl) errorEl.textContent = '';
+    }
+
     // Auto-gerar slug baseado no nome
-    const slug = gerarSlug(e.target.value);
+    const slug = gerarSlug(valor);
     slugInput.value = slug;
     verificarSlug(slug);
   });
@@ -155,9 +171,34 @@ function initMasks() {
 }
 
 /**
+ * Verifica se o texto parece ser um endereço
+ */
+function pareceEndereco(texto) {
+  const padroesEndereco = [
+    /^rua\s/i,
+    /^av\.?\s/i,
+    /^avenida\s/i,
+    /^travessa\s/i,
+    /^alameda\s/i,
+    /^estrada\s/i,
+    /^rodovia\s/i,
+    /^praça\s/i,
+    /^largo\s/i,
+    /\d{5}-?\d{3}/, // CEP
+    /,\s*\d+/, // número após vírgula
+  ];
+  return padroesEndereco.some(pattern => pattern.test(texto));
+}
+
+/**
  * Gera slug a partir do nome
  */
 function gerarSlug(nome) {
+  // Se parecer endereço, não gerar slug automaticamente
+  if (pareceEndereco(nome)) {
+    return '';
+  }
+
   return nome
     .toLowerCase()
     .normalize('NFD')
@@ -165,6 +206,7 @@ function gerarSlug(nome) {
     .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
     .replace(/\s+/g, '-') // Espaços viram hífens
     .replace(/-+/g, '-') // Remove hífens duplicados
+    .replace(/^-|-$/g, '') // Remove hífens no início/fim
     .substring(0, 50);
 }
 
