@@ -106,93 +106,123 @@ body {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  justify-content: flex-start;
-  gap: 0 !important; /* Remove gap, usar margin no label */
+  justify-content: flex-start !important;
+  gap: 0 !important;
   cursor: pointer;
   transition: all 0.3s;
-  position: relative;
+  position: relative !important;
   z-index: 1;
-  min-width: 70px;
+  min-width: 70px !important;
+  width: auto !important;
   flex: 1;
   max-width: 100px;
-  padding: 0;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
-/* Círculo do número - RESET de position absolute do marketplace.css */
+/* Círculo do número - FORÇAR posicionamento normal no fluxo */
 .step-dot .step-number {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
-  border-radius: 50%;
-  background: #e5e7eb;
-  color: #6b7280;
-  font-weight: 700;
-  font-size: 0.9rem;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  border-radius: 50% !important;
+  background: #e5e7eb !important;
+  color: #6b7280 !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
   transition: all 0.3s;
-  border: 3px solid #e5e7eb;
-  flex-shrink: 0;
-  /* RESET explícito - sobrescreve marketplace.css */
+  border: 3px solid #e5e7eb !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  /* CRÍTICO: Forçar posicionamento estático (não absolute) */
   position: static !important;
-  top: auto !important;
-  left: auto !important;
+  top: unset !important;
+  left: unset !important;
+  right: unset !important;
+  bottom: unset !important;
   transform: none !important;
   z-index: 2;
-  margin: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  /* Garantir ordem no flexbox */
+  order: 0 !important;
 }
 
-/* Label do step - SEM position absolute, COM margin-top */
+/* Label do step - ABAIXO do círculo, nunca atrás */
 .step-dot .step-label {
   display: block !important;
-  position: static !important; /* Garantir que NÃO é absolute */
-  font-size: 0.7rem;
-  color: #6b7280;
+  /* CRÍTICO: Forçar posicionamento estático */
+  position: static !important;
+  top: unset !important;
+  left: unset !important;
+  right: unset !important;
+  bottom: unset !important;
+  transform: none !important;
+  /* Estilos visuais */
+  font-size: 0.7rem !important;
+  color: #6b7280 !important;
   transition: all 0.3s;
-  text-align: center;
-  max-width: 80px;
-  line-height: 1.2;
+  text-align: center !important;
+  max-width: 80px !important;
+  width: auto !important;
+  line-height: 1.2 !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 8px !important; /* Espaçamento entre círculo e texto */
-  margin-bottom: 0;
-  padding: 0;
+  /* CRÍTICO: Espaçamento para ficar ABAIXO do círculo */
+  margin-top: 10px !important;
+  margin-bottom: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding: 0 !important;
+  /* Garantir ordem no flexbox */
+  order: 1 !important;
 }
 
 /* Step Ativo */
 .step-dot.active .step-number {
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
-  color: white;
-  border-color: #2563eb;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-  transform: scale(1.1);
+  background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
+  color: white !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+  transform: scale(1.1) !important; /* Permitir scale, mas manter posição estática */
+  position: static !important; /* Garantir que continua estático */
 }
 
 .step-dot.active .step-label {
-  color: #2563eb;
-  font-weight: 700;
+  color: #2563eb !important;
+  font-weight: 700 !important;
+  position: static !important;
+  margin-top: 10px !important;
 }
 
 /* Step Concluído - com checkmark */
 .step-dot.completed .step-number {
-  background: #10b981;
-  color: white;
-  border-color: #10b981;
-  font-size: 0;
+  background: #10b981 !important;
+  color: white !important;
+  border-color: #10b981 !important;
+  font-size: 0 !important;
+  position: static !important; /* Garantir que continua estático */
+  transform: none !important;
 }
 
 .step-dot.completed .step-number::after {
   content: '✓';
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
 }
 
 .step-dot.completed .step-label {
-  color: #10b981;
-  font-weight: 600;
+  color: #10b981 !important;
+  font-weight: 600 !important;
+  position: static !important;
+  margin-top: 10px !important;
 }
 
 /* Form Container */
