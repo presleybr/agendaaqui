@@ -21,7 +21,12 @@ const DANGEROUS_PATTERNS = [
 ];
 
 const containsDangerousCommand = (sql) => {
-  return DANGEROUS_PATTERNS.some(pattern => pattern.test(sql));
+  // Remover comentários SQL antes de verificar (-- e /* */)
+  const sqlSemComentarios = sql
+    .replace(/--.*$/gm, '')  // Remove comentários de linha
+    .replace(/\/\*[\s\S]*?\*\//g, '');  // Remove comentários de bloco
+
+  return DANGEROUS_PATTERNS.some(pattern => pattern.test(sqlSemComentarios));
 };
 
 const runMigrations = async () => {
