@@ -13,8 +13,8 @@ class SplitPaymentService {
    */
   static calcularTaxa(empresa) {
     // Usa a taxa configurada na empresa (percentual_plataforma)
-    // Padrão: 500 centavos = R$ 5,00
-    const taxaEmpresa = empresa.percentual_plataforma || 500;
+    // Padrão: 1000 centavos = R$ 10,00
+    const taxaEmpresa = empresa.percentual_plataforma || 1000;
 
     console.log(`💰 Taxa da empresa "${empresa.nome}": R$ ${(taxaEmpresa / 100).toFixed(2)}`);
 

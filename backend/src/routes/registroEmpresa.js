@@ -190,7 +190,7 @@ router.post('/empresa', async (req, res) => {
       plano: 'basico',
 
       // Comissão padrão
-      percentual_plataforma: 500 // R$ 5,00
+      percentual_plataforma: 1000 // R$ 10,00
     });
 
     console.log('✅ Empresa criada:', empresa.id);

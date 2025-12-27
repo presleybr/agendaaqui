@@ -20,10 +20,10 @@ class PaymentSplitService {
     const hoje = new Date();
     const diasDesdeInicio = Math.floor((hoje - dataInicio) / (1000 * 60 * 60 * 24));
 
-    // SEMPRE R$ 5,00 fixo para plataforma
-    const valorPlataforma = empresa.percentual_plataforma || 500; // 500 = R$ 5,00
+    // SEMPRE R$ 10,00 fixo para plataforma
+    const valorPlataforma = empresa.percentual_plataforma || 1000; // 1000 = R$ 10,00
     const valorEmpresa = valorTotal - valorPlataforma;
-    const motivo = 'Comissão fixa de R$ 5,00 por transação';
+    const motivo = 'Comissão fixa de R$ 10,00 por transação';
 
     // Validar que o valor total é suficiente
     if (valorTotal < valorPlataforma) {

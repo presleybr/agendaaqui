@@ -56,7 +56,7 @@ class Empresa {
         intervalo_minutos: 60,
         status: 'ativo',
         plano: 'basico',
-        percentual_plataforma: 500,
+        percentual_plataforma: 1000, // R$ 10,00
         cor_primaria: '#2563eb',
         cor_secundaria: '#1e40af',
         cor_texto: '#333333',

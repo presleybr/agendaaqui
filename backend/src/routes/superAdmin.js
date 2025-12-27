@@ -1102,4 +1102,30 @@ router.post('/migrations/fix-primeiro-acesso', authAdmin, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/super-admin/migrations/update-taxa-plataforma
+ * Atualiza taxa da plataforma para R$ 10,00 em todas as empresas
+ */
+router.post('/migrations/update-taxa-plataforma', authAdmin, async (req, res) => {
+  try {
+    const result = await db.query(`
+      UPDATE empresas
+      SET percentual_plataforma = 1000, updated_at = CURRENT_TIMESTAMP
+      WHERE percentual_plataforma = 500 OR percentual_plataforma IS NULL
+      RETURNING id, nome, slug
+    `);
+
+    console.log(`✅ Migration update-taxa-plataforma: ${result.rows.length} empresas atualizadas para R$ 10,00`);
+
+    res.json({
+      success: true,
+      message: `${result.rows.length} empresas atualizadas para taxa de R$ 10,00`,
+      empresas: result.rows
+    });
+  } catch (error) {
+    console.error('Erro na migration update-taxa-plataforma:', error);
+    res.status(500).json({ error: 'Erro ao executar migration' });
+  }
+});
+
 module.exports = router;

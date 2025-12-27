@@ -453,7 +453,7 @@ class EmpresaController {
         mostrar_marca_propria,
 
         // Sistema
-        percentual_plataforma: 500, // R$ 5,00 fixo por transação
+        percentual_plataforma: 1000, // R$ 10,00 fixo por transação
         status: status || 'ativo',
         plano: plano || 'basico'
       });

@@ -267,7 +267,7 @@ class AsaasPaymentController {
 
       // Calcular split
       const valorTotal = pagamento.valor_total || pagamento.valor;
-      const taxaPlataforma = empresa.percentual_plataforma || 500;
+      const taxaPlataforma = empresa.percentual_plataforma || 1000; // R$ 10,00
       const taxaPix = TAXA_PIX_ASAAS;
       const valorEmpresa = valorTotal - taxaPlataforma - taxaPix;
 
