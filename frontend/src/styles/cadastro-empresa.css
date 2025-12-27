@@ -80,14 +80,15 @@ body {
 }
 
 .steps-indicator {
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
   justify-content: space-between;
   align-items: flex-start;
   position: relative;
   padding: 0 10px;
 }
 
-/* Linha conectora entre steps */
+/* Linha conectora entre steps - elemento separado */
 .steps-indicator::before {
   content: '';
   position: absolute;
@@ -97,14 +98,16 @@ body {
   height: 2px;
   background: #e5e7eb;
   z-index: 0;
+  pointer-events: none;
 }
 
+/* Container de cada step - DEVE ser flex column */
 .step-dot {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 0 !important; /* Remove gap, usar margin no label */
   cursor: pointer;
   transition: all 0.3s;
   position: relative;
@@ -112,9 +115,14 @@ body {
   min-width: 70px;
   flex: 1;
   max-width: 100px;
+  padding: 0;
 }
 
+/* Círculo do número - RESET de position absolute do marketplace.css */
 .step-dot .step-number {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   width: 36px;
   height: 36px;
   min-width: 36px;
@@ -122,17 +130,24 @@ body {
   border-radius: 50%;
   background: #e5e7eb;
   color: #6b7280;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-weight: 700;
   font-size: 0.9rem;
   transition: all 0.3s;
   border: 3px solid #e5e7eb;
   flex-shrink: 0;
+  /* RESET explícito - sobrescreve marketplace.css */
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  z-index: 2;
+  margin: 0;
 }
 
+/* Label do step - SEM position absolute, COM margin-top */
 .step-dot .step-label {
+  display: block !important;
+  position: static !important; /* Garantir que NÃO é absolute */
   font-size: 0.7rem;
   color: #6b7280;
   transition: all 0.3s;
@@ -142,7 +157,9 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 0;
+  margin-top: 8px !important; /* Espaçamento entre círculo e texto */
+  margin-bottom: 0;
+  padding: 0;
 }
 
 /* Step Ativo */
