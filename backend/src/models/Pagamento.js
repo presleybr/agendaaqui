@@ -92,6 +92,10 @@ class Pagamento {
       fields.push(`valor_taxa = $${paramIndex++}`);
       values.push(data.valor_taxa);
     }
+    if (data.taxa_pix !== undefined) {
+      fields.push(`taxa_pix = $${paramIndex++}`);
+      values.push(data.taxa_pix);
+    }
     if (data.valor_empresa !== undefined) {
       fields.push(`valor_empresa = $${paramIndex++}`);
       values.push(data.valor_empresa);
@@ -109,7 +113,7 @@ class Pagamento {
       values.push(typeof data.split_data === 'string' ? data.split_data : JSON.stringify(data.split_data));
     }
 
-    fields.push(`atualizado_em = CURRENT_TIMESTAMP`);
+    fields.push(`updated_at = CURRENT_TIMESTAMP`);
     values.push(id);
 
     const query = `

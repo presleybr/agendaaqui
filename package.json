@@ -10,10 +10,19 @@
     "build": "cd frontend && npm run build",
     "start": "cd backend && npm start"
   },
-  "keywords": ["agendamento", "vistoria", "veicular", "nodejs", "express"],
+  "keywords": [
+    "agendamento",
+    "vistoria",
+    "veicular",
+    "nodejs",
+    "express"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
   }
 }

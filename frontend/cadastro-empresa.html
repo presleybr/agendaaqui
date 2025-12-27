@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastre sua Empresa | Agenda Aqui Vistorias</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+  <!-- Meta tags -->
+  <meta name="description" content="Cadastre sua empresa de vistoria veicular e comece a receber agendamentos online.">
+  <meta name="theme-color" content="#2563eb">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Cadastre sua Empresa | Agenda Aqui Vistorias">
+  <meta property="og:description" content="Sistema completo de agendamento para empresas de vistoria veicular">
+  <meta property="og:type" content="website">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/src/styles/cadastro-empresa.css">
+</head>
+<body>
+  <div class="cadastro-container">
+    <!-- Header -->
+    <header class="cadastro-header">
+      <a href="/" class="logo">
+        <img src="/logo.png" alt="Agenda Aqui Vistorias" onerror="this.style.display='none'">
+        <span>Agenda Aqui Vistorias</span>
+      </a>
+      <p class="tagline">Cadastre sua empresa e comece a receber agendamentos online</p>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="steps-indicator" id="stepsIndicator">
+        <div class="step-dot active" data-step="1">
+          <span class="step-number">1</span>
+          <span class="step-label">Dados</span>
+        </div>
+        <div class="step-dot" data-step="2">
+          <span class="step-number">2</span>
+          <span class="step-label">Endere&ccedil;o</span>
+        </div>
+        <div class="step-dot" data-step="3">
+          <span class="step-number">3</span>
+          <span class="step-label">PIX</span>
+        </div>
+        <div class="step-dot" data-step="4">
+          <span class="step-number">4</span>
+          <span class="step-label">Visual</span>
+        </div>
+        <div class="step-dot" data-step="5">
+          <span class="step-number">5</span>
+          <span class="step-label">Pre&ccedil;os</span>
+        </div>
+        <div class="step-dot" data-step="6">
+          <span class="step-number">6</span>
+          <span class="step-label">Hor&aacute;rios</span>
+        </div>
+        <div class="step-dot" data-step="7">
+          <span class="step-number">7</span>
+          <span class="step-label">Confirmar</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Container -->
+    <main class="form-container">
+      <form id="cadastroForm" novalidate>
+
+        <!-- Step 1: Dados Básicos -->
+        <div class="form-step active" data-step="1">
+          <h2>Dados da Empresa</h2>
+          <p class="step-description">Informe os dados b&aacute;sicos da sua empresa</p>
+
+          <div class="form-group">
+            <label for="nome">Nome da Empresa *</label>
+            <input type="text" id="nome" name="nome" required placeholder="Ex: Vistoria Express" maxlength="100">
+            <span class="error-message"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="slug">Endere&ccedil;o da sua p&aacute;gina *</label>
+            <div class="input-with-prefix">
+              <span class="prefix">agendaaquivistorias.com.br/</span>
+              <input type="text" id="slug" name="slug" required placeholder="sua-empresa" maxlength="50" pattern="[a-z0-9-]+">
+            </div>
+            <span class="slug-status"></span>
+            <span class="error-message"></span>
+            <small>Use apenas letras min&uacute;sculas, n&uacute;meros e h&iacute;fen</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cnpj">CNPJ</label>
+              <input type="text" id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" maxlength="18">
+              <span class="error-message"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="telefone">Telefone / WhatsApp</label>
+              <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000" maxlength="15">
+              <span class="error-message"></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required placeholder="contato@suaempresa.com.br">
+            <span class="email-status"></span>
+            <span class="error-message"></span>
+            <small>Ser&aacute; usado para login no painel administrativo</small>
+          </div>
+        </div>
+
+        <!-- Step 2: Endereço -->
+        <div class="form-step" data-step="2">
+          <h2>Endere&ccedil;o</h2>
+          <p class="step-description">Onde sua empresa est&aacute; localizada?</p>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 0 0 150px;">
+              <label for="cep">CEP</label>
+              <input type="text" id="cep" name="cep" placeholder="00000-000" maxlength="9">
+              <span class="cep-status"></span>
+            </div>
+
+            <div class="form-group" style="flex: 1;">
+              <label for="endereco">Endere&ccedil;o</label>
+              <input type="text" id="endereco" name="endereco" placeholder="Rua, Avenida...">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 0 0 100px;">
+              <label for="numero">N&uacute;mero</label>
+              <input type="text" id="numero" name="numero" placeholder="123">
+            </div>
+
+            <div class="form-group" style="flex: 1;">
+              <label for="complemento">Complemento</label>
+              <input type="text" id="complemento" name="complemento" placeholder="Sala, Bloco...">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label for="bairro">Bairro</label>
+              <input type="text" id="bairro" name="bairro" placeholder="Bairro">
+            </div>
+
+            <div class="form-group" style="flex: 1;">
+              <label for="cidade">Cidade</label>
+              <input type="text" id="cidade" name="cidade" placeholder="Cidade">
+            </div>
+
+            <div class="form-group" style="flex: 0 0 80px;">
+              <label for="estado">Estado</label>
+              <select id="estado" name="estado">
+                <option value="">UF</option>
+                <option value="AC">AC</option>
+                <option value="AL">AL</option>
+                <option value="AP">AP</option>
+                <option value="AM">AM</option>
+                <option value="BA">BA</option>
+                <option value="CE">CE</option>
+                <option value="DF">DF</option>
+                <option value="ES">ES</option>
+                <option value="GO">GO</option>
+                <option value="MA">MA</option>
+                <option value="MT">MT</option>
+                <option value="MS">MS</option>
+                <option value="MG">MG</option>
+                <option value="PA">PA</option>
+                <option value="PB">PB</option>
+                <option value="PR">PR</option>
+                <option value="PE">PE</option>
+                <option value="PI">PI</option>
+                <option value="RJ">RJ</option>
+                <option value="RN">RN</option>
+                <option value="RS">RS</option>
+                <option value="RO">RO</option>
+                <option value="RR">RR</option>
+                <option value="SC">SC</option>
+                <option value="SP">SP</option>
+                <option value="SE">SE</option>
+                <option value="TO">TO</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: PIX -->
+        <div class="form-step" data-step="3">
+          <h2>Chave PIX</h2>
+          <p class="step-description">Informe a chave PIX para receber seus pagamentos</p>
+
+          <div class="pix-info">
+            <div class="pix-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <div class="pix-text">
+              <strong>Recebimento Autom&aacute;tico</strong>
+              <p>Quando um cliente pagar, o valor ser&aacute; transferido automaticamente para sua chave PIX.</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="tipo_chave_pix">Tipo de Chave</label>
+            <select id="tipo_chave_pix" name="tipo_chave_pix">
+              <option value="cpf">CPF</option>
+              <option value="cnpj">CNPJ</option>
+              <option value="email">Email</option>
+              <option value="telefone">Telefone</option>
+              <option value="aleatoria">Chave Aleat&oacute;ria</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="chave_pix">Chave PIX *</label>
+            <input type="text" id="chave_pix" name="chave_pix" required placeholder="Digite sua chave PIX">
+            <span class="error-message"></span>
+          </div>
+
+          <div class="taxa-info">
+            <p><strong>Taxa por vistoria:</strong> R$ 5,00 (fixa)</p>
+            <p><small>Esta taxa &eacute; descontada automaticamente de cada pagamento recebido.</small></p>
+          </div>
+        </div>
+
+        <!-- Step 4: Personalização -->
+        <div class="form-step" data-step="4">
+          <h2>Personaliza&ccedil;&atilde;o</h2>
+          <p class="step-description">Deixe sua p&aacute;gina com a cara da sua empresa</p>
+
+          <div class="form-group">
+            <label for="descricao">Descri&ccedil;&atilde;o da Empresa</label>
+            <textarea id="descricao" name="descricao" rows="3" placeholder="Conte um pouco sobre sua empresa..." maxlength="500"></textarea>
+            <small><span id="descricaoCount">0</span>/500 caracteres</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cor_primaria">Cor Prim&aacute;ria</label>
+              <div class="color-picker-wrapper">
+                <input type="color" id="cor_primaria" name="cor_primaria" value="#2563eb">
+                <input type="text" id="cor_primaria_text" value="#2563eb" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="cor_secundaria">Cor Secund&aacute;ria</label>
+              <div class="color-picker-wrapper">
+                <input type="color" id="cor_secundaria" name="cor_secundaria" value="#1e40af">
+                <input type="text" id="cor_secundaria_text" value="#1e40af" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$">
+              </div>
+            </div>
+          </div>
+
+          <div class="preview-colors">
+            <span>Preview:</span>
+            <button type="button" class="preview-btn" id="previewBtn">Bot&atilde;o de Exemplo</button>
+          </div>
+
+          <div class="form-group">
+            <label for="logo_url">URL do Logo (opcional)</label>
+            <input type="url" id="logo_url" name="logo_url" placeholder="https://seusite.com/logo.png">
+            <small>Cole a URL de uma imagem do seu logo</small>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="whatsapp">WhatsApp</label>
+              <input type="tel" id="whatsapp" name="whatsapp" placeholder="(00) 00000-0000">
+            </div>
+
+            <div class="form-group">
+              <label for="instagram_url">Instagram</label>
+              <input type="text" id="instagram_url" name="instagram_url" placeholder="@suaempresa">
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5: Preços -->
+        <div class="form-step" data-step="5">
+          <h2>Pre&ccedil;os das Vistorias</h2>
+          <p class="step-description">Defina os pre&ccedil;os dos seus servi&ccedil;os</p>
+
+          <div class="precos-container" id="precosContainer">
+            <div class="preco-item">
+              <div class="preco-header">
+                <input type="text" class="preco-nome" value="Vistoria Cautelar" data-categoria="cautelar">
+                <div class="preco-valor">
+                  <span>R$</span>
+                  <input type="number" class="preco-input" value="150" min="0" step="0.01" data-categoria="cautelar">
+                </div>
+              </div>
+              <input type="text" class="preco-descricao" placeholder="Descri&ccedil;&atilde;o (opcional)" data-categoria="cautelar">
+            </div>
+
+            <div class="preco-item">
+              <div class="preco-header">
+                <input type="text" class="preco-nome" value="Transfer&ecirc;ncia" data-categoria="transferencia">
+                <div class="preco-valor">
+                  <span>R$</span>
+                  <input type="number" class="preco-input" value="120" min="0" step="0.01" data-categoria="transferencia">
+                </div>
+              </div>
+              <input type="text" class="preco-descricao" placeholder="Descri&ccedil;&atilde;o (opcional)" data-categoria="transferencia">
+            </div>
+
+            <div class="preco-item">
+              <div class="preco-header">
+                <input type="text" class="preco-nome" value="Revistoria" data-categoria="revistoria">
+                <div class="preco-valor">
+                  <span>R$</span>
+                  <input type="number" class="preco-input" value="100" min="0" step="0.01" data-categoria="revistoria">
+                </div>
+              </div>
+              <input type="text" class="preco-descricao" placeholder="Descri&ccedil;&atilde;o (opcional)" data-categoria="revistoria">
+            </div>
+          </div>
+
+          <button type="button" class="btn-add-preco" id="btnAddPreco">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Adicionar outro servi&ccedil;o
+          </button>
+
+          <div class="taxa-exemplo">
+            <h4>Exemplo de c&aacute;lculo:</h4>
+            <p>Vistoria Cautelar: R$ 150,00</p>
+            <p>+ Taxa PIX: R$ 1,99</p>
+            <p><strong>Cliente paga: R$ 151,99</strong></p>
+            <p class="destaque">Voc&ecirc; recebe: R$ 145,00 (ap&oacute;s taxa da plataforma)</p>
+          </div>
+        </div>
+
+        <!-- Step 6: Horários -->
+        <div class="form-step" data-step="6">
+          <h2>Hor&aacute;rios de Funcionamento</h2>
+          <p class="step-description">Configure os hor&aacute;rios dispon&iacute;veis para agendamento</p>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="horario_inicio">Hor&aacute;rio de In&iacute;cio</label>
+              <input type="time" id="horario_inicio" name="horario_inicio" value="08:00">
+            </div>
+
+            <div class="form-group">
+              <label for="horario_fim">Hor&aacute;rio de T&eacute;rmino</label>
+              <input type="time" id="horario_fim" name="horario_fim" value="18:00">
+            </div>
+
+            <div class="form-group">
+              <label for="intervalo_minutos">Intervalo entre vistorias</label>
+              <select id="intervalo_minutos" name="intervalo_minutos">
+                <option value="30">30 minutos</option>
+                <option value="45">45 minutos</option>
+                <option value="60" selected>1 hora</option>
+                <option value="90">1h 30min</option>
+                <option value="120">2 horas</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Dias de Funcionamento</label>
+            <div class="dias-semana">
+              <label class="dia-checkbox">
+                <input type="checkbox" name="dias_trabalho" value="0">
+                <span>Dom</span>
+              </label>
+              <label class="dia-checkbox">
+                <input type="checkbox" name="dias_trabalho" value="1" checked>
+                <span>Seg</span>
+              </label>
+              <label class="dia-checkbox">
+                <input type="checkbox" name="dias_trabalho" value="2" checked>
+                <span>Ter</span>
+              </label>
+              <label class="dia-checkbox">
+                <input type="checkbox" name="dias_trabalho" value="3" checked>
+                <span>Qua</span>
+              </label>
+              <label class="dia-checkbox">
+                <input type="checkbox" name="dias_trabalho" value="4" checked>
+                <span>Qui</span>
+              </label>
+              <label class="dia-checkbox">
+                <input type="checkbox" name="dias_trabalho" value="5" checked>
+                <span>Sex</span>
+              </label>
+              <label class="dia-checkbox">
+                <input type="checkbox" name="dias_trabalho" value="6" checked>
+                <span>S&aacute;b</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="horarios-preview">
+            <h4>Preview da Agenda:</h4>
+            <div id="horariosPreview" class="slots-preview"></div>
+          </div>
+        </div>
+
+        <!-- Step 7: Confirmação -->
+        <div class="form-step" data-step="7">
+          <h2>Confirme seus dados</h2>
+          <p class="step-description">Revise as informa&ccedil;&otilde;es antes de finalizar</p>
+
+          <div class="resumo-container" id="resumoContainer">
+            <!-- Preenchido via JavaScript -->
+          </div>
+
+          <div class="termos-container">
+            <label class="termos-checkbox">
+              <input type="checkbox" id="aceiteTermos" required>
+              <span>Li e aceito os <a href="#" target="_blank">termos de uso</a> e a <a href="#" target="_blank">pol&iacute;tica de privacidade</a></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="form-navigation">
+          <button type="button" class="btn btn-secondary" id="btnVoltar" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            Voltar
+          </button>
+
+          <button type="button" class="btn btn-primary" id="btnAvancar">
+            Avan&ccedil;ar
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+
+          <button type="submit" class="btn btn-success" id="btnFinalizar" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Finalizar Cadastro
+          </button>
+        </div>
+      </form>
+    </main>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+      <div class="modal-content success-modal">
+        <div class="success-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <h2>Cadastro Realizado!</h2>
+        <p>Sua empresa foi cadastrada com sucesso.</p>
+
+        <div class="success-info" id="successInfo">
+          <!-- Preenchido via JavaScript -->
+        </div>
+
+        <div class="success-actions">
+          <a href="#" class="btn btn-primary" id="btnAcessarPagina">
+            Ver Minha P&aacute;gina
+          </a>
+          <a href="/painel-empresa.html" class="btn btn-secondary">
+            Acessar Painel Admin
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner"></div>
+      <p>Processando cadastro...</p>
+    </div>
+  </div>
+
+  <!-- Script -->
+  <script type="module" src="/src/cadastro-empresa.js"></script>
+</body>
+</html>

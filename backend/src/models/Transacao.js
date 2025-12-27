@@ -112,11 +112,26 @@ class Transacao {
     }
   }
 
+  static async findByPixTxid(pixTxid) {
+    if (usePostgres) {
+      const result = await db.query(
+        'SELECT * FROM transacoes WHERE pix_txid = $1',
+        [pixTxid]
+      );
+      return result.rows[0];
+    } else {
+      return db.prepare(
+        'SELECT * FROM transacoes WHERE pix_txid = ?'
+      ).get(pixTxid);
+    }
+  }
+
   static async updateStatus(id, status, data = {}) {
     const fields = [usePostgres ? 'status = $1' : 'status = ?'];
     const params = [status];
     let paramIndex = 2;
 
+    // Campos padrão
     if (data.pix_status) {
       fields.push(usePostgres ? `pix_status = $${paramIndex}` : 'pix_status = ?');
       params.push(data.pix_status);
@@ -126,6 +141,31 @@ class Transacao {
     if (data.erro_mensagem) {
       fields.push(usePostgres ? `erro_mensagem = $${paramIndex}` : 'erro_mensagem = ?');
       params.push(data.erro_mensagem);
+      paramIndex++;
+    }
+
+    // Campos Asaas PIX
+    if (data.pix_txid) {
+      fields.push(usePostgres ? `pix_txid = $${paramIndex}` : 'pix_txid = ?');
+      params.push(data.pix_txid);
+      paramIndex++;
+    }
+
+    if (data.pix_tipo) {
+      fields.push(usePostgres ? `pix_tipo = $${paramIndex}` : 'pix_tipo = ?');
+      params.push(data.pix_tipo);
+      paramIndex++;
+    }
+
+    if (data.pix_ambiente) {
+      fields.push(usePostgres ? `pix_ambiente = $${paramIndex}` : 'pix_ambiente = ?');
+      params.push(data.pix_ambiente);
+      paramIndex++;
+    }
+
+    if (data.pix_detalhes) {
+      fields.push(usePostgres ? `pix_detalhes = $${paramIndex}` : 'pix_detalhes = ?');
+      params.push(data.pix_detalhes);
       paramIndex++;
     }
 

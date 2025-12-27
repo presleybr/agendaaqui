@@ -7,6 +7,7 @@ const Empresa = require('../models/Empresa');
 const PrecoVistoria = require('../models/PrecoVistoria');
 const AvailabilityService = require('../utils/availability');
 const emailService = require('../utils/emailService');
+const { TAXA_PIX_ASAAS, calcularValorTotal } = require('../config/taxas');
 
 class AgendamentoController {
   static async create(req, res) {
@@ -60,12 +61,12 @@ class AgendamentoController {
 
       // Obter preço - da categoria de veículo se disponível, senão usa o tipo_vistoria legado
       console.log('💰 Obtendo preços...');
-      let preco;
+      let precoVistoria; // Preço base da vistoria (sem taxas)
 
       if (categoria_veiculo && empresa_id) {
         // Novo sistema: preço por categoria de veículo
-        preco = await PrecoVistoria.getPrecoParaAgendamento(empresa_id, categoria_veiculo);
-        console.log('✅ Preço por categoria de veículo:', preco, 'centavos para categoria:', categoria_veiculo);
+        precoVistoria = await PrecoVistoria.getPrecoParaAgendamento(empresa_id, categoria_veiculo);
+        console.log('✅ Preço por categoria de veículo:', precoVistoria, 'centavos para categoria:', categoria_veiculo);
       } else if (empresa_id) {
         // Sistema legado: preço por tipo de vistoria da empresa
         const empresa = await Empresa.findById(empresa_id);
@@ -75,20 +76,24 @@ class AgendamentoController {
             transferencia: empresa.preco_transferencia,
             outros: empresa.preco_outros
           };
-          preco = precosEmpresa[tipo_vistoria] || precosEmpresa.outros;
-          console.log('✅ Preço da empresa (legado):', preco, 'centavos para tipo:', tipo_vistoria);
+          precoVistoria = precosEmpresa[tipo_vistoria] || precosEmpresa.outros;
+          console.log('✅ Preço da empresa (legado):', precoVistoria, 'centavos para tipo:', tipo_vistoria);
         } else {
           // Fallback para configuração global se empresa não encontrada
           const precos = await Configuracao.getPrices();
-          preco = precos[tipo_vistoria] || precos.outros;
-          console.log('⚠️ Empresa não encontrada, usando preço global:', preco);
+          precoVistoria = precos[tipo_vistoria] || precos.outros;
+          console.log('⚠️ Empresa não encontrada, usando preço global:', precoVistoria);
         }
       } else {
         // Usar configuração global (página principal)
         const precos = await Configuracao.getPrices();
-        preco = precos[tipo_vistoria] || precos.outros;
-        console.log('✅ Preço global:', preco, 'para tipo:', tipo_vistoria);
+        precoVistoria = precos[tipo_vistoria] || precos.outros;
+        console.log('✅ Preço global:', precoVistoria, 'para tipo:', tipo_vistoria);
       }
+
+      // Adicionar taxa PIX Asaas ao valor total (cliente paga)
+      const preco = calcularValorTotal(precoVistoria, true);
+      console.log('💳 Valor total com taxa PIX:', preco, 'centavos (vistoria:', precoVistoria, '+ taxa PIX:', TAXA_PIX_ASAAS, ')');
 
       // Combinar data e horário em timestamp
       const data_hora = `${data} ${horario}:00`;

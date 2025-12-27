@@ -2,6 +2,8 @@ const Empresa = require('../models/Empresa');
 const Configuracao = require('../models/Configuracao');
 const Transacao = require('../models/Transacao');
 const Pagamento = require('../models/Pagamento');
+const PixTransferService = require('./PixTransferService');
+const { TAXA_PIX_ASAAS, calcularSplit } = require('../config/taxas');
 
 class SplitPaymentService {
   /**
@@ -48,15 +50,20 @@ class SplitPaymentService {
         throw new Error('Empresa não encontrada');
       }
 
-      // Calcular taxa usando a configuração da empresa
-      const taxa = this.calcularTaxa(empresa);
+      // Calcular taxa da plataforma usando a configuração da empresa
+      const taxaPlataforma = this.calcularTaxa(empresa);
 
       // Usar valor_total (em centavos) do pagamento
       const valorTotal = pagamento.valor_total || pagamento.valor || 0;
-      const valorEmpresa = valorTotal - taxa;
+
+      // Taxa PIX Asaas (R$ 1,99 = 199 centavos)
+      const taxaPix = TAXA_PIX_ASAAS;
+
+      // Valor que a empresa recebe = Total - Taxa Plataforma - Taxa PIX
+      const valorEmpresa = valorTotal - taxaPlataforma - taxaPix;
 
       if (valorEmpresa < 0) {
-        throw new Error(`Valor do pagamento (R$ ${(valorTotal/100).toFixed(2)}) menor que a taxa (R$ ${(taxa/100).toFixed(2)})`);
+        throw new Error(`Valor do pagamento (R$ ${(valorTotal/100).toFixed(2)}) menor que as taxas (R$ ${((taxaPlataforma + taxaPix)/100).toFixed(2)})`);
       }
 
       console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
@@ -65,19 +72,22 @@ class SplitPaymentService {
       console.log(`   Pagamento ID: ${pagamento.id}`);
       console.log(`   Empresa: ${empresa.nome} (ID: ${empresa.id})`);
       console.log(`   Valor Total: R$ ${(valorTotal / 100).toFixed(2)}`);
-      console.log(`   Taxa Plataforma: R$ ${(taxa / 100).toFixed(2)}`);
-      console.log(`   Valor Empresa: R$ ${(valorEmpresa / 100).toFixed(2)}`);
+      console.log(`   ├─ Taxa Plataforma: R$ ${(taxaPlataforma / 100).toFixed(2)} (fica com você)`);
+      console.log(`   ├─ Taxa PIX Asaas: R$ ${(taxaPix / 100).toFixed(2)} (custo transferência)`);
+      console.log(`   └─ Valor Empresa: R$ ${(valorEmpresa / 100).toFixed(2)} (repasse)`);
       console.log(`   Chave PIX: ${empresa.chave_pix || empresa.pix_key || 'Não configurada'}`);
       console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
 
       // Atualizar pagamento com dados do split
       await Pagamento.update(pagamento.id, {
-        valor_taxa: taxa,
+        valor_taxa: taxaPlataforma,
+        taxa_pix: taxaPix,
         valor_empresa: valorEmpresa,
         status_repasse: 'pendente',
         split_data: JSON.stringify({
-          taxa_percentual: ((taxa / valorTotal) * 100).toFixed(2),
-          taxa_valor: taxa,
+          taxa_plataforma: taxaPlataforma,
+          taxa_pix: taxaPix,
+          taxa_total: taxaPlataforma + taxaPix,
           empresa_valor: valorEmpresa,
           empresa_nome: empresa.nome,
           empresa_pix: empresa.chave_pix || empresa.pix_key,
@@ -85,14 +95,25 @@ class SplitPaymentService {
         })
       });
 
-      // Criar transação de taxa (receita do sistema)
+      // Criar transação de taxa plataforma (sua receita)
       await Transacao.create({
         empresa_id: empresa.id,
         pagamento_id: pagamento.id,
         agendamento_id: pagamento.agendamento_id,
         tipo: 'taxa',
-        valor: taxa,
-        descricao: `Taxa de sistema - Pagamento #${pagamento.id}`,
+        valor: taxaPlataforma,
+        descricao: `Taxa plataforma - Pagamento #${pagamento.id}`,
+        status: 'processado'
+      });
+
+      // Criar transação de taxa PIX (custo Asaas)
+      await Transacao.create({
+        empresa_id: empresa.id,
+        pagamento_id: pagamento.id,
+        agendamento_id: pagamento.agendamento_id,
+        tipo: 'taxa_pix',
+        valor: taxaPix,
+        descricao: `Taxa PIX Asaas - Pagamento #${pagamento.id}`,
         status: 'processado'
       });
 
@@ -109,17 +130,105 @@ class SplitPaymentService {
         status: 'pendente'
       });
 
+      // ═══════════════════════════════════════════════════════════════
+      // REPASSE AUTOMÁTICO VIA ASAAS PIX
+      // ═══════════════════════════════════════════════════════════════
+      const chavePix = empresa.chave_pix || empresa.pix_key;
+      let repasseAutomatico = null;
+
+      if (chavePix && valorEmpresa > 0) {
+        console.log('\n🚀 Iniciando repasse automático via Asaas...');
+
+        try {
+          const pixService = new PixTransferService();
+
+          const resultadoPix = await pixService.transferirPix({
+            chave_pix: chavePix,
+            valor: valorEmpresa, // já em centavos
+            empresa_nome: empresa.nome,
+            empresa_id: empresa.id,
+            split_id: transacaoRepasse.id
+          });
+
+          if (resultadoPix.sucesso) {
+            // Atualizar transação com dados do PIX
+            await Transacao.updateStatus(transacaoRepasse.id, 'processado', {
+              pix_status: 'enviado',
+              pix_txid: resultadoPix.comprovante,
+              pix_tipo: resultadoPix.tipo,
+              pix_ambiente: resultadoPix.ambiente,
+              pix_detalhes: JSON.stringify(resultadoPix.detalhes)
+            });
+
+            // Atualizar pagamento
+            await Pagamento.update(pagamento.id, {
+              status_repasse: 'processado',
+              data_repasse: new Date().toISOString(),
+              pix_comprovante: resultadoPix.comprovante
+            });
+
+            repasseAutomatico = {
+              sucesso: true,
+              tipo: resultadoPix.tipo,
+              comprovante: resultadoPix.comprovante,
+              status: resultadoPix.status,
+              ambiente: resultadoPix.ambiente
+            };
+
+            console.log('✅ Repasse automático realizado com sucesso!');
+            console.log(`   Comprovante: ${resultadoPix.comprovante}`);
+
+          } else {
+            // Repasse falhou, manter como pendente
+            await Transacao.updateStatus(transacaoRepasse.id, 'erro', {
+              pix_status: 'erro',
+              erro_mensagem: resultadoPix.mensagem
+            });
+
+            repasseAutomatico = {
+              sucesso: false,
+              erro: resultadoPix.mensagem
+            };
+
+            console.error('❌ Falha no repasse automático:', resultadoPix.mensagem);
+          }
+
+        } catch (pixError) {
+          console.error('❌ Erro ao processar repasse automático:', pixError);
+
+          repasseAutomatico = {
+            sucesso: false,
+            erro: pixError.message
+          };
+
+          // Atualizar transação com erro
+          await Transacao.updateStatus(transacaoRepasse.id, 'erro', {
+            pix_status: 'erro',
+            erro_mensagem: pixError.message
+          });
+        }
+      } else {
+        console.warn('⚠️  Repasse automático não realizado: chave PIX não configurada ou valor inválido');
+        repasseAutomatico = {
+          sucesso: false,
+          erro: !chavePix ? 'Chave PIX não configurada para a empresa' : 'Valor inválido para repasse'
+        };
+      }
+
       return {
         success: true,
         pagamento_id: pagamento.id,
         valor_total: valorTotal,
-        taxa,
+        taxa: taxaPlataforma,
+        taxa_pix: taxaPix,
+        taxa_total: taxaPlataforma + taxaPix,
         valor_empresa: valorEmpresa,
         transacao_repasse_id: transacaoRepasse.id,
+        repasse_automatico: repasseAutomatico,
         empresa: {
           id: empresa.id,
           nome: empresa.nome,
-          pix_key: empresa.chave_pix || empresa.pix_key,
+          pix_key: chavePix,
           pix_type: empresa.pix_type
         }
       };

@@ -31,6 +31,12 @@ const painelEmpresaRoutes = require('./routes/painelEmpresa');
 // Rotas completas do Super Admin
 const superAdminRoutes = require('./routes/superAdmin');
 
+// Rotas de integração Asaas (PIX automático)
+const asaasRoutes = require('./routes/asaas');
+
+// Rota pública de auto-cadastro de empresas
+const registroEmpresaRoutes = require('./routes/registroEmpresa');
+
 const app = express();
 
 // Trust proxy - necessário para Render, Heroku, etc (proxies reversos)
@@ -239,6 +245,12 @@ app.use('/api/empresa/painel', painelEmpresaRoutes);
 
 // Repasses Routes (transferências PIX automáticas)
 app.use('/api/repasses', repassesRoutes);
+
+// Asaas Routes (integração PIX automático)
+app.use('/api/asaas', asaasRoutes);
+
+// Auto-cadastro de empresas (público)
+app.use('/api/registro', registroEmpresaRoutes);
 
 // Tenant Routes (requer subdomínio válido)
 app.use('/api/tenant', tenantRoutes);

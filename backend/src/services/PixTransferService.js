@@ -1,105 +1,204 @@
-const { MercadoPagoConfig, MercadoPago } = require('mercadopago');
+const { getInstance: getAsaasService } = require('./AsaasService');
 
 /**
  * Serviço para realizar transferências PIX automáticas
- * Integração com Mercado Pago Split Payments
+ * Agora integrado com a API da Asaas
+ *
+ * Fluxo:
+ * 1. Cliente paga via Mercado Pago PIX
+ * 2. Webhook confirma pagamento
+ * 3. Sistema calcula split (taxa plataforma + valor empresa)
+ * 4. Este serviço transfere valor da empresa via Asaas PIX
  */
 class PixTransferService {
   constructor() {
-    // Inicializar cliente Mercado Pago
-    if (process.env.MP_ACCESS_TOKEN) {
-      this.client = new MercadoPagoConfig({
-        accessToken: process.env.MP_ACCESS_TOKEN,
-      });
-      this.initialized = true;
-    } else {
-      console.warn('⚠️  MP_ACCESS_TOKEN não configurado - transferências PIX desabilitadas');
-      this.initialized = false;
+    this.asaas = getAsaasService();
+    this.initialized = this.asaas.isReady();
+
+    if (!this.initialized) {
+      console.warn('⚠️  PixTransferService: Asaas não configurado - modo simulação ativado');
     }
   }
 
   /**
-   * Realizar transferência PIX via Mercado Pago
-   * Documentação: https://www.mercadopago.com.br/developers/pt/docs/advanced-payments/api
+   * Realizar transferência PIX via Asaas
+   * @param {Object} dadosTransferencia - Dados da transferência
+   * @param {string} dadosTransferencia.chave_pix - Chave PIX do destinatário
+   * @param {number} dadosTransferencia.valor - Valor em CENTAVOS
+   * @param {string} dadosTransferencia.empresa_nome - Nome da empresa
+   * @param {number} dadosTransferencia.empresa_id - ID da empresa
+   * @param {number} dadosTransferencia.split_id - ID do split
    */
   async transferirPix(dadosTransferencia) {
     const { chave_pix, valor, empresa_nome, empresa_id, split_id } = dadosTransferencia;
 
-    console.log(`\n💸 Iniciando transferência PIX`);
+    console.log(`\n💸 PixTransferService: Iniciando transferência`);
     console.log(`   Para: ${empresa_nome} (${chave_pix})`);
-    console.log(`   Valor: R$ ${valor / 100}`);
+    console.log(`   Valor: R$ ${(valor / 100).toFixed(2)}`);
     console.log(`   Split ID: ${split_id}`);
 
+    // Se Asaas não está configurado, usar modo simulação
     if (!this.initialized) {
-      throw new Error('Mercado Pago não configurado. Configure MP_ACCESS_TOKEN.');
+      console.log('⚠️  Modo SIMULAÇÃO - Asaas não configurado');
+      return this.transferirPixSimulado(dadosTransferencia);
     }
 
     try {
-      // Nota: Mercado Pago não oferece transferência direta via PIX na API padrão
-      // Existem 3 opções:
-      //
-      // OPÇÃO 1: Split Payment (Marketplace)
-      //   - Requer conta Marketplace no MP
-      //   - O split é feito automaticamente na compra
-      //   - Não precisa transferir depois
-      //
-      // OPÇÃO 2: Money Out API (Transferências)
-      //   - Requer aprovação especial do MP
-      //   - Permite transferir dinheiro da sua conta MP para PIX
-      //
-      // OPÇÃO 3: Manual
-      //   - Marcar como "pendente" e processar manualmente
-      //   - Ou usar API de outro provedor (PagSeguro, Asaas, etc)
+      // Converter centavos para reais
+      const valorReais = valor / 100;
 
-      // Por enquanto, vamos implementar a lógica de SPLIT PAYMENT (OPÇÃO 1)
-      // que é o mais adequado para este caso de uso
+      // Realizar transferência via Asaas
+      const resultado = await this.asaas.transferirPix({
+        valor: valorReais,
+        chavePix: chave_pix,
+        descricao: `Repasse Vistoria - ${empresa_nome} - Split #${split_id}`,
+        empresaNome: empresa_nome,
+        empresaId: empresa_id,
+        splitId: split_id
+      });
 
-      console.log('⚠️  IMPORTANTE: Para transferências automáticas, configure Split Payment no Mercado Pago');
-      console.log('   Acesse: https://www.mercadopago.com.br/developers/pt/docs/split-payments/landing');
-
-      // Simular sucesso por enquanto
-      // TODO: Implementar integração real quando conta Marketplace estiver configurada
-      const comprovante = this.gerarComprovanteSimulado(valor, chave_pix);
-
-      return {
-        sucesso: true,
-        comprovante,
-        tipo: 'simulado',
-        mensagem: 'Transferência registrada - aguardando processamento manual',
-        detalhes: {
-          chave_pix,
-          valor,
-          timestamp: new Date().toISOString()
-        }
-      };
+      if (resultado.sucesso) {
+        return {
+          sucesso: true,
+          comprovante: resultado.transferenciaId,
+          tipo: resultado.tipo,
+          ambiente: resultado.ambiente,
+          status: resultado.status,
+          detalhes: {
+            asaas_id: resultado.transferenciaId,
+            valor: resultado.valor,
+            chave_pix: resultado.chavePix,
+            tipo_chave: resultado.tipoChave,
+            data_transferencia: resultado.dataTransferencia,
+            data_efetivacao: resultado.dataEfetivacao,
+            comprovante_url: resultado.comprovante
+          }
+        };
+      } else {
+        return {
+          sucesso: false,
+          mensagem: resultado.mensagem,
+          erro: resultado.detalhes
+        };
+      }
 
     } catch (error) {
       console.error('❌ Erro na transferência PIX:', error);
-      throw new Error(`Falha ao transferir PIX: ${error.message}`);
+      return {
+        sucesso: false,
+        mensagem: error.message,
+        erro: error
+      };
     }
   }
 
   /**
-   * Verificar se uma transferência foi concluída
-   * (Para quando usar API real)
+   * Transferência PIX simulada (quando Asaas não está configurado)
    */
-  async verificarStatusTransferencia(comprovanteId) {
+  transferirPixSimulado(dadosTransferencia) {
+    const { chave_pix, valor, empresa_nome, split_id } = dadosTransferencia;
+
+    console.log('📝 Gerando comprovante SIMULADO...');
+
+    const comprovante = this.gerarComprovanteSimulado(valor, chave_pix);
+
+    return {
+      sucesso: true,
+      comprovante,
+      tipo: 'simulado',
+      ambiente: 'desenvolvimento',
+      status: 'PENDING_MANUAL',
+      mensagem: 'Transferência registrada - MODO SIMULAÇÃO (configure ASAAS_API_KEY para produção)',
+      detalhes: {
+        chave_pix,
+        valor: valor / 100,
+        empresa_nome,
+        split_id,
+        timestamp: new Date().toISOString(),
+        aviso: 'Esta é uma transferência simulada. Configure ASAAS_API_KEY para ativar transferências reais.'
+      }
+    };
+  }
+
+  /**
+   * Verificar se uma transferência foi concluída
+   * @param {string} transferenciaId - ID da transferência na Asaas
+   */
+  async verificarStatusTransferencia(transferenciaId) {
     if (!this.initialized) {
-      return null;
+      return {
+        status: 'simulado',
+        comprovante_id: transferenciaId,
+        mensagem: 'Modo simulação - status não disponível'
+      };
     }
 
     try {
-      // TODO: Implementar verificação real quando API estiver disponível
-      console.log(`🔍 Verificando status da transferência ${comprovanteId}`);
+      const resultado = await this.asaas.consultarTransferencia(transferenciaId);
 
       return {
-        status: 'concluido',
-        comprovante_id: comprovanteId,
-        data_conclusao: new Date().toISOString()
+        status: resultado.status,
+        comprovante_id: resultado.id,
+        valor: resultado.valor,
+        chave_pix: resultado.chavePix,
+        data_conclusao: resultado.dataEfetivacao,
+        comprovante_url: resultado.comprovante
       };
     } catch (error) {
       console.error('❌ Erro ao verificar status:', error);
       return null;
+    }
+  }
+
+  /**
+   * Consultar saldo disponível para transferências
+   */
+  async consultarSaldo() {
+    if (!this.initialized) {
+      return {
+        disponivel: false,
+        mensagem: 'Asaas não configurado'
+      };
+    }
+
+    try {
+      const { saldo, saldo_formatado } = await this.asaas.getSaldo();
+
+      return {
+        disponivel: true,
+        saldo,
+        saldo_formatado
+      };
+    } catch (error) {
+      console.error('❌ Erro ao consultar saldo:', error);
+      return {
+        disponivel: false,
+        mensagem: error.message
+      };
+    }
+  }
+
+  /**
+   * Listar transferências realizadas
+   */
+  async listarTransferencias(filtros = {}) {
+    if (!this.initialized) {
+      return {
+        total: 0,
+        transferencias: [],
+        mensagem: 'Asaas não configurado'
+      };
+    }
+
+    try {
+      return await this.asaas.listarTransferencias(filtros);
+    } catch (error) {
+      console.error('❌ Erro ao listar transferências:', error);
+      return {
+        total: 0,
+        transferencias: [],
+        erro: error.message
+      };
     }
   }
 
@@ -118,10 +217,15 @@ class PixTransferService {
   validarChavePix(chave) {
     if (!chave) return false;
 
-    // Remover espaços e caracteres especiais
-    const chaveClean = chave.replace(/\s+/g, '').replace(/[^a-zA-Z0-9@.-]/g, '');
+    // Usar validação da Asaas se disponível
+    if (this.initialized) {
+      const resultado = this.asaas.validarChavePix(chave);
+      return resultado.valida;
+    }
 
-    // Validações básicas por tipo
+    // Validação local
+    const chaveClean = chave.replace(/\s+/g, '').replace(/[^a-zA-Z0-9@.+-]/g, '');
+
     // CPF: 11 dígitos
     if (/^\d{11}$/.test(chaveClean)) return true;
 
@@ -149,32 +253,18 @@ class PixTransferService {
       currency: 'BRL'
     });
   }
-}
 
-/**
- * GUIA DE IMPLEMENTAÇÃO PARA TRANSFERÊNCIAS REAIS:
- *
- * 1. MERCADO PAGO SPLIT PAYMENT (RECOMENDADO)
- *    - Cadastre sua conta como Marketplace
- *    - Configure os sellers (empresas clientes)
- *    - Use Advanced Payments API com split automático
- *    - Documentação: https://www.mercadopago.com.br/developers/pt/docs/split-payments
- *
- * 2. ASAAS (ALTERNATIVA POPULAR)
- *    - API simples e completa
- *    - Suporta transferências PIX automáticas
- *    - Documentação: https://docs.asaas.com
- *    - Endpoint: POST /v3/transfers
- *
- * 3. PAGBANK (EX-PAGSEGURO)
- *    - Split Payment nativo
- *    - Boa documentação
- *    - Documentação: https://dev.pagbank.uol.com.br
- *
- * 4. INTEGRAÇÃO BANCÁRIA DIRETA
- *    - PIX via API do banco (BB, Itaú, etc)
- *    - Requer contrato com banco
- *    - Mais complexo mas maior controle
- */
+  /**
+   * Verificar se o serviço está operacional
+   */
+  getStatus() {
+    return {
+      operacional: true,
+      modo: this.initialized ? 'producao' : 'simulacao',
+      asaas_configurado: this.initialized,
+      ambiente: this.initialized ? (this.asaas.sandbox ? 'sandbox' : 'producao') : 'n/a'
+    };
+  }
+}
 
 module.exports = PixTransferService;
