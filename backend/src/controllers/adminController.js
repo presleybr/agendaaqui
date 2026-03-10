@@ -25,7 +25,7 @@ class AdminController {
         return res.status(401).json({ error: 'Credenciais inválidas' });
       }
 
-      if (admin.status !== 'ativo') {
+      if (!admin.ativo) {
         return res.status(401).json({ error: 'Usuário inativo' });
       }
 
