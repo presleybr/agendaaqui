@@ -37,31 +37,8 @@ services:
           type: web
           name: agendaaqui-backend
           envVarKey: RENDER_EXTERNAL_URL
-    routes:
-      # Páginas específicas
-      - type: rewrite
-        source: /admin
-        destination: /admin.html
-      - type: rewrite
-        source: /admin/*
-        destination: /admin.html
-      - type: rewrite
-        source: /cliente
-        destination: /cliente.html
-      - type: rewrite
-        source: /cliente/*
-        destination: /cliente.html
-      - type: rewrite
-        source: /painel
-        destination: /painel-empresa.html
-      - type: rewrite
-        source: /painel/*
-        destination: /painel-empresa.html
-      # Slugs de empresas - qualquer path não reconhecido serve empresa.html
-      # A página inicial (/) é servida automaticamente como index.html pelo Render
-      - type: rewrite
-        source: /*
-        destination: /empresa.html
+    # Rotas gerenciadas pelo arquivo _redirects no diretório public/
+    # O _redirects é copiado para dist/ pelo Vite e processado pelo Render a cada deploy
 
 databases:
   - name: agendamentos-db
