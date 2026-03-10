@@ -33,10 +33,7 @@ services:
     staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: agendaaqui-backend
-          envVarKey: RENDER_EXTERNAL_URL
+        value: https://agendaaqui-backend-fon8.onrender.com/api
     # Rotas gerenciadas pelo arquivo _redirects no diretório public/
     # O _redirects é copiado para dist/ pelo Vite e processado pelo Render a cada deploy
 

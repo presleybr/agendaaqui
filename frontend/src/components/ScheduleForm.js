@@ -109,7 +109,7 @@ export class ScheduleForm {
 
     // Senão, carregar da API
     try {
-      const API_URL = import.meta.env?.VITE_API_URL || 'https://agendaaqui-backend.onrender.com/api';
+      const API_URL = import.meta.env?.VITE_API_URL || 'https://agendaaqui-backend-fon8.onrender.com/api';
       const slug = this.options.slug || window.empresaSlug || 'demo';
 
       console.log('🔄 Loading vehicle prices for slug:', slug);

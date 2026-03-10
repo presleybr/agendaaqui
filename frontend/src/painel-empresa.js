@@ -7,7 +7,7 @@
 import ThemeManager from './themeManager.js';
 
 // API Base URL
-const API_URL = import.meta.env?.VITE_API_URL || 'https://agendaaqui-backend.onrender.com/api';
+const API_URL = import.meta.env?.VITE_API_URL || 'https://agendaaqui-backend-fon8.onrender.com/api';
 
 // Backend URL para imagens (remove /api do final)
 const BACKEND_URL = API_URL.replace(/\/api$/, '');
