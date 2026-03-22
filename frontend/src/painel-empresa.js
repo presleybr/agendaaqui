@@ -20,6 +20,9 @@ const BACKEND_URL = API_URL.replace(/\/api$/, '');
 function getImageUrl(url) {
   if (!url) return null;
 
+  // Se eh uma data URI (base64), retorna como esta
+  if (url.startsWith('data:')) return url;
+
   // Se ja eh uma URL absoluta (http/https), retorna como esta
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;

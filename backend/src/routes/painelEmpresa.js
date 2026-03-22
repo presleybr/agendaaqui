@@ -883,14 +883,11 @@ router.delete('/precos-vistoria/:id', requireRole('admin', 'gerente'), async (re
   }
 });
 
-// ==================== UPLOAD DE IMAGENS (CLOUDINARY) ====================
+// ==================== UPLOAD DE IMAGENS (BASE64) ====================
 
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
-const cloudinaryService = require('../services/cloudinary');
 
-// Usar memoria temporaria para upload (depois envia para Cloudinary)
 const storage = multer.memoryStorage();
 
 const uploadEmpresa = multer({
@@ -907,7 +904,7 @@ const uploadEmpresa = multer({
 
 /**
  * POST /api/empresa/painel/upload-imagem
- * Upload de logo ou capa da empresa para Cloudinary
+ * Upload de logo ou capa da empresa - salva como base64 no banco
  */
 router.post('/upload-imagem', requireRole('admin', 'gerente'), (req, res) => {
   uploadEmpresa(req, res, async (err) => {
@@ -923,37 +920,9 @@ router.post('/upload-imagem', requireRole('admin', 'gerente'), (req, res) => {
     try {
       const tipo = req.body.tipo || 'outros';
 
-      // Verificar se Cloudinary esta configurado
-      if (!cloudinaryService.isConfigured()) {
-        console.error('Cloudinary nao configurado - variaveis de ambiente faltando');
-        return res.status(500).json({
-          error: 'Servico de imagens nao configurado. Contate o suporte.'
-        });
-      }
-
-      // Definir pasta e public_id no Cloudinary
-      let folder = 'agendaaqui/empresas';
-      if (tipo === 'logo') folder = 'agendaaqui/empresas/logos';
-      else if (tipo === 'capa') folder = 'agendaaqui/empresas/capas';
-      else if (tipo === 'perfil') folder = 'agendaaqui/empresas/perfis';
-
-      // Public ID unico baseado na empresa e tipo
-      const publicId = `empresa-${req.empresa_id}-${tipo}`;
-
-      // Fazer upload para Cloudinary
-      console.log(`Enviando imagem para Cloudinary: ${folder}/${publicId}`);
-      const uploadResult = await cloudinaryService.uploadImageBuffer(req.file.buffer, {
-        folder: folder,
-        public_id: publicId
-      });
-
-      if (!uploadResult.success) {
-        console.error('Erro no upload para Cloudinary:', uploadResult.error);
-        return res.status(500).json({ error: 'Erro ao enviar imagem para o servidor' });
-      }
-
-      const imageUrl = uploadResult.url;
-      console.log(`Imagem enviada com sucesso: ${imageUrl}`);
+      // Converter buffer para data URI base64
+      const base64 = req.file.buffer.toString('base64');
+      const imageUrl = `data:${req.file.mimetype};base64,${base64}`;
 
       // Determinar campo do banco de dados
       let campo = '';
@@ -973,7 +942,7 @@ router.post('/upload-imagem', requireRole('admin', 'gerente'), (req, res) => {
         await db.query(`
           INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao)
           VALUES ($1, $2, 'upload_imagem', $3)
-        `, [req.empresa_id, req.usuarioEmpresa.id, `Upload de ${tipo}: ${imageUrl}`]);
+        `, [req.empresa_id, req.usuarioEmpresa.id, `Upload de ${tipo} (base64)`]);
       } catch (logErr) {
         console.error('Erro ao registrar log:', logErr.message);
       }
@@ -982,13 +951,7 @@ router.post('/upload-imagem', requireRole('admin', 'gerente'), (req, res) => {
         success: true,
         message: 'Imagem enviada com sucesso',
         url: imageUrl,
-        tipo: tipo,
-        cloudinary: {
-          public_id: uploadResult.public_id,
-          width: uploadResult.width,
-          height: uploadResult.height,
-          format: uploadResult.format
-        }
+        tipo: tipo
       });
 
     } catch (dbErr) {

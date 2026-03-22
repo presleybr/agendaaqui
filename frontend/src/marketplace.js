@@ -13,6 +13,7 @@ const BACKEND_URL = API_URL.replace(/\/api$/, '');
  */
 function getImageUrl(url) {
   if (!url) return null;
+  if (url.startsWith('data:')) return url;
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
   return `${BACKEND_URL}/${cleanUrl}`;
