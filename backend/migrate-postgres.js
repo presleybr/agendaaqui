@@ -289,6 +289,80 @@ const runMigration = async () => {
     `);
     console.log('[OK] Tabela empresa_configuracoes');
 
+    // =============================================
+    // TABELA: usuarios_empresa
+    // =============================================
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS usuarios_empresa (
+        id SERIAL PRIMARY KEY,
+        empresa_id INTEGER NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+        nome VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        senha_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(20) DEFAULT 'admin',
+        ativo BOOLEAN DEFAULT true,
+        primeiro_acesso BOOLEAN DEFAULT true,
+        ultimo_acesso TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(empresa_id, email)
+      )
+    `);
+    console.log('[OK] Tabela usuarios_empresa');
+
+    // =============================================
+    // TABELA: sessoes_empresa
+    // =============================================
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS sessoes_empresa (
+        id SERIAL PRIMARY KEY,
+        usuario_id INTEGER NOT NULL REFERENCES usuarios_empresa(id) ON DELETE CASCADE,
+        token_hash VARCHAR(255) NOT NULL,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('[OK] Tabela sessoes_empresa');
+
+    // =============================================
+    // TABELA: log_atividades_empresa
+    // =============================================
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS log_atividades_empresa (
+        id SERIAL PRIMARY KEY,
+        empresa_id INTEGER NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+        usuario_id INTEGER REFERENCES usuarios_empresa(id) ON DELETE SET NULL,
+        acao VARCHAR(100) NOT NULL,
+        descricao TEXT,
+        dados_extras JSONB,
+        ip_address VARCHAR(45),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('[OK] Tabela log_atividades_empresa');
+
+    // =============================================
+    // TABELA: precos_vistoria
+    // =============================================
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS precos_vistoria (
+        id SERIAL PRIMARY KEY,
+        empresa_id INTEGER NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+        categoria VARCHAR(100) NOT NULL,
+        nome_exibicao VARCHAR(255) NOT NULL,
+        descricao TEXT,
+        preco INTEGER NOT NULL DEFAULT 0,
+        ativo BOOLEAN DEFAULT true,
+        ordem INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(empresa_id, categoria)
+      )
+    `);
+    console.log('[OK] Tabela precos_vistoria');
+
     await client.query('COMMIT');
     console.log('\n[OK] Todas as tabelas criadas/verificadas com sucesso!\n');
 
@@ -309,13 +383,22 @@ const runMigration = async () => {
     // Colunas de personalizacao na tabela empresas
     await addColumnSafe('empresas', 'banner_url', 'TEXT');
     await addColumnSafe('empresas', 'favicon_url', 'TEXT');
+    await addColumnSafe('empresas', 'foto_capa_url', 'TEXT');
+    await addColumnSafe('empresas', 'foto_perfil_url', 'TEXT');
     await addColumnSafe('empresas', 'meta_pixel_id', 'VARCHAR(50)');
     await addColumnSafe('empresas', 'google_analytics_id', 'VARCHAR(50)');
+    await addColumnSafe('empresas', 'whatsapp', 'VARCHAR(20)');
     await addColumnSafe('empresas', 'whatsapp_numero', 'VARCHAR(20)');
+    await addColumnSafe('empresas', 'numero', 'VARCHAR(20)');
+    await addColumnSafe('empresas', 'complemento', 'VARCHAR(100)');
+    await addColumnSafe('empresas', 'bairro', 'VARCHAR(100)');
+    await addColumnSafe('empresas', 'descricao', 'TEXT');
+    await addColumnSafe('empresas', 'horario_funcionamento', 'TEXT');
     await addColumnSafe('empresas', 'facebook_url', 'TEXT');
     await addColumnSafe('empresas', 'instagram_url', 'TEXT');
     await addColumnSafe('empresas', 'linkedin_url', 'TEXT');
     await addColumnSafe('empresas', 'website_url', 'TEXT');
+    await addColumnSafe('empresas', 'site_url', 'TEXT');
     await addColumnSafe('empresas', 'titulo_hero', 'TEXT');
     await addColumnSafe('empresas', 'subtitulo_hero', 'TEXT');
     await addColumnSafe('empresas', 'texto_sobre', 'TEXT');

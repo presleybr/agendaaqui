@@ -372,8 +372,8 @@ router.put('/minha-empresa', requireRole('admin', 'gerente'), async (req, res) =
     res.json({ success: true, message: 'Dados atualizados com sucesso' });
 
   } catch (err) {
-    console.error('Erro ao atualizar empresa:', err);
-    res.status(500).json({ error: 'Erro ao atualizar dados' });
+    console.error('Erro ao atualizar empresa:', err.message, err.detail || '');
+    res.status(500).json({ error: 'Erro ao atualizar dados: ' + err.message });
   }
 });
 

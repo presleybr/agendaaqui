@@ -411,6 +411,77 @@ app.listen(PORT, async () => {
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🔒 Environment: ${process.env.NODE_ENV || 'development'}`);
 
+  // Auto-migration: garantir que colunas necessarias existam
+  try {
+    const columns = [
+      ['empresas', 'whatsapp', 'VARCHAR(20)'],
+      ['empresas', 'numero', 'VARCHAR(20)'],
+      ['empresas', 'complemento', 'VARCHAR(100)'],
+      ['empresas', 'bairro', 'VARCHAR(100)'],
+      ['empresas', 'descricao', 'TEXT'],
+      ['empresas', 'horario_funcionamento', 'TEXT'],
+      ['empresas', 'foto_capa_url', 'TEXT'],
+      ['empresas', 'foto_perfil_url', 'TEXT'],
+      ['empresas', 'site_url', 'TEXT'],
+      ['empresas', 'facebook_url', 'TEXT'],
+      ['empresas', 'instagram_url', 'TEXT'],
+      ['empresas', 'intervalo_minutos', 'INTEGER DEFAULT 60'],
+    ];
+    for (const [table, col, def] of columns) {
+      try {
+        await db.query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS ${col} ${def}`);
+      } catch (e) { /* coluna ja existe */ }
+    }
+
+    // Garantir tabelas do painel empresa
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS usuarios_empresa (
+        id SERIAL PRIMARY KEY,
+        empresa_id INTEGER NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+        nome VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        senha_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(20) DEFAULT 'admin',
+        ativo BOOLEAN DEFAULT true,
+        primeiro_acesso BOOLEAN DEFAULT true,
+        ultimo_acesso TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(empresa_id, email)
+      )
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS log_atividades_empresa (
+        id SERIAL PRIMARY KEY,
+        empresa_id INTEGER NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+        usuario_id INTEGER REFERENCES usuarios_empresa(id) ON DELETE SET NULL,
+        acao VARCHAR(100) NOT NULL,
+        descricao TEXT,
+        dados_extras JSONB,
+        ip_address VARCHAR(45),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS precos_vistoria (
+        id SERIAL PRIMARY KEY,
+        empresa_id INTEGER NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+        categoria VARCHAR(100) NOT NULL,
+        nome_exibicao VARCHAR(255) NOT NULL,
+        descricao TEXT,
+        preco INTEGER NOT NULL DEFAULT 0,
+        ativo BOOLEAN DEFAULT true,
+        ordem INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(empresa_id, categoria)
+      )
+    `);
+    console.log('✅ Auto-migration: colunas e tabelas verificadas');
+  } catch (migErr) {
+    console.error('⚠️  Erro na auto-migration (nao bloqueante):', migErr.message);
+  }
+
   // Inicia o LocalTunnel se estiver habilitado
   if (process.env.ENABLE_TUNNEL === 'true') {
     console.log('');
