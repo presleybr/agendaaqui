@@ -5,8 +5,8 @@
 
 /* Variables */
 :root {
-  --brand-primary: #1877f2;
-  --brand-secondary: #166fe5;
+  --brand-primary: #16a34a;
+  --brand-secondary: #15803d;
   --bg-primary: #f0f2f5;
   --bg-card: #ffffff;
   --text-primary: #050505;
@@ -583,9 +583,10 @@ body.empresa-profile-page {
 
   .profile-name {
     font-size: 1.4rem;
-    color: var(--text-primary);
+    color: #111;
     text-shadow: none;
     margin-top: 10px;
+    font-weight: 800;
   }
 
   .profile-meta {
@@ -1006,7 +1007,7 @@ body.empresa-profile-page {
 
 .pricing-card.featured {
   border-color: var(--brand-primary);
-  background: linear-gradient(135deg, rgba(24, 119, 242, 0.05) 0%, rgba(24, 119, 242, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.05) 0%, rgba(22, 163, 74, 0.1) 100%);
 }
 
 .pricing-card h4 {
@@ -1714,7 +1715,7 @@ html {
 #scheduleApp .form-group textarea:focus {
   outline: none;
   border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.1);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
 }
 
 #scheduleApp .form-row {
@@ -1782,7 +1783,7 @@ html {
 
 #scheduleApp .time-slot:hover:not(.unavailable) {
   border-color: var(--brand-primary);
-  background: rgba(24, 119, 242, 0.05);
+  background: rgba(22, 163, 74, 0.05);
 }
 
 #scheduleApp .time-slot.selected {
@@ -1934,14 +1935,14 @@ html {
 
 .pricing-card:hover {
   border-color: var(--brand-primary) !important;
-  background: linear-gradient(135deg, rgba(24, 119, 242, 0.03) 0%, rgba(24, 119, 242, 0.08) 100%) !important;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.03) 0%, rgba(22, 163, 74, 0.08) 100%) !important;
   transform: translateY(-4px) !important;
-  box-shadow: 0 8px 24px rgba(24, 119, 242, 0.15) !important;
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.15) !important;
 }
 
 .pricing-card.featured {
   animation: none !important;
-  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15) !important;
 }
 
 .pricing-card.featured::after {
@@ -1949,8 +1950,8 @@ html {
 }
 
 .pricing-card.featured:hover {
-  background: linear-gradient(135deg, rgba(24, 119, 242, 0.08) 0%, rgba(24, 119, 242, 0.15) 100%) !important;
-  box-shadow: 0 8px 24px rgba(24, 119, 242, 0.2) !important;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(22, 163, 74, 0.15) 100%) !important;
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.2) !important;
 }
 
 /* ============================================
@@ -1984,13 +1985,13 @@ html {
   /* Show CTA card on mobile */
   .mobile-cta-agendamento {
     display: block;
-    background: linear-gradient(135deg, #1877f2 0%, #166fe5 100%);
+    background: linear-gradient(135deg, var(--brand-primary, #16a34a) 0%, var(--brand-secondary, #15803d) 100%);
     border-radius: 16px;
     padding: 24px 20px;
     margin: 16px 0;
     text-align: center;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(24, 119, 242, 0.3);
+    box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
     transition: all 0.3s ease;
     text-decoration: none;
     color: white;
@@ -1999,7 +2000,7 @@ html {
   .mobile-cta-agendamento:hover,
   .mobile-cta-agendamento:active {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(24, 119, 242, 0.4);
+    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
   }
 
   .cta-icon {
@@ -2039,7 +2040,7 @@ html {
     justify-content: center;
     gap: 8px;
     background: white;
-    color: #1877f2;
+    color: var(--brand-primary, #16a34a);
     padding: 12px 28px;
     border-radius: 8px;
     font-weight: 700;
@@ -2086,7 +2087,7 @@ html {
   }
 
   .mobile-cta-agendamento .cta-cancel-btn:hover {
-    background: rgba(24, 119, 242, 0.05);
+    background: rgba(22, 163, 74, 0.05);
   }
 
   .mobile-cta-agendamento .cta-cancel-btn svg {
@@ -2143,7 +2144,7 @@ html {
   #mobileScheduleApp .form-group textarea:focus {
     outline: none;
     border-color: var(--brand-primary);
-    box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.1);
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
   }
 
   #mobileScheduleApp .form-row {
@@ -2213,7 +2214,7 @@ html {
 
   #mobileScheduleApp .time-slot:hover:not(.unavailable) {
     border-color: var(--brand-primary);
-    background: rgba(24, 119, 242, 0.05);
+    background: rgba(22, 163, 74, 0.05);
   }
 
   #mobileScheduleApp .time-slot.selected {

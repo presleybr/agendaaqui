@@ -767,17 +767,13 @@ class EmpresaPage {
   }
 
   applyCustomColors() {
-    const corPrimaria = this.empresa.cor_primaria || '#1877f2';
-    const corSecundaria = this.empresa.cor_secundaria || '#166fe5';
+    const corPrimaria = this.empresa.cor_primaria || '#16a34a';
+    const corSecundaria = this.empresa.cor_secundaria || '#15803d';
 
     const styles = `
       :root {
         --brand-primary: ${corPrimaria};
         --brand-secondary: ${corSecundaria};
-      }
-
-      .profile-header {
-        background: ${corPrimaria};
       }
 
       .action-primary,
@@ -811,6 +807,41 @@ class EmpresaPage {
 
       .social-link:hover {
         background: ${corPrimaria};
+      }
+
+      .mobile-nav-cta {
+        background: ${corPrimaria} !important;
+      }
+
+      .mobile-nav-cta:hover {
+        background: ${corSecundaria} !important;
+      }
+
+      .mobile-cta-agendamento {
+        background: linear-gradient(135deg, ${corPrimaria} 0%, ${corSecundaria} 100%) !important;
+        box-shadow: 0 4px 16px ${corPrimaria}4d !important;
+      }
+
+      .cover-photo {
+        background: linear-gradient(135deg, ${corPrimaria} 0%, ${corSecundaria} 100%);
+      }
+
+      .profile-picture {
+        background: ${corPrimaria};
+      }
+
+      .pricing-card:hover {
+        border-color: ${corPrimaria} !important;
+        background: linear-gradient(135deg, ${corPrimaria}08 0%, ${corPrimaria}14) !important;
+        box-shadow: 0 8px 24px ${corPrimaria}26 !important;
+      }
+
+      .pricing-card.featured {
+        box-shadow: 0 4px 12px ${corPrimaria}26 !important;
+      }
+
+      .spinner {
+        border-top-color: ${corPrimaria};
       }
     `;
 
@@ -847,7 +878,7 @@ class EmpresaPage {
         <div style="text-align: center; padding: 40px;">
           <h2 style="color: #ef4444; margin-bottom: 16px;">Empresa nao encontrada</h2>
           <p style="color: #666; margin-bottom: 24px;">${message}</p>
-          <a href="/" style="display: inline-block; padding: 12px 24px; background: #1877f2; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Voltar para Home</a>
+          <a href="/" style="display: inline-block; padding: 12px 24px; background: var(--brand-primary, #16a34a); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Voltar para Home</a>
         </div>
       `;
     }
