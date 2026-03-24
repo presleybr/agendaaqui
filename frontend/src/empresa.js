@@ -112,6 +112,16 @@ class EmpresaPage {
       });
     });
 
+    // Header glassmorphism - scroll detection
+    const header = document.getElementById('siteHeader');
+    if (header) {
+      const onScroll = () => {
+        header.classList.toggle('scrolled', window.scrollY > 200);
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+
     // Tab navigation highlighting
     this.setupTabNavigation();
 
