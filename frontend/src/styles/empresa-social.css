@@ -688,6 +688,8 @@ body.empresa-profile-page {
     padding: 12px 14px;
     font-size: 0.8rem;
     gap: 6px;
+    color: #1a1a2e;
+    font-weight: 700;
   }
 
   .tab-item svg {
@@ -780,6 +782,12 @@ body.empresa-profile-page {
     font-size: 1rem;
     margin-bottom: 12px;
     padding-bottom: 10px;
+    color: #111;
+    font-weight: 800;
+  }
+
+  .card-title svg {
+    color: var(--brand-primary);
   }
 }
 
@@ -796,6 +804,21 @@ body.empresa-profile-page {
   .about-text {
     font-size: 0.9rem;
     margin-bottom: 16px;
+    color: #222;
+  }
+
+  .info-label {
+    color: #555;
+    font-weight: 600;
+  }
+
+  .info-value {
+    color: #111;
+    font-weight: 500;
+  }
+
+  .info-item svg {
+    color: var(--brand-primary);
   }
 }
 
@@ -925,6 +948,11 @@ body.empresa-profile-page {
   .service-item {
     padding: 12px;
   }
+
+  .service-name {
+    color: #111;
+    font-weight: 700;
+  }
 }
 
 .service-icon {
@@ -989,6 +1017,23 @@ body.empresa-profile-page {
   .content-card .pricing-grid .pricing-card {
     flex: 0 0 90%;
     max-width: 90%;
+  }
+}
+
+/* Mobile pricing text visibility */
+@media (max-width: 768px) {
+  .pricing-card h4 {
+    color: #111;
+    font-weight: 700;
+  }
+
+  .pricing-card li {
+    color: #333;
+  }
+
+  .pricing-card .price {
+    color: var(--brand-primary);
+    font-weight: 800;
   }
 }
 
@@ -1209,6 +1254,26 @@ body.empresa-profile-page {
     max-width: 90%;
     scroll-snap-align: center;
   }
+
+  .review-author h4 {
+    color: #111;
+  }
+
+  .review-text {
+    color: #222;
+  }
+
+  .review-date {
+    color: #555;
+  }
+
+  .rating-number {
+    color: #111;
+  }
+
+  .rating-total {
+    color: #333;
+  }
 }
 
 .review-item {
@@ -1343,9 +1408,27 @@ body.empresa-profile-page {
     align-items: stretch;
   }
 
+  .location-info p {
+    color: #222;
+    font-weight: 500;
+  }
+
   .directions-btn {
     width: 100%;
     justify-content: center;
+    background: var(--brand-primary);
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 14px 16px;
+  }
+
+  .directions-btn:hover {
+    background: var(--brand-secondary);
+  }
+
+  .photo-placeholder p {
+    color: #555;
   }
 }
 
