@@ -504,16 +504,31 @@ class EmpresaPage {
     if (this.precosVistoria && this.precosVistoria.length > 0) {
       const precosAtivos = this.precosVistoria.filter(p => p.ativo !== false);
 
-      pricingGrid.innerHTML = precosAtivos.map((item, index) => `
-        <div class="pricing-card ${index === 0 ? 'featured' : ''}">
-          <h4>${item.nome_exibicao}</h4>
-          <div class="price">R$ ${formatPrice(item.preco)}</div>
-          <p style="color: var(--text-secondary); margin-bottom: 16px;">${item.descricao || ''}</p>
-          <a href="#agendamento" class="btn ${index === 0 ? 'btn-primary' : 'btn-secondary'}" data-categoria="${item.categoria}">
-            Agendar
-          </a>
-        </div>
-      `).join('');
+      pricingGrid.innerHTML = precosAtivos.map((item, index) => {
+        const isSobConsulta = item.preco === 0;
+        const whatsapp = this.empresa?.whatsapp || this.empresa?.whatsapp_numero || this.empresa?.telefone || '';
+        const whatsappLink = whatsapp ? `https://wa.me/55${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Ola! Gostaria de saber o valor da ${item.nome_exibicao}.`)}` : '#agendamento';
+
+        return `
+          <div class="pricing-card ${index === 0 ? 'featured' : ''}">
+            <h4>${item.nome_exibicao}</h4>
+            ${isSobConsulta
+              ? `<div class="price" style="font-size: 1.2rem; color: var(--text-secondary);">Sob Consulta</div>`
+              : `<div class="price">R$ ${formatPrice(item.preco)}</div>`
+            }
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">${item.descricao || ''}</p>
+            ${isSobConsulta
+              ? `<a href="${whatsappLink}" target="_blank" class="btn ${index === 0 ? 'btn-primary' : 'btn-secondary'}" style="display: inline-flex; align-items: center; gap: 6px;">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.125.553 4.12 1.522 5.857L.057 23.64l5.932-1.56A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82c-1.998 0-3.87-.557-5.47-1.522l-.392-.232-3.516.925.938-3.437-.254-.404A9.786 9.786 0 012.18 12c0-5.422 4.398-9.82 9.82-9.82 5.422 0 9.82 4.398 9.82 9.82 0 5.422-4.398 9.82-9.82 9.82z"/></svg>
+                  Sob Consulta
+                </a>`
+              : `<a href="#agendamento" class="btn ${index === 0 ? 'btn-primary' : 'btn-secondary'}" data-categoria="${item.categoria}">
+                  Agendar
+                </a>`
+            }
+          </div>
+        `;
+      }).join('');
 
       // Add click handlers para precos dinamicos
       pricingGrid.querySelectorAll('[data-categoria]').forEach(btn => {

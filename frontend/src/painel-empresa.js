@@ -1433,7 +1433,10 @@ class PainelEmpresa {
       let html = '<div class="precos-grid" style="display: grid; gap: 12px;">';
 
       precos.forEach((preco) => {
-        const valorReais = (preco.preco / 100).toFixed(2);
+        const isSobConsulta = preco.preco === 0;
+        const valorDisplay = isSobConsulta
+          ? '<span style="color: #d97706; font-style: italic;">Sob Consulta</span>'
+          : `<span style="color: #059669;">R$ ${(preco.preco / 100).toFixed(2)}</span>`;
 
         html += `
           <div class="preco-item" style="display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color);">
@@ -1441,8 +1444,8 @@ class PainelEmpresa {
               <div style="font-weight: 600; color: var(--text-primary); font-size: 15px;">${preco.nome_exibicao}</div>
               <div style="font-size: 13px; color: var(--text-secondary); margin-top: 2px;">${preco.descricao || 'Sem descricao'}</div>
             </div>
-            <div style="font-size: 18px; font-weight: 700; color: #059669; white-space: nowrap;">
-              R$ ${valorReais}
+            <div style="font-size: 18px; font-weight: 700; white-space: nowrap;">
+              ${valorDisplay}
             </div>
             <div style="display: flex; gap: 8px;">
               <button class="btn btn-secondary btn-sm" onclick="painel.editarPreco('${preco.id}', '${preco.categoria}', '${preco.nome_exibicao.replace(/'/g, "\\'")}', '${(preco.descricao || '').replace(/'/g, "\\'")}', ${preco.preco}, ${preco.ordem})" style="padding: 6px 10px;">
@@ -1495,6 +1498,20 @@ class PainelEmpresa {
       btnCancelar.onclick = () => this.fecharModalPreco();
     }
 
+    // Checkbox Sob Consulta toggle
+    const sobConsultaCheck = document.getElementById('precoSobConsulta');
+    if (sobConsultaCheck) {
+      sobConsultaCheck.onchange = () => {
+        const valorGroup = document.getElementById('precoValorGroup');
+        if (sobConsultaCheck.checked) {
+          valorGroup.style.display = 'none';
+          document.getElementById('precoValor').value = '';
+        } else {
+          valorGroup.style.display = '';
+        }
+      };
+    }
+
     // Form submit
     const formPreco = document.getElementById('formPreco');
     if (formPreco) {
@@ -1521,6 +1538,8 @@ class PainelEmpresa {
     document.getElementById('precoDescricao').value = '';
     document.getElementById('precoValor').value = '';
     document.getElementById('precoOrdem').value = '0';
+    document.getElementById('precoSobConsulta').checked = false;
+    document.getElementById('precoValorGroup').style.display = '';
     document.getElementById('precoModal').classList.add('active');
   }
 
@@ -1530,8 +1549,13 @@ class PainelEmpresa {
     document.getElementById('precoCategoria').value = categoria || '';
     document.getElementById('precoNome').value = nome || '';
     document.getElementById('precoDescricao').value = descricao || '';
-    document.getElementById('precoValor').value = (precoCentavos / 100).toFixed(2);
     document.getElementById('precoOrdem').value = ordem || 0;
+
+    const isSobConsulta = precoCentavos === 0;
+    document.getElementById('precoSobConsulta').checked = isSobConsulta;
+    document.getElementById('precoValorGroup').style.display = isSobConsulta ? 'none' : '';
+    document.getElementById('precoValor').value = isSobConsulta ? '' : (precoCentavos / 100).toFixed(2);
+
     document.getElementById('precoModal').classList.add('active');
   }
 
@@ -1544,7 +1568,8 @@ class PainelEmpresa {
     const categoriaExistente = document.getElementById('precoCategoria').value;
     const nome = document.getElementById('precoNome').value.trim();
     const descricao = document.getElementById('precoDescricao').value.trim();
-    const valorReais = parseFloat(document.getElementById('precoValor').value) || 0;
+    const sobConsulta = document.getElementById('precoSobConsulta').checked;
+    const valorReais = sobConsulta ? 0 : (parseFloat(document.getElementById('precoValor').value) || 0);
     const ordem = parseInt(document.getElementById('precoOrdem').value) || 0;
 
     if (!nome) {
@@ -1552,7 +1577,7 @@ class PainelEmpresa {
       return;
     }
 
-    if (valorReais <= 0) {
+    if (!sobConsulta && valorReais <= 0) {
       alert('Valor deve ser maior que zero');
       return;
     }
