@@ -426,8 +426,10 @@ class EmpresaPage {
       this.empresa.telefone || this.empresa.whatsapp || 'Nao informado';
 
     // Hours
-    document.getElementById('empresaHorario').textContent =
-      this.empresa.horario_funcionamento || 'Segunda a Sexta: 8h - 18h';
+    const horarioEl = document.getElementById('empresaHorario');
+    if (horarioEl) {
+      horarioEl.innerHTML = this.formatHorario(this.empresa.horario_funcionamento);
+    }
 
     // Email
     document.getElementById('empresaEmail').textContent =
@@ -435,6 +437,25 @@ class EmpresaPage {
 
     // Social links
     this.renderSocialLinks();
+  }
+
+  formatHorario(value) {
+    if (!value) return 'Segunda a Sexta: 8h - 18h';
+    // Tentar parse JSON
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map(h => {
+          if (h.inicio && h.fim) {
+            const inicio = h.inicio.replace(':', 'h');
+            const fim = h.fim.replace(':', 'h');
+            return `<div>${h.dias}: ${inicio} às ${fim}</div>`;
+          }
+          return `<div>${h.dias}</div>`;
+        }).join('');
+      }
+    } catch (e) { /* nao e JSON, usar como texto */ }
+    return value;
   }
 
   renderSocialLinks() {
@@ -719,8 +740,10 @@ class EmpresaPage {
     document.getElementById('footerEmail').textContent =
       this.empresa.email || '-';
 
-    document.getElementById('footerHorario').textContent =
-      this.empresa.horario_funcionamento || 'Segunda a Sexta: 8h - 18h';
+    const footerHorarioEl = document.getElementById('footerHorario');
+    if (footerHorarioEl) {
+      footerHorarioEl.innerHTML = this.formatHorario(this.empresa.horario_funcionamento);
+    }
 
     const endereco = [this.empresa.cidade, this.empresa.estado].filter(Boolean).join(', ');
     document.getElementById('footerEndereco').textContent = endereco || '-';

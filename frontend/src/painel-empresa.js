@@ -1208,8 +1208,11 @@ class PainelEmpresa {
           </div>
 
           <div class="form-group">
-            <label>Horario de Funcionamento</label>
-            <input type="text" id="empHorario" value="${empresa.horario_funcionamento || ''}" placeholder="Ex: Seg-Sex 8h-18h, Sab 8h-12h">
+            <label style="margin-bottom: 8px; display: block;">Horario de Funcionamento</label>
+            <div id="horariosContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
+            <button type="button" onclick="painel.addHorarioRow()" style="margin-top: 8px; padding: 6px 14px; border: 1px dashed var(--border-medium, #ccc); background: transparent; border-radius: 8px; cursor: pointer; font-size: 0.85rem; color: var(--text-secondary, #666);">
+              + Adicionar horario
+            </button>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -1238,10 +1241,106 @@ class PainelEmpresa {
         </form>
       `;
 
+      // Popular horarios de funcionamento
+      this.initHorarios(empresa.horario_funcionamento);
+
     } catch (err) {
       console.error('Erro ao carregar empresa:', err);
       container.innerHTML = '<div style="color: var(--status-danger); padding: 20px;">Erro ao carregar dados da empresa</div>';
     }
+  }
+
+  // ============================================
+  // HORARIOS DE FUNCIONAMENTO
+  // ============================================
+
+  parseHorarios(value) {
+    if (!value) return [];
+    // Tentar parse JSON primeiro
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) { /* nao e JSON */ }
+    // Fallback: texto simples vira uma linha so
+    return [{ dias: value, inicio: '', fim: '' }];
+  }
+
+  initHorarios(value) {
+    const horarios = this.parseHorarios(value);
+    const container = document.getElementById('horariosContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (horarios.length === 0) {
+      // Adicionar linhas padrao
+      this.addHorarioRow('Seg a Sex', '08:00', '18:00');
+      this.addHorarioRow('Sab', '08:00', '12:00');
+    } else {
+      horarios.forEach(h => this.addHorarioRow(h.dias, h.inicio, h.fim));
+    }
+  }
+
+  addHorarioRow(dias = '', inicio = '', fim = '') {
+    const container = document.getElementById('horariosContainer');
+    if (!container) return;
+
+    const row = document.createElement('div');
+    row.className = 'horario-row';
+    row.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+
+    const diasOptions = [
+      'Seg a Sex', 'Seg a Sab', 'Seg a Dom',
+      'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta',
+      'Sabado', 'Domingo',
+      'Feriados'
+    ];
+
+    // Verificar se o valor salvo bate com alguma opcao, senao add como custom
+    const diasLower = (dias || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    let matchedOption = diasOptions.find(opt => {
+      const optLower = opt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return optLower === diasLower;
+    });
+
+    row.innerHTML = `
+      <select class="horario-dias" style="flex: 1; padding: 8px 10px; border: 1px solid var(--border-light, #ddd); border-radius: 8px; font-size: 0.9rem;">
+        <option value="">Selecione...</option>
+        ${diasOptions.map(opt => `<option value="${opt}" ${opt === matchedOption ? 'selected' : ''}>${opt}</option>`).join('')}
+        ${!matchedOption && dias ? `<option value="${dias}" selected>${dias}</option>` : ''}
+      </select>
+      <span style="color: var(--text-secondary, #666); font-size: 0.85rem;">das</span>
+      <input type="time" class="horario-inicio" value="${inicio}" style="padding: 8px; border: 1px solid var(--border-light, #ddd); border-radius: 8px; font-size: 0.9rem;">
+      <span style="color: var(--text-secondary, #666); font-size: 0.85rem;">as</span>
+      <input type="time" class="horario-fim" value="${fim}" style="padding: 8px; border: 1px solid var(--border-light, #ddd); border-radius: 8px; font-size: 0.9rem;">
+      <button type="button" onclick="this.closest('.horario-row').remove()" style="background: none; border: none; cursor: pointer; padding: 4px; color: #dc2626; font-size: 1.2rem;" title="Remover">&times;</button>
+    `;
+
+    container.appendChild(row);
+  }
+
+  getHorariosValue() {
+    const rows = document.querySelectorAll('#horariosContainer .horario-row');
+    const horarios = [];
+    rows.forEach(row => {
+      const dias = row.querySelector('.horario-dias')?.value?.trim();
+      const inicio = row.querySelector('.horario-inicio')?.value?.trim();
+      const fim = row.querySelector('.horario-fim')?.value?.trim();
+      if (dias) {
+        horarios.push({ dias, inicio: inicio || '', fim: fim || '' });
+      }
+    });
+    return JSON.stringify(horarios);
+  }
+
+  formatHorariosTexto(value) {
+    const horarios = this.parseHorarios(value);
+    if (horarios.length === 0) return '';
+    return horarios.map(h => {
+      if (h.inicio && h.fim) {
+        return `${h.dias}: ${h.inicio.replace(':','h')} as ${h.fim.replace(':','h')}`;
+      }
+      return h.dias;
+    }).join(' | ');
   }
 
   async uploadImagem(tipo) {
@@ -1329,7 +1428,7 @@ class PainelEmpresa {
       cidade: document.getElementById('empCidade')?.value,
       estado: document.getElementById('empEstado')?.value,
       descricao: document.getElementById('empDescricao')?.value,
-      horario_funcionamento: document.getElementById('empHorario')?.value,
+      horario_funcionamento: this.getHorariosValue(),
       cor_primaria: document.getElementById('empCorPrimaria')?.value,
       cor_secundaria: document.getElementById('empCorSecundaria')?.value
     };
