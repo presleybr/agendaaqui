@@ -37,6 +37,10 @@ const asaasRoutes = require('./routes/asaas');
 // Rota pública de auto-cadastro de empresas
 const registroEmpresaRoutes = require('./routes/registroEmpresa');
 
+// Rotas WhatsApp (notificacoes)
+const whatsappEmpresaRoutes = require('./routes/whatsappEmpresa');
+const whatsappCronRoutes = require('./routes/whatsappCron');
+
 const app = express();
 
 // Trust proxy - necessário para Render, Heroku, etc (proxies reversos)
@@ -242,6 +246,10 @@ app.use('/api/empresas', empresasRoutes);
 // Rotas do Painel CRM da Empresa (autenticação própria)
 app.use('/api/empresa/auth', authEmpresaRoutes);
 app.use('/api/empresa/painel', painelEmpresaRoutes);
+app.use('/api/empresa/painel/whatsapp', whatsappEmpresaRoutes);
+
+// WhatsApp Cron (endpoint para cron externo)
+app.use('/api/whatsapp/cron', whatsappCronRoutes);
 
 // Repasses Routes (transferências PIX automáticas)
 app.use('/api/repasses', repassesRoutes);
@@ -477,6 +485,44 @@ app.listen(PORT, async () => {
         UNIQUE(empresa_id, categoria)
       )
     `);
+    // Tabela de configuracao WhatsApp por empresa
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS whatsapp_config (
+        id SERIAL PRIMARY KEY,
+        empresa_id INTEGER NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+        telefone_gerente VARCHAR(20),
+        ativo BOOLEAN DEFAULT false,
+        notif_antes_ativo BOOLEAN DEFAULT true,
+        notif_antes_minutos INTEGER DEFAULT 30,
+        notif_inicio_ativo BOOLEAN DEFAULT true,
+        notif_resumo_diario_ativo BOOLEAN DEFAULT false,
+        notif_resumo_horario VARCHAR(5) DEFAULT '07:00',
+        session_data JSONB,
+        session_keys JSONB,
+        connection_status VARCHAR(20) DEFAULT 'disconnected',
+        last_connected_at TIMESTAMP,
+        last_error TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(empresa_id)
+      )
+    `);
+
+    // Log de notificacoes WhatsApp enviadas
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS whatsapp_notificacoes_log (
+        id SERIAL PRIMARY KEY,
+        empresa_id INTEGER NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+        agendamento_id INTEGER,
+        tipo VARCHAR(20) NOT NULL,
+        telefone_destino VARCHAR(20),
+        mensagem TEXT,
+        status VARCHAR(10) DEFAULT 'enviado',
+        erro_detalhes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     console.log('✅ Auto-migration: colunas e tabelas verificadas');
   } catch (migErr) {
     console.error('⚠️  Erro na auto-migration (nao bloqueante):', migErr.message);

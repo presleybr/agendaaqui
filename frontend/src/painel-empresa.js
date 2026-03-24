@@ -335,6 +335,7 @@ class PainelEmpresa {
       'calendario': 'Calendario',
       'relatorios': 'Relatorios',
       'precos': 'Precos de Vistoria',
+      'whatsapp': 'Notificacoes WhatsApp',
       'minha-empresa': 'Minha Empresa',
       'configuracoes': 'Configuracoes'
     };
@@ -363,6 +364,9 @@ class PainelEmpresa {
         break;
       case 'precos':
         this.loadPrecosVistoria();
+        break;
+      case 'whatsapp':
+        this.loadWhatsApp();
         break;
       case 'minha-empresa':
         this.loadMinhaEmpresa();
@@ -1735,6 +1739,272 @@ class PainelEmpresa {
 
     document.getElementById('filterSearch').value = term;
     this.showSection('agendamentos');
+  }
+
+  // ============================================
+  // WHATSAPP
+  // ============================================
+
+  async loadWhatsApp() {
+    await Promise.all([
+      this.loadWhatsAppConnection(),
+      this.loadWhatsAppSettings(),
+      this.loadWhatsAppLog()
+    ]);
+  }
+
+  async loadWhatsAppConnection() {
+    const container = document.getElementById('whatsappConnectionContent');
+    try {
+      const status = await this.apiGet('/empresa/painel/whatsapp/status');
+      const isConnected = status.memoryStatus === 'connected' || status.dbStatus === 'connected';
+
+      if (isConnected) {
+        const lastConn = status.lastConnected ? new Date(status.lastConnected).toLocaleString('pt-BR') : 'N/A';
+        container.innerHTML = `
+          <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">✅</div>
+            <p style="font-size: 1.1rem; font-weight: 600; color: var(--success-color, #22c55e); margin-bottom: 8px;">WhatsApp Conectado</p>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px;">Ultima conexao: ${lastConn}</p>
+            <button class="btn btn-secondary" onclick="painel.disconnectWhatsApp()" style="background: #ef4444; color: white; border: none;">
+              Desconectar
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 48px; margin-bottom: 12px;">📱</div>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">Conecte o WhatsApp da empresa para receber notificacoes automaticas de agendamentos.</p>
+            <button class="btn btn-primary" onclick="painel.connectWhatsApp()" style="background: #25D366; border-color: #25D366;">
+              Conectar WhatsApp
+            </button>
+            ${status.lastError ? `<p style="color: #ef4444; font-size: 0.8rem; margin-top: 12px;">Ultimo erro: ${status.lastError}</p>` : ''}
+          </div>
+        `;
+      }
+    } catch (err) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+          <div style="font-size: 48px; margin-bottom: 12px;">📱</div>
+          <p style="color: var(--text-secondary); margin-bottom: 16px;">Conecte o WhatsApp da empresa para receber notificacoes automaticas.</p>
+          <button class="btn btn-primary" onclick="painel.connectWhatsApp()" style="background: #25D366; border-color: #25D366;">
+            Conectar WhatsApp
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  async connectWhatsApp() {
+    const container = document.getElementById('whatsappConnectionContent');
+    container.innerHTML = `
+      <div style="text-align: center; padding: 20px;">
+        <div class="spinner" style="margin: 0 auto 16px;"></div>
+        <p style="color: var(--text-secondary);">Gerando QR Code...</p>
+      </div>
+    `;
+
+    try {
+      await this.apiPost('/empresa/painel/whatsapp/connect', {});
+      this.startQRPolling();
+    } catch (err) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+          <p style="color: #ef4444; margin-bottom: 12px;">Erro: ${err.message}</p>
+          <button class="btn btn-primary" onclick="painel.connectWhatsApp()" style="background: #25D366; border-color: #25D366;">Tentar Novamente</button>
+        </div>
+      `;
+    }
+  }
+
+  async disconnectWhatsApp() {
+    if (!confirm('Deseja desconectar o WhatsApp? As notificacoes serao pausadas.')) return;
+    try {
+      await this.apiPost('/empresa/painel/whatsapp/disconnect', {});
+      this.stopQRPolling();
+      this.loadWhatsAppConnection();
+    } catch (err) {
+      alert('Erro ao desconectar: ' + err.message);
+    }
+  }
+
+  startQRPolling() {
+    this.stopQRPolling();
+    this._qrPollInterval = setInterval(async () => {
+      try {
+        const data = await this.apiGet('/empresa/painel/whatsapp/qr');
+        const container = document.getElementById('whatsappConnectionContent');
+
+        if (data.status === 'connected') {
+          this.stopQRPolling();
+          this.loadWhatsAppConnection();
+          return;
+        }
+
+        if (data.qr) {
+          const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(data.qr)}`;
+          container.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+              <p style="font-weight: 600; margin-bottom: 12px;">Escaneie o QR Code com o WhatsApp</p>
+              <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">Abra o WhatsApp > Menu > Aparelhos conectados > Conectar aparelho</p>
+              <img src="${qrImageUrl}" alt="QR Code" style="width: 256px; height: 256px; border-radius: 8px; border: 2px solid var(--border-color);">
+              <p style="color: var(--text-tertiary); font-size: 0.8rem; margin-top: 12px;">O QR Code atualiza automaticamente</p>
+              <button class="btn btn-secondary" onclick="painel.stopQRPolling(); painel.loadWhatsAppConnection();" style="margin-top: 12px;">Cancelar</button>
+            </div>
+          `;
+        }
+      } catch (err) {
+        // Silencioso - continua polling
+      }
+    }, 3000);
+  }
+
+  stopQRPolling() {
+    if (this._qrPollInterval) {
+      clearInterval(this._qrPollInterval);
+      this._qrPollInterval = null;
+    }
+  }
+
+  async loadWhatsAppSettings() {
+    const container = document.getElementById('whatsappSettingsContent');
+    try {
+      const config = await this.apiGet('/empresa/painel/whatsapp/config');
+
+      container.innerHTML = `
+        <form id="formWhatsAppSettings" style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="form-group">
+            <label for="waTelefoneGerente">Telefone do Gerente (com DDD)</label>
+            <input type="text" id="waTelefoneGerente" placeholder="11999999999" value="${config.telefone_gerente || ''}">
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="waAtivo" style="width: 18px; height: 18px; cursor: pointer;" ${config.ativo ? 'checked' : ''}>
+            <label for="waAtivo" style="margin: 0; cursor: pointer; font-weight: 500;">Ativar notificacoes automaticas</label>
+          </div>
+          <hr style="border-color: var(--border-color);">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="waNotifAntes" style="width: 18px; height: 18px; cursor: pointer;" ${config.notif_antes_ativo !== false ? 'checked' : ''}>
+            <label for="waNotifAntes" style="margin: 0; cursor: pointer;">Lembrete antes do agendamento</label>
+          </div>
+          <div class="form-group" style="margin-left: 28px;">
+            <label for="waMinutosAntes">Minutos antes</label>
+            <input type="number" id="waMinutosAntes" min="5" max="120" value="${config.notif_antes_minutos || 30}" style="max-width: 120px;">
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="waNotifInicio" style="width: 18px; height: 18px; cursor: pointer;" ${config.notif_inicio_ativo !== false ? 'checked' : ''}>
+            <label for="waNotifInicio" style="margin: 0; cursor: pointer;">Aviso quando agendamento inicia</label>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="waResumoDiario" style="width: 18px; height: 18px; cursor: pointer;" ${config.notif_resumo_diario_ativo ? 'checked' : ''}>
+            <label for="waResumoDiario" style="margin: 0; cursor: pointer;">Resumo diario dos agendamentos</label>
+          </div>
+          <div class="form-group" style="margin-left: 28px;">
+            <label for="waResumoHorario">Horario do resumo</label>
+            <input type="time" id="waResumoHorario" value="${config.notif_resumo_horario || '07:00'}" style="max-width: 140px;">
+          </div>
+          <div style="display: flex; gap: 12px; margin-top: 8px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Salvar Configuracoes</button>
+            <button type="button" class="btn btn-secondary" onclick="painel.testWhatsApp()" style="flex: 1;">
+              Enviar Teste
+            </button>
+          </div>
+        </form>
+      `;
+
+      document.getElementById('formWhatsAppSettings').addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.saveWhatsAppSettings();
+      });
+    } catch (err) {
+      container.innerHTML = `<p style="color: var(--text-secondary); padding: 20px;">Erro ao carregar configuracoes.</p>`;
+    }
+  }
+
+  async saveWhatsAppSettings() {
+    try {
+      await this.apiPut('/empresa/painel/whatsapp/config', {
+        telefone_gerente: document.getElementById('waTelefoneGerente').value,
+        ativo: document.getElementById('waAtivo').checked,
+        notif_antes_ativo: document.getElementById('waNotifAntes').checked,
+        notif_antes_minutos: parseInt(document.getElementById('waMinutosAntes').value) || 30,
+        notif_inicio_ativo: document.getElementById('waNotifInicio').checked,
+        notif_resumo_diario_ativo: document.getElementById('waResumoDiario').checked,
+        notif_resumo_horario: document.getElementById('waResumoHorario').value || '07:00'
+      });
+      alert('Configuracoes salvas com sucesso!');
+    } catch (err) {
+      alert('Erro ao salvar: ' + err.message);
+    }
+  }
+
+  async testWhatsApp() {
+    try {
+      const telefone = document.getElementById('waTelefoneGerente')?.value;
+      if (!telefone) {
+        alert('Configure o telefone do gerente antes de testar.');
+        return;
+      }
+      // Salva primeiro para garantir que telefone esta atualizado
+      await this.saveWhatsAppSettings();
+      const result = await this.apiPost('/empresa/painel/whatsapp/test', {});
+      alert(result.message || 'Mensagem de teste enviada!');
+      this.loadWhatsAppLog();
+    } catch (err) {
+      alert('Erro ao enviar teste: ' + err.message);
+    }
+  }
+
+  async loadWhatsAppLog() {
+    const container = document.getElementById('whatsappLogContent');
+    try {
+      const logs = await this.apiGet('/empresa/painel/whatsapp/log');
+
+      if (!logs || logs.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-tertiary); padding: 20px; text-align: center;">Nenhuma notificacao enviada ainda.</p>`;
+        return;
+      }
+
+      const tipoLabels = {
+        'antes': '⏰ Lembrete',
+        'inicio': '🟢 Inicio',
+        'resumo_diario': '📊 Resumo',
+        'teste': '✅ Teste'
+      };
+
+      const rows = logs.map(log => {
+        const data = new Date(log.created_at).toLocaleString('pt-BR');
+        const statusClass = log.status === 'enviado' ? 'color: #22c55e;' : 'color: #ef4444;';
+        return `
+          <tr>
+            <td>${tipoLabels[log.tipo] || log.tipo}</td>
+            <td>${log.telefone_destino || '-'}</td>
+            <td><span style="${statusClass} font-weight: 600;">${log.status === 'enviado' ? 'Enviado' : 'Erro'}</span></td>
+            <td style="font-size: 0.85rem; color: var(--text-secondary);">${data}</td>
+            <td style="font-size: 0.8rem; color: var(--text-tertiary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${log.erro_detalhes || '-'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="table-container" style="border: none; box-shadow: none;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Telefone</th>
+                <th>Status</th>
+                <th>Data</th>
+                <th>Detalhes</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    } catch (err) {
+      container.innerHTML = `<p style="color: var(--text-tertiary); padding: 20px; text-align: center;">Erro ao carregar historico.</p>`;
+    }
   }
 
   // ============================================
