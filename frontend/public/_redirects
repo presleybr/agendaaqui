@@ -16,6 +16,13 @@
 /painel/            /painel-empresa.html    200
 /painel/*           /painel-empresa.html    200
 
+# SEO files
+/sitemap.xml   /sitemap.xml   200
+/robots.txt    /robots.txt    200
+
+# Google Search Console verification
+/google73363dfe82b3e826.html   /google73363dfe82b3e826.html   200
+
 # Arquivos estáticos (passthrough)
 /assets/*   /assets/:splat  200
 /*.js       /:splat.js      200
@@ -26,6 +33,8 @@
 /*.ico      /:splat.ico     200
 /*.woff     /:splat.woff    200
 /*.woff2    /:splat.woff2   200
+/*.xml      /:splat.xml     200
+/*.txt      /:splat.txt     200
 
 # Slugs de empresas - paths dinâmicos (DEVE vir depois das rotas específicas)
 /:slug      /empresa.html   200

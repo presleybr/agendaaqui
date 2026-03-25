@@ -304,8 +304,12 @@ class EmpresaPage {
 
   customizePage() {
     // Title and meta
-    document.title = `${this.empresa.nome} - Vistoria Veicular`;
-    document.getElementById('pageDescription').content = this.empresa.descricao || `Agende sua vistoria com ${this.empresa.nome}`;
+    document.title = `${this.empresa.nome} | Vistoria Veicular em ${this.empresa.cidade || ''} ${this.empresa.estado || ''}`.trim();
+    document.getElementById('pageDescription').content =
+      `Agende sua vistoria veicular com ${this.empresa.nome} em ${this.empresa.cidade || ''}, ${this.empresa.estado || ''}. Vistorias cautelares, transferências e laudos. Atendimento rápido e online.`;
+
+    // SEO: Inject dynamic meta tags, Open Graph, canonical, and JSON-LD schema
+    this.injectSEOTags();
 
     // Profile section
     this.renderProfileSection();
@@ -336,6 +340,120 @@ class EmpresaPage {
 
     // Apply custom colors
     this.applyCustomColors();
+  }
+
+  injectSEOTags() {
+    const empresa = this.empresa;
+    const slug = this.slug;
+    const baseUrl = 'https://agendaaquivistorias.com.br';
+    const pageUrl = `${baseUrl}/${slug}`;
+    const cidade = empresa.cidade || '';
+    const estado = empresa.estado || '';
+    const descricao = `Agende sua vistoria veicular com ${empresa.nome} em ${cidade}, ${estado}. Vistorias cautelares, transferências e laudos. Atendimento rápido e online.`;
+
+    // --- Canonical ---
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.rel = 'canonical';
+      document.head.appendChild(canonical);
+    }
+    canonical.href = pageUrl;
+
+    // --- Keywords ---
+    let keywords = document.querySelector('meta[name="keywords"]');
+    if (!keywords) {
+      keywords = document.createElement('meta');
+      keywords.name = 'keywords';
+      document.head.appendChild(keywords);
+    }
+    keywords.content = `vistoria veicular ${cidade}, vistoria ${estado}, cautelar ${cidade}, ${empresa.nome}, laudo veicular ${cidade}, transferência veicular ${cidade}`;
+
+    // --- Open Graph ---
+    const ogTags = {
+      'og:title': `${empresa.nome} | Vistoria Veicular em ${cidade} ${estado}`,
+      'og:description': descricao,
+      'og:url': pageUrl,
+      'og:type': 'business.business',
+      'og:locale': 'pt_BR',
+      'og:site_name': 'AgendaAqui Vistorias'
+    };
+
+    if (empresa.logo_url) {
+      const logoUrl = empresa.logo_url.startsWith('http') ? empresa.logo_url : `${baseUrl}${empresa.logo_url}`;
+      ogTags['og:image'] = logoUrl;
+    }
+
+    for (const [property, content] of Object.entries(ogTags)) {
+      let tag = document.querySelector(`meta[property="${property}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute('property', property);
+        document.head.appendChild(tag);
+      }
+      tag.content = content;
+    }
+
+    // --- JSON-LD Schema (LocalBusiness / AutoRepair) ---
+    const endereco = [empresa.endereco, empresa.numero].filter(Boolean).join(', ');
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'AutoRepair',
+      'name': empresa.nome,
+      'description': descricao,
+      'url': pageUrl,
+      'telephone': empresa.telefone || empresa.whatsapp || '',
+      'priceRange': '$$',
+      'address': {
+        '@type': 'PostalAddress',
+        'streetAddress': endereco,
+        'addressLocality': cidade,
+        'addressRegion': estado,
+        'postalCode': empresa.cep || '',
+        'addressCountry': 'BR'
+      },
+      'image': empresa.logo_url ? (empresa.logo_url.startsWith('http') ? empresa.logo_url : `${baseUrl}${empresa.logo_url}`) : undefined
+    };
+
+    // Geo coordinates (approximate by city if not available)
+    if (empresa.latitude && empresa.longitude) {
+      schema.geo = {
+        '@type': 'GeoCoordinates',
+        'latitude': empresa.latitude,
+        'longitude': empresa.longitude
+      };
+    }
+
+    // Opening hours
+    if (empresa.horario_funcionamento) {
+      schema.openingHours = empresa.horario_funcionamento;
+    }
+
+    // Rating
+    if (empresa.google_rating) {
+      schema.aggregateRating = {
+        '@type': 'AggregateRating',
+        'ratingValue': parseFloat(empresa.google_rating) || 5.0,
+        'reviewCount': parseInt(empresa.google_reviews_count) || 1,
+        'bestRating': 5
+      };
+    }
+
+    // Social links
+    const sameAs = [empresa.facebook_url, empresa.instagram_url, empresa.site_url, empresa.google_meu_negocio_url].filter(Boolean);
+    if (sameAs.length > 0) {
+      schema.sameAs = sameAs;
+    }
+
+    // Remove existing schema if any
+    const existingSchema = document.querySelector('script[data-seo="jsonld"]');
+    if (existingSchema) existingSchema.remove();
+
+    const scriptTag = document.createElement('script');
+    scriptTag.type = 'application/ld+json';
+    scriptTag.setAttribute('data-seo', 'jsonld');
+    scriptTag.textContent = JSON.stringify(schema);
+    document.head.appendChild(scriptTag);
   }
 
   renderProfileSection() {

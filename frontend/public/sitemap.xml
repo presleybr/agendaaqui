@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Página principal (Marketplace) -->
+  <url>
+    <loc>https://agendaaquivistorias.com.br/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Nexus Vistoria -->
+  <url>
+    <loc>https://agendaaquivistorias.com.br/nexus</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Cadastro de Empresa -->
+  <url>
+    <loc>https://agendaaquivistorias.com.br/cadastro-empresa.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Painel da Empresa (login) -->
+  <url>
+    <loc>https://agendaaquivistorias.com.br/painel-empresa.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>

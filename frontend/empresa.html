@@ -3,9 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title id="pageTitle">Vistoria Veicular - Agende Online</title>
-  <meta name="description" id="pageDescription" content="Agende sua vistoria veicular online de forma rápida e fácil.">
+  <title id="pageTitle">Vistoria Veicular - Agende Online | AgendaAqui Vistorias</title>
+  <meta name="description" id="pageDescription" content="Agende sua vistoria veicular online de forma rápida e fácil. Vistorias cautelares, transferências e laudos com atendimento rápido.">
+  <meta name="keywords" content="vistoria veicular, vistoria cautelar, laudo veicular, transferência veicular, agendamento online">
+  <meta name="robots" content="index, follow">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="canonical" href="https://agendaaquivistorias.com.br">
+
+  <!-- Open Graph defaults (overridden by JS) -->
+  <meta property="og:type" content="business.business">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="AgendaAqui Vistorias">
+  <meta property="og:title" content="Vistoria Veicular - Agende Online">
+  <meta property="og:description" content="Agende sua vistoria veicular online de forma rápida e fácil.">
 
   <!-- Mercado Pago SDK -->
   <script src="https://sdk.mercadopago.com/js/v2"></script>
@@ -82,7 +92,7 @@
     <!-- Cover Photo -->
     <div class="cover-photo" id="coverPhoto">
       <div class="cover-gradient"></div>
-      <img src="/cover-default.jpg" alt="Capa" id="coverImage" onerror="this.style.display='none'">
+      <img src="/cover-default.jpg" alt="Capa da empresa" id="coverImage" loading="lazy" onerror="this.style.display='none'">
     </div>
 
     <!-- Profile Info Overlay -->
@@ -90,7 +100,7 @@
       <div class="profile-main">
         <!-- Profile Picture -->
         <div class="profile-picture" id="profilePicture">
-          <img src="" alt="Logo" id="profileImage" onerror="this.parentElement.classList.add('no-image')">
+          <img src="" alt="Logo da empresa" id="profileImage" loading="lazy" onerror="this.parentElement.classList.add('no-image')">
           <span class="profile-initial" id="profileInitial">V</span>
         </div>
 

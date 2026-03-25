@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /cliente
+Disallow: /cliente/
+Disallow: /super-admin
+Disallow: /api/
+
+Sitemap: https://agendaaquivistorias.com.br/sitemap.xml
