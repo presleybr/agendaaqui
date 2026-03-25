@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageTitle">Blog | AgendaAqui Vistorias - Dicas e Guias sobre Vistoria Veicular</title>
+  <meta name="description" id="pageDescription" content="Artigos, guias e dicas sobre vistoria veicular, compra de carros usados, transferência, documentação e mais. Informação de qualidade para você.">
+  <meta name="keywords" content="blog vistoria veicular, dicas compra carro usado, transferência veicular, vistoria cautelar, laudo veicular">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="canonical" id="pageCanonical" href="https://agendaaquivistorias.com.br/blog">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="AgendaAqui Vistorias">
+  <meta property="og:title" id="ogTitle" content="Blog | AgendaAqui Vistorias">
+  <meta property="og:description" id="ogDescription" content="Artigos, guias e dicas sobre vistoria veicular.">
+  <meta property="og:url" content="https://agendaaquivistorias.com.br/blog">
+  <meta property="og:image" content="https://agendaaquivistorias.com.br/logo-dark.png">
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="twTitle" content="Blog | AgendaAqui Vistorias">
+  <meta name="twitter:description" id="twDescription" content="Artigos, guias e dicas sobre vistoria veicular.">
+  <meta name="twitter:image" content="https://agendaaquivistorias.com.br/logo-dark.png">
+
+  <link rel="stylesheet" href="/src/styles/main.css">
+  <link rel="stylesheet" href="/src/styles/marketplace.css">
+  <link rel="stylesheet" href="/src/styles/blog.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header" id="siteHeader">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <h1 class="logo-text">AgendaAqui</h1>
+        </a>
+        <nav class="main-nav">
+          <a href="/" class="nav-link">Buscar Vistorias</a>
+          <a href="/blog" class="nav-link active">Blog</a>
+          <a href="/painel-empresa.html" class="nav-link nav-link-cta">Area da Empresa</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Breadcrumb -->
+  <div class="container" style="padding-top: 90px;">
+    <nav id="breadcrumb" class="blog-breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span>&gt;</span>
+      <span id="breadcrumbCurrent">Blog</span>
+    </nav>
+  </div>
+
+  <!-- Blog Content -->
+  <main class="blog-main">
+    <div class="container">
+      <!-- Blog List View -->
+      <div id="blogList">
+        <div class="blog-hero">
+          <h1 id="blogTitle">Blog AgendaAqui Vistorias</h1>
+          <p id="blogSubtitle">Dicas, guias e informacoes sobre vistoria veicular</p>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="blog-filters" id="blogFilters">
+          <button class="filter-btn active" data-cat="">Todos</button>
+          <button class="filter-btn" data-cat="guia">Guias</button>
+          <button class="filter-btn" data-cat="dicas">Dicas</button>
+          <button class="filter-btn" data-cat="regional">Regional</button>
+        </div>
+
+        <!-- Articles Grid -->
+        <div class="blog-grid" id="blogGrid">
+          <!-- Cards inseridos via JS -->
+        </div>
+
+        <div class="blog-loading" id="blogLoading">
+          <div class="spinner"></div>
+          <p>Carregando artigos...</p>
+        </div>
+      </div>
+
+      <!-- Single Article View -->
+      <div id="articleView" style="display: none;">
+        <article class="blog-article">
+          <div class="article-header">
+            <div class="article-meta">
+              <span class="article-category" id="articleCategory"></span>
+              <time id="articleDate"></time>
+              <span id="articleReadTime"></span>
+            </div>
+            <h1 id="articleTitle"></h1>
+            <p class="article-summary" id="articleSummary"></p>
+          </div>
+
+          <div class="article-content" id="articleContent">
+            <!-- Conteudo inserido via JS -->
+          </div>
+
+          <div class="article-tags" id="articleTags">
+            <!-- Tags inseridas via JS -->
+          </div>
+
+          <!-- CTA -->
+          <div class="article-cta">
+            <h3>Precisa de uma vistoria veicular?</h3>
+            <p>Encontre empresas credenciadas na sua cidade, compare precos e agende online.</p>
+            <a href="/" class="btn btn-primary">Buscar Vistorias</a>
+          </div>
+
+          <!-- Related Articles -->
+          <div class="related-articles" id="relatedArticles">
+            <h3>Artigos Relacionados</h3>
+            <div class="related-grid" id="relatedGrid"></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2025 AgendaAqui Vistorias. Todos os direitos reservados.</p>
+      </div>
+      <div class="footer-content">
+        <div class="footer-section">
+          <h4>Contato</h4>
+          <p>(67) 99967-3464</p>
+          <p>contato@agendaaquivistorias.com.br</p>
+        </div>
+        <div class="footer-section">
+          <h4>Links Uteis</h4>
+          <ul>
+            <li><a href="/">Buscar Vistorias</a></li>
+            <li><a href="/blog">Blog</a></li>
+            <li><a href="/painel-empresa.html">Area da Empresa</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/blog.js"></script>
+</body>
+</html>

@@ -43,7 +43,8 @@ export default defineConfig({
         cliente: resolve(__dirname, 'cliente.html'),
         painelEmpresa: resolve(__dirname, 'painel-empresa.html'),
         cadastroEmpresa: resolve(__dirname, 'cadastro-empresa.html'),
-        vistorias: resolve(__dirname, 'vistorias.html')
+        vistorias: resolve(__dirname, 'vistorias.html'),
+        blog: resolve(__dirname, 'blog.html')
       }
     }
   },

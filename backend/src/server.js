@@ -41,6 +41,9 @@ const registroEmpresaRoutes = require('./routes/registroEmpresa');
 // Rotas SEO (sitemap dinâmico, meta tags pré-renderizadas)
 const seoRoutes = require('./routes/seo');
 
+// Rotas do Blog (artigos, SEO, pre-rendering)
+const blogRoutes = require('./routes/blog');
+
 // Rotas WhatsApp (notificacoes)
 const whatsappEmpresaRoutes = require('./routes/whatsappEmpresa');
 const whatsappCronRoutes = require('./routes/whatsappCron');
@@ -267,6 +270,9 @@ app.use('/api/registro', registroEmpresaRoutes);
 // SEO Routes (sitemap dinâmico, dados para pre-rendering)
 app.use('/api/seo', seoRoutes);
 
+// Blog Routes (artigos públicos)
+app.use('/api/blog', blogRoutes);
+
 // Tenant Routes (requer subdomínio válido)
 app.use('/api/tenant', tenantRoutes);
 
@@ -311,6 +317,45 @@ app.get('/cliente', (req, res) => {
     res.sendFile(clientePath);
   } else {
     res.status(404).send('Cliente panel not found');
+  }
+});
+
+// Rota para o Blog (SEO com pre-rendering para bots)
+const { isBot: isBotCheck } = require('./middleware/seoPrerender');
+const { artigos: blogArtigos } = require('./routes/blog');
+
+app.get('/blog', (req, res) => {
+  const fs = require('fs');
+  const prodPath = path.join(__dirname, '../../frontend/dist/blog.html');
+  const devPath = path.join(__dirname, '../../frontend/blog.html');
+  const filePath = fs.existsSync(prodPath) ? prodPath : devPath;
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.redirect('/');
+  }
+});
+
+app.get('/blog/:slug', (req, res) => {
+  const userAgent = req.get('user-agent') || '';
+
+  // Pre-render para bots
+  if (isBotCheck(userAgent)) {
+    const artigo = blogArtigos.find(a => a.slug === req.params.slug);
+    if (artigo) {
+      // Redireciona internamente para o endpoint de pre-render
+      return res.redirect(307, `/api/blog/prerender/${req.params.slug}`);
+    }
+  }
+
+  const fs = require('fs');
+  const prodPath = path.join(__dirname, '../../frontend/dist/blog.html');
+  const devPath = path.join(__dirname, '../../frontend/blog.html');
+  const filePath = fs.existsSync(prodPath) ? prodPath : devPath;
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.redirect('/blog');
   }
 });
 
@@ -360,7 +405,8 @@ app.get('/:slug([a-z0-9-]+)', seoPrerender, (req, res, next) => {
     'robots',
     'sitemap',
     'index',
-    'vistorias'
+    'vistorias',
+    'blog'
   ];
 
   // Se for uma rota reservada ou tiver extensão de arquivo, passa para o próximo handler

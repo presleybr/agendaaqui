@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const Empresa = require('../models/Empresa');
+let blogArtigos = [];
+try { blogArtigos = require('./blog').artigos || []; } catch (e) { /* blog not loaded yet */ }
 
 /**
  * GET /api/seo/sitemap.xml
@@ -42,6 +44,12 @@ router.get('/sitemap.xml', async (req, res) => {
       const cidadeSlug = c.cidade.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
       const estadoSlug = c.estado.toLowerCase();
       xml += `  <url>\n    <loc>${baseUrl}/vistorias/${cidadeSlug}-${estadoSlug}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    }
+
+    // Blog
+    xml += `  <url>\n    <loc>${baseUrl}/blog</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+    for (const artigo of blogArtigos) {
+      xml += `  <url>\n    <loc>${baseUrl}/blog/${artigo.slug}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n    <lastmod>${artigo.data_publicacao}</lastmod>\n  </url>\n`;
     }
 
     xml += '</urlset>';

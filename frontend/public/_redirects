@@ -21,6 +21,11 @@
 /vistorias/         /vistorias.html         200
 /vistorias/*        /vistorias.html         200
 
+# Blog (SEO)
+/blog               /blog.html              200
+/blog/              /blog.html              200
+/blog/*             /blog.html              200
+
 # SEO files
 /sitemap.xml   /sitemap.xml   200
 /robots.txt    /robots.txt    200
