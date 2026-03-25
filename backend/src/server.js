@@ -37,6 +37,9 @@ const asaasRoutes = require('./routes/asaas');
 // Rota pública de auto-cadastro de empresas
 const registroEmpresaRoutes = require('./routes/registroEmpresa');
 
+// Rotas SEO (sitemap dinâmico, meta tags pré-renderizadas)
+const seoRoutes = require('./routes/seo');
+
 // Rotas WhatsApp (notificacoes)
 const whatsappEmpresaRoutes = require('./routes/whatsappEmpresa');
 const whatsappCronRoutes = require('./routes/whatsappCron');
@@ -260,6 +263,9 @@ app.use('/api/asaas', asaasRoutes);
 // Auto-cadastro de empresas (público)
 app.use('/api/registro', registroEmpresaRoutes);
 
+// SEO Routes (sitemap dinâmico, dados para pre-rendering)
+app.use('/api/seo', seoRoutes);
+
 // Tenant Routes (requer subdomínio válido)
 app.use('/api/tenant', tenantRoutes);
 
@@ -304,6 +310,30 @@ app.get('/cliente', (req, res) => {
     res.sendFile(clientePath);
   } else {
     res.status(404).send('Cliente panel not found');
+  }
+});
+
+// Rota para landing pages de cidades (SEO)
+app.get('/vistorias', (req, res) => {
+  const fs = require('fs');
+  const prodPath = path.join(__dirname, '../../frontend/dist/vistorias.html');
+  const devPath = path.join(__dirname, '../../frontend/vistorias.html');
+  const filePath = fs.existsSync(prodPath) ? prodPath : devPath;
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.redirect('/');
+  }
+});
+app.get('/vistorias/*', (req, res) => {
+  const fs = require('fs');
+  const prodPath = path.join(__dirname, '../../frontend/dist/vistorias.html');
+  const devPath = path.join(__dirname, '../../frontend/vistorias.html');
+  const filePath = fs.existsSync(prodPath) ? prodPath : devPath;
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.redirect('/');
   }
 });
 

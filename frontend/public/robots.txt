@@ -6,5 +6,8 @@ Disallow: /cliente
 Disallow: /cliente/
 Disallow: /super-admin
 Disallow: /api/
+Disallow: /painel
+Disallow: /painel/
 
 Sitemap: https://agendaaquivistorias.com.br/sitemap.xml
+Sitemap: https://api.agendaaquivistorias.com.br/api/seo/sitemap.xml

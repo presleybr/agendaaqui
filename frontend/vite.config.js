@@ -42,7 +42,8 @@ export default defineConfig({
         empresa: resolve(__dirname, 'empresa.html'),
         cliente: resolve(__dirname, 'cliente.html'),
         painelEmpresa: resolve(__dirname, 'painel-empresa.html'),
-        cadastroEmpresa: resolve(__dirname, 'cadastro-empresa.html')
+        cadastroEmpresa: resolve(__dirname, 'cadastro-empresa.html'),
+        vistorias: resolve(__dirname, 'vistorias.html')
       }
     }
   },

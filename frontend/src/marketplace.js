@@ -427,10 +427,10 @@ class Marketplace {
       const headerClass = capaUrl ? 'card-header has-capa' : 'card-header';
 
       return `
-        <a href="${empresa.url || '/' + empresa.slug}" class="empresa-card ${isFeatured ? 'featured-card' : ''}">
+        <a href="${empresa.url || '/' + empresa.slug}" class="empresa-card ${isFeatured ? 'featured-card' : ''}" title="${empresa.nome} - Vistoria Veicular em ${empresa.cidade || ''}, ${empresa.estado || ''}">
           <div class="${headerClass}" ${headerStyle}>
             <div class="empresa-logo">
-              <img src="${logoUrl}" alt="${empresa.nome || 'Empresa'}" onerror="this.style.display='none'">
+              <img src="${logoUrl}" alt="${empresa.nome || 'Empresa'} - Vistoria Veicular em ${empresa.cidade || ''}" loading="lazy" onerror="this.style.display='none'">
             </div>
             ${distancia}
           </div>

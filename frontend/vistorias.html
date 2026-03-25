@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageTitle">Vistoria Veicular | AgendaAqui Vistorias</title>
+  <meta name="description" id="pageDescription" content="Encontre empresas de vistoria veicular na sua cidade. Compare preços, veja avaliações e agende online.">
+  <meta name="keywords" id="pageKeywords" content="vistoria veicular, vistoria cautelar, laudo veicular, agendamento online">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="canonical" id="pageCanonical" href="https://agendaaquivistorias.com.br">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="AgendaAqui Vistorias">
+  <meta property="og:title" id="ogTitle" content="Vistoria Veicular | AgendaAqui Vistorias">
+  <meta property="og:description" id="ogDescription" content="Encontre empresas de vistoria veicular na sua cidade.">
+  <meta property="og:image" content="https://agendaaquivistorias.com.br/logo-dark.png">
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="twitterTitle" content="Vistoria Veicular | AgendaAqui Vistorias">
+  <meta name="twitter:description" id="twitterDescription" content="Encontre empresas de vistoria veicular na sua cidade.">
+
+  <link rel="stylesheet" href="/src/styles/main.css">
+  <link rel="stylesheet" href="/src/styles/marketplace.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header" id="siteHeader">
+    <div class="container">
+      <div class="header-content">
+        <a href="/" class="logo">
+          <h1 class="logo-text">AgendaAqui</h1>
+        </a>
+        <nav class="main-nav">
+          <a href="/" class="nav-link">Buscar Vistorias</a>
+          <a href="/#como-funciona" class="nav-link">Como Funciona</a>
+          <a href="/painel-empresa.html" class="nav-link nav-link-cta">Area da Empresa</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Breadcrumb -->
+  <div class="container" style="padding-top: 100px;">
+    <nav id="breadcrumb" aria-label="Breadcrumb" style="font-size: 14px; color: #666; margin-bottom: 16px;">
+      <a href="/" style="color: #2563eb; text-decoration: none;">Home</a>
+      <span style="margin: 0 8px;">&gt;</span>
+      <span id="breadcrumbCidade">Vistorias</span>
+    </nav>
+  </div>
+
+  <!-- City Hero -->
+  <section class="hero-section" style="padding: 40px 0 30px; min-height: auto; background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);">
+    <div class="container">
+      <div class="hero-content" style="padding: 0;">
+        <h1 id="cityTitle" class="hero-title" style="font-size: 2rem;">Vistoria Veicular</h1>
+        <p id="citySubtitle" class="hero-subtitle" style="font-size: 1.1rem;">Encontre as melhores empresas de vistoria veicular</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Companies List -->
+  <section class="search-results-section" style="padding-top: 30px;">
+    <div class="container">
+      <div id="resultsHeader" class="results-header" style="display: none;">
+        <h2 id="resultsTitle">Empresas encontradas</h2>
+      </div>
+
+      <div class="results-grid" id="resultsGrid"></div>
+
+      <div class="loading-state" id="loadingState" style="display: flex;">
+        <div class="spinner"></div>
+        <p>Carregando empresas...</p>
+      </div>
+
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <h3>Nenhuma empresa encontrada nesta cidade</h3>
+        <p>Tente buscar por outra cidade na <a href="/" style="color: #2563eb;">pagina principal</a></p>
+      </div>
+
+      <!-- FAQ Section for SEO -->
+      <div id="faqSection" style="display: none; margin-top: 48px; max-width: 800px;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 24px;">Perguntas Frequentes</h2>
+        <div id="faqList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2025 AgendaAqui Vistorias. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/vistorias.js"></script>
+</body>
+</html>

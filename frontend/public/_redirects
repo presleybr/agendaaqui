@@ -16,6 +16,11 @@
 /painel/            /painel-empresa.html    200
 /painel/*           /painel-empresa.html    200
 
+# Landing pages de cidades (SEO)
+/vistorias          /vistorias.html         200
+/vistorias/         /vistorias.html         200
+/vistorias/*        /vistorias.html         200
+
 # SEO files
 /sitemap.xml   /sitemap.xml   200
 /robots.txt    /robots.txt    200

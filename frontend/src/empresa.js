@@ -342,14 +342,18 @@ class EmpresaPage {
     this.applyCustomColors();
   }
 
-  injectSEOTags() {
+  async injectSEOTags() {
     const empresa = this.empresa;
     const slug = this.slug;
     const baseUrl = 'https://agendaaquivistorias.com.br';
     const pageUrl = `${baseUrl}/${slug}`;
     const cidade = empresa.cidade || '';
     const estado = empresa.estado || '';
-    const descricao = `Agende sua vistoria veicular com ${empresa.nome} em ${cidade}, ${estado}. Vistorias cautelares, transferências e laudos. Atendimento rápido e online.`;
+    const descricao = empresa.meta_description ||
+      `Agende sua vistoria veicular com ${empresa.nome} em ${cidade}, ${estado}. Vistorias cautelares, transferências e laudos. Atendimento rápido e online.`;
+    const logoUrl = empresa.logo_url
+      ? (empresa.logo_url.startsWith('http') ? empresa.logo_url : `${baseUrl}${empresa.logo_url}`)
+      : `${baseUrl}/logo-dark.png`;
 
     // --- Canonical ---
     let canonical = document.querySelector('link[rel="canonical"]');
@@ -361,13 +365,7 @@ class EmpresaPage {
     canonical.href = pageUrl;
 
     // --- Keywords ---
-    let keywords = document.querySelector('meta[name="keywords"]');
-    if (!keywords) {
-      keywords = document.createElement('meta');
-      keywords.name = 'keywords';
-      document.head.appendChild(keywords);
-    }
-    keywords.content = `vistoria veicular ${cidade}, vistoria ${estado}, cautelar ${cidade}, ${empresa.nome}, laudo veicular ${cidade}, transferência veicular ${cidade}`;
+    this.setMetaTag('name', 'keywords', `vistoria veicular ${cidade}, vistoria ${estado}, cautelar ${cidade}, ${empresa.nome}, laudo veicular ${cidade}, transferência veicular ${cidade}`);
 
     // --- Open Graph ---
     const ogTags = {
@@ -376,84 +374,108 @@ class EmpresaPage {
       'og:url': pageUrl,
       'og:type': 'business.business',
       'og:locale': 'pt_BR',
-      'og:site_name': 'AgendaAqui Vistorias'
+      'og:site_name': 'AgendaAqui Vistorias',
+      'og:image': logoUrl
     };
-
-    if (empresa.logo_url) {
-      const logoUrl = empresa.logo_url.startsWith('http') ? empresa.logo_url : `${baseUrl}${empresa.logo_url}`;
-      ogTags['og:image'] = logoUrl;
-    }
-
     for (const [property, content] of Object.entries(ogTags)) {
-      let tag = document.querySelector(`meta[property="${property}"]`);
-      if (!tag) {
-        tag = document.createElement('meta');
-        tag.setAttribute('property', property);
-        document.head.appendChild(tag);
-      }
-      tag.content = content;
+      this.setMetaTag('property', property, content);
     }
 
-    // --- JSON-LD Schema (LocalBusiness / AutoRepair) ---
-    const endereco = [empresa.endereco, empresa.numero].filter(Boolean).join(', ');
-    const schema = {
-      '@context': 'https://schema.org',
-      '@type': 'AutoRepair',
-      'name': empresa.nome,
-      'description': descricao,
-      'url': pageUrl,
-      'telephone': empresa.telefone || empresa.whatsapp || '',
-      'priceRange': '$$',
-      'address': {
-        '@type': 'PostalAddress',
-        'streetAddress': endereco,
-        'addressLocality': cidade,
-        'addressRegion': estado,
-        'postalCode': empresa.cep || '',
-        'addressCountry': 'BR'
-      },
-      'image': empresa.logo_url ? (empresa.logo_url.startsWith('http') ? empresa.logo_url : `${baseUrl}${empresa.logo_url}`) : undefined
+    // --- Twitter Cards ---
+    const twitterTags = {
+      'twitter:card': 'summary_large_image',
+      'twitter:title': `${empresa.nome} | Vistoria Veicular em ${cidade} ${estado}`,
+      'twitter:description': descricao,
+      'twitter:image': logoUrl
     };
-
-    // Geo coordinates (approximate by city if not available)
-    if (empresa.latitude && empresa.longitude) {
-      schema.geo = {
-        '@type': 'GeoCoordinates',
-        'latitude': empresa.latitude,
-        'longitude': empresa.longitude
-      };
+    for (const [name, content] of Object.entries(twitterTags)) {
+      this.setMetaTag('name', name, content);
     }
 
-    // Opening hours
-    if (empresa.horario_funcionamento) {
-      schema.openingHours = empresa.horario_funcionamento;
+    // --- Preconnect to API for performance ---
+    if (!document.querySelector('link[rel="preconnect"][href*="onrender"]')) {
+      const preconnect = document.createElement('link');
+      preconnect.rel = 'preconnect';
+      preconnect.href = scheduleService.API_URL.replace('/api', '');
+      document.head.appendChild(preconnect);
     }
 
-    // Rating
-    if (empresa.google_rating) {
-      schema.aggregateRating = {
-        '@type': 'AggregateRating',
-        'ratingValue': parseFloat(empresa.google_rating) || 5.0,
-        'reviewCount': parseInt(empresa.google_reviews_count) || 1,
-        'bestRating': 5
-      };
+    // --- Try to load rich SEO data from backend (includes Breadcrumb + FAQ schemas) ---
+    try {
+      const response = await fetch(`${scheduleService.API_URL}/seo/empresa/${slug}`);
+      if (response.ok) {
+        const seoData = await response.json();
+        if (seoData.schemas) {
+          document.querySelectorAll('script[data-seo="jsonld"]').forEach(el => el.remove());
+          seoData.schemas.forEach(schema => {
+            const scriptTag = document.createElement('script');
+            scriptTag.type = 'application/ld+json';
+            scriptTag.setAttribute('data-seo', 'jsonld');
+            scriptTag.textContent = JSON.stringify(schema);
+            document.head.appendChild(scriptTag);
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      // Fallback to client-side schemas
     }
 
-    // Social links
-    const sameAs = [empresa.facebook_url, empresa.instagram_url, empresa.site_url, empresa.google_meu_negocio_url].filter(Boolean);
-    if (sameAs.length > 0) {
-      schema.sameAs = sameAs;
+    // --- Fallback: generate schemas client-side ---
+    const endereco = [empresa.endereco, empresa.numero].filter(Boolean).join(', ');
+    const cidadeSlug = cidade.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+
+    const schemas = [
+      // LocalBusiness / AutoRepair
+      {
+        '@context': 'https://schema.org', '@type': 'AutoRepair',
+        name: empresa.nome, description: descricao, url: pageUrl,
+        telephone: empresa.telefone || empresa.whatsapp || '', priceRange: '$$',
+        image: logoUrl,
+        address: { '@type': 'PostalAddress', streetAddress: endereco, addressLocality: cidade, addressRegion: estado, postalCode: empresa.cep || '', addressCountry: 'BR' },
+        ...(empresa.latitude && empresa.longitude ? { geo: { '@type': 'GeoCoordinates', latitude: empresa.latitude, longitude: empresa.longitude } } : {}),
+        ...(empresa.horario_funcionamento ? { openingHours: empresa.horario_funcionamento } : {}),
+        ...(empresa.google_rating ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: parseFloat(empresa.google_rating) || 5.0, reviewCount: parseInt(empresa.google_reviews_count) || 1, bestRating: 5 } } : {}),
+        ...([empresa.facebook_url, empresa.instagram_url, empresa.site_url].filter(Boolean).length > 0 ? { sameAs: [empresa.facebook_url, empresa.instagram_url, empresa.site_url].filter(Boolean) } : {})
+      },
+      // Breadcrumb
+      {
+        '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: baseUrl },
+          { '@type': 'ListItem', position: 2, name: `Vistorias em ${cidade}, ${estado}`, item: `${baseUrl}/vistorias/${cidadeSlug}-${estado.toLowerCase()}` },
+          { '@type': 'ListItem', position: 3, name: empresa.nome, item: pageUrl }
+        ]
+      },
+      // FAQ
+      {
+        '@context': 'https://schema.org', '@type': 'FAQPage',
+        mainEntity: [
+          { '@type': 'Question', name: `Quanto custa uma vistoria veicular na ${empresa.nome}?`, acceptedAnswer: { '@type': 'Answer', text: `Os preços variam conforme o serviço. Vistoria cautelar a partir de R$ ${((empresa.preco_cautelar || 15000) / 100).toFixed(2).replace('.', ',')}. Agende online para conferir.` } },
+          { '@type': 'Question', name: `Onde fica a ${empresa.nome}?`, acceptedAnswer: { '@type': 'Answer', text: `Localizada em ${endereco ? endereco + ', ' : ''}${cidade}, ${estado}.` } },
+          { '@type': 'Question', name: `Como agendar vistoria na ${empresa.nome}?`, acceptedAnswer: { '@type': 'Answer', text: `Agende online pelo site. Escolha serviço, data e horário, e pague via PIX ou cartão.` } }
+        ]
+      }
+    ];
+
+    document.querySelectorAll('script[data-seo="jsonld"]').forEach(el => el.remove());
+    schemas.forEach(s => {
+      const scriptTag = document.createElement('script');
+      scriptTag.type = 'application/ld+json';
+      scriptTag.setAttribute('data-seo', 'jsonld');
+      scriptTag.textContent = JSON.stringify(s);
+      document.head.appendChild(scriptTag);
+    });
+  }
+
+  setMetaTag(attr, key, content) {
+    let tag = document.querySelector(`meta[${attr}="${key}"]`);
+    if (!tag) {
+      tag = document.createElement('meta');
+      tag.setAttribute(attr, key);
+      document.head.appendChild(tag);
     }
-
-    // Remove existing schema if any
-    const existingSchema = document.querySelector('script[data-seo="jsonld"]');
-    if (existingSchema) existingSchema.remove();
-
-    const scriptTag = document.createElement('script');
-    scriptTag.type = 'application/ld+json';
-    scriptTag.setAttribute('data-seo', 'jsonld');
-    scriptTag.textContent = JSON.stringify(schema);
-    document.head.appendChild(scriptTag);
+    tag.content = content;
   }
 
   renderProfileSection() {
