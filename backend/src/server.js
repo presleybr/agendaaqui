@@ -9,6 +9,7 @@ const path = require('path');
 const errorHandler = require('./middleware/errorHandler');
 const db = require('./config/database');
 const { detectTenant } = require('./middleware/tenantMiddleware');
+const { seoPrerender } = require('./middleware/seoPrerender');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -340,7 +341,8 @@ app.get('/vistorias/*', (req, res) => {
 // Rota para páginas de empresas (URLs amigáveis)
 // Deve vir ANTES do catch-all do SPA
 // Exemplos: /vistoriapremium, /vistoria-express-sp
-app.get('/:slug([a-z0-9-]+)', (req, res, next) => {
+// Usa middleware seoPrerender para servir HTML completo para bots/crawlers do Google
+app.get('/:slug([a-z0-9-]+)', seoPrerender, (req, res, next) => {
   const fs = require('fs');
   const slug = req.params.slug;
 
@@ -357,7 +359,8 @@ app.get('/:slug([a-z0-9-]+)', (req, res, next) => {
     'favicon',
     'robots',
     'sitemap',
-    'index'
+    'index',
+    'vistorias'
   ];
 
   // Se for uma rota reservada ou tiver extensão de arquivo, passa para o próximo handler
