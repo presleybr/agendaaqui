@@ -484,15 +484,16 @@ class EmpresaPage {
     const profileImage = document.getElementById('profileImage');
     const profileInitial = document.getElementById('profileInitial');
 
-    if (this.empresa.logo_url) {
-      const logoUrl = getImageUrl(this.empresa.logo_url);
-      console.log('Logo URL:', logoUrl);
+    const fotoPerfil = this.empresa.foto_perfil_url || this.empresa.logo_url;
+    if (fotoPerfil) {
+      const logoUrl = getImageUrl(fotoPerfil);
+      console.log('Foto perfil URL:', logoUrl);
       profileImage.onload = () => {
         profilePicture.classList.remove('no-image');
         profileImage.style.display = 'block';
       };
       profileImage.onerror = () => {
-        console.error('Erro ao carregar logo:', logoUrl);
+        console.error('Erro ao carregar foto de perfil:', logoUrl);
         profilePicture.classList.add('no-image');
       };
       profileImage.src = logoUrl;
