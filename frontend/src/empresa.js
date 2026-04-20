@@ -487,28 +487,16 @@ class EmpresaPage {
     const fotoPerfil = this.empresa.foto_perfil_url || this.empresa.logo_url;
     if (fotoPerfil) {
       const logoUrl = getImageUrl(fotoPerfil);
-      console.log('Foto perfil URL:', logoUrl);
-
-      const showImage = () => {
-        profilePicture.classList.remove('no-image');
-        profileImage.style.display = 'block';
-      };
-      const hideImage = () => {
+      console.log('Foto perfil URL:', logoUrl?.substring(0, 80));
+      // Mostra direto (mesmo padrao do /painel) — se a imagem falhar, onerror reverte.
+      profileImage.src = logoUrl;
+      profileImage.style.display = 'block';
+      profilePicture.classList.remove('no-image');
+      profileImage.onerror = () => {
+        console.error('Erro ao carregar foto de perfil');
         profileImage.style.display = 'none';
         profilePicture.classList.add('no-image');
       };
-
-      profileImage.onload = showImage;
-      profileImage.onerror = () => {
-        console.error('Erro ao carregar foto de perfil:', logoUrl);
-        hideImage();
-      };
-      profileImage.src = logoUrl;
-
-      // Caso a imagem ja esteja em cache (load nao dispara), forca exibicao.
-      if (profileImage.complete && profileImage.naturalWidth > 0) {
-        showImage();
-      }
     } else {
       profileImage.style.display = 'none';
       profilePicture.classList.add('no-image');
