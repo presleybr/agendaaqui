@@ -213,7 +213,7 @@ router.post('/card', async (req, res) => {
     if (mpPayment.status === 'approved') {
       await db.query(`
         UPDATE agendamentos
-        SET status = 'confirmado', pagamento_confirmado = true
+        SET status = 'confirmado', status_pagamento = 'aprovado', pagamento_confirmado = true
         WHERE id = $1
       `, [agendamento_id]);
 
@@ -285,7 +285,7 @@ router.get('/status/:paymentId', async (req, res) => {
           if (agendamento && agendamento.status !== 'confirmado') {
             await db.query(`
               UPDATE agendamentos
-              SET status = 'confirmado', pagamento_confirmado = true
+              SET status = 'confirmado', status_pagamento = 'aprovado', pagamento_confirmado = true
               WHERE id = $1
             `, [pagamentoRecord.agendamento_id]);
             console.log(`✅ Agendamento ${pagamentoRecord.agendamento_id} confirmado`);
@@ -377,7 +377,7 @@ router.post('/webhook', async (req, res) => {
             if (agendamento) {
               await db.query(`
                 UPDATE agendamentos
-                SET status = 'confirmado', pagamento_confirmado = true
+                SET status = 'confirmado', status_pagamento = 'aprovado', pagamento_confirmado = true
                 WHERE id = $1
               `, [pagamentoRecord.agendamento_id]);
 

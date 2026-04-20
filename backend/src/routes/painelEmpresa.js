@@ -1030,7 +1030,7 @@ router.post('/pix-manual/:id/aprovar', requireRole('admin', 'gerente'), async (r
 
     await db.query(
       `UPDATE agendamentos
-       SET status = 'confirmado', pagamento_confirmado = true
+       SET status = 'confirmado', status_pagamento = 'aprovado', pagamento_confirmado = true
        WHERE id = $1`,
       [pag.agendamento_id]
     );
@@ -1079,6 +1079,11 @@ router.post('/pix-manual/:id/rejeitar', requireRole('admin', 'gerente'), async (
       [motivo || 'Comprovante invalido', id, req.empresa_id]
     );
     if (!upd.rows[0]) return res.status(404).json({ error: 'Pagamento nao encontrado' });
+
+    await db.query(
+      `UPDATE agendamentos SET status_pagamento = 'recusado' WHERE id = $1`,
+      [upd.rows[0].agendamento_id]
+    );
 
     res.json({ success: true, pagamento_id: id });
   } catch (err) {
