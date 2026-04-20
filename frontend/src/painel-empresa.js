@@ -145,6 +145,7 @@ class PainelEmpresa {
 
       // Atualiza badge de PIX pendentes em segundo plano
       this.refreshPixPendentesBadge();
+      this.refreshMensalidadeBadgeAsync();
     } catch (err) {
       console.error('Token invalido:', err);
       localStorage.removeItem('empresa_token');
@@ -376,6 +377,9 @@ class PainelEmpresa {
         break;
       case 'pix-manual':
         this.loadPixPendentes();
+        break;
+      case 'mensalidade':
+        this.loadMensalidade();
         break;
       case 'configuracoes':
         this.loadConfiguracoes();
@@ -1579,6 +1583,206 @@ class PainelEmpresa {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  formatDate(dateStr) {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('pt-BR');
+  }
+
+  formatCurrency(centavos) {
+    return 'R$ ' + (Number(centavos || 0) / 100).toFixed(2).replace('.', ',');
+  }
+
+  async loadMensalidade() {
+    const container = document.getElementById('mensalidadeContainer');
+    if (!container) return;
+    container.innerHTML = '<div class="loading" style="padding:40px;text-align:center;"><div class="spinner"></div></div>';
+    try {
+      const data = await fetch(`${API_URL}/mensalidade/minha`, {
+        headers: { 'Authorization': `Bearer ${this.token}` }
+      }).then(r => r.json());
+
+      const emp = data.empresa || {};
+      const atual = data.atual;
+      const historico = data.historico || [];
+
+      if (emp.mensalidade_isenta) {
+        container.innerHTML = `
+          <div class="settings-card">
+            <div style="padding:24px;text-align:center;">
+              <h3 style="color:#16a34a;">Empresa isenta de mensalidade</h3>
+              <p style="color:#666;margin-top:8px;">Voce nao paga mensalidade nesta plataforma.</p>
+            </div>
+          </div>`;
+        return;
+      }
+
+      const statusBadge = (st) => {
+        const map = {
+          paga: ['#16a34a', '#ecfdf5', 'Paga'],
+          pendente: ['#ca8a04', '#fef9c3', 'Pendente'],
+          aguardando_aprovacao: ['#2563eb', '#dbeafe', 'Aguardando aprovacao'],
+          atrasada: ['#dc2626', '#fee2e2', 'Atrasada'],
+          isenta: ['#6b7280', '#f3f4f6', 'Isenta']
+        };
+        const [c, bg, label] = map[st] || ['#6b7280', '#f3f4f6', st];
+        return `<span style="padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;color:${c};background:${bg};">${label}</span>`;
+      };
+
+      const bannerAtraso = atual && atual.status === 'atrasada'
+        ? `<div style="background:#fee2e2;color:#991b1b;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-weight:500;">
+             Sua mensalidade esta em atraso. Pague para manter o acesso.
+           </div>`
+        : '';
+
+      let cardAtual = '';
+      if (atual) {
+        const showPix = ['pendente', 'atrasada'].includes(atual.status);
+        const showComprovanteForm = atual.status !== 'paga';
+        cardAtual = `
+          <div class="settings-card" style="margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div>
+                <div style="color:#666;font-size:13px;">Competencia ${atual.competencia}</div>
+                <div style="font-size:24px;font-weight:700;margin-top:4px;">${this.formatCurrency(atual.valor_centavos)}</div>
+                <div style="color:#666;font-size:13px;margin-top:4px;">Vencimento: ${this.formatDate(atual.data_vencimento)}</div>
+              </div>
+              <div>${statusBadge(atual.status)}</div>
+            </div>
+
+            ${atual.plano_nome ? `<div style="color:#666;font-size:13px;">Plano: <strong>${atual.plano_nome}</strong></div>` : ''}
+            ${atual.rejeicao_motivo ? `<div style="background:#fee2e2;color:#991b1b;padding:8px;border-radius:6px;margin-top:12px;font-size:13px;">Comprovante rejeitado: ${atual.rejeicao_motivo}</div>` : ''}
+
+            ${showPix ? `
+              <div style="margin-top:20px;padding-top:20px;border-top:1px solid #eee;">
+                <button class="btn btn-primary" id="btnGerarPixMens">${atual.pix_br_code ? 'Ver QR Code' : 'Gerar PIX'}</button>
+                <div id="pixMensArea" style="margin-top:16px;${atual.pix_qr_base64 ? '' : 'display:none;'}"></div>
+              </div>
+            ` : ''}
+
+            ${showComprovanteForm ? `
+              <div style="margin-top:20px;padding-top:20px;border-top:1px solid #eee;">
+                <label style="display:block;margin-bottom:8px;font-weight:500;">Enviar comprovante</label>
+                <input type="file" id="fileCompMens" accept="image/*,.pdf" style="margin-bottom:8px;">
+                <button class="btn btn-secondary" id="btnEnviarCompMens">Enviar</button>
+                ${atual.comprovante_url ? `<div style="margin-top:8px;color:#666;font-size:13px;">Ultimo envio: ${this.formatDateTime(atual.comprovante_enviado_em)}</div>` : ''}
+              </div>
+            ` : ''}
+          </div>`;
+      } else {
+        cardAtual = `<div class="settings-card"><p style="color:#666;padding:16px;">Nenhuma mensalidade aberta no momento.</p></div>`;
+      }
+
+      const histRows = historico.map(h => `
+        <tr>
+          <td>${h.competencia}</td>
+          <td>${this.formatCurrency(h.valor_centavos)}</td>
+          <td>${this.formatDate(h.data_vencimento)}</td>
+          <td>${statusBadge(h.status)}</td>
+          <td>${h.aprovado_em ? this.formatDate(h.aprovado_em) : '-'}</td>
+        </tr>
+      `).join('');
+
+      container.innerHTML = `
+        ${bannerAtraso}
+        ${cardAtual}
+        <div class="settings-card">
+          <h3 style="margin-bottom:16px;">Historico</h3>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr style="background:#f9fafb;">
+                  <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Competencia</th>
+                  <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Valor</th>
+                  <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Vencimento</th>
+                  <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Status</th>
+                  <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Paga em</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${histRows || '<tr><td colspan="5" style="padding:20px;text-align:center;color:#666;">Sem historico</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+
+      const btnPix = document.getElementById('btnGerarPixMens');
+      if (btnPix && atual) btnPix.onclick = () => this.gerarPixMensalidade(atual.id);
+      if (atual && atual.pix_qr_base64) this.renderPixMensalidade(atual);
+
+      const btnComp = document.getElementById('btnEnviarCompMens');
+      if (btnComp && atual) btnComp.onclick = () => this.enviarComprovanteMensalidade(atual.id);
+
+      this.refreshMensalidadeBadge(atual);
+    } catch (err) {
+      console.error('Erro loadMensalidade:', err);
+      container.innerHTML = `<div class="settings-card"><p style="color:#dc2626;padding:16px;">Erro ao carregar mensalidade: ${err.message}</p></div>`;
+    }
+  }
+
+  async gerarPixMensalidade(id) {
+    try {
+      const data = await this.apiPost(`/mensalidade/${id}/gerar-pix`, {});
+      this.renderPixMensalidade(data);
+    } catch (err) {
+      alert(err.message || 'Erro ao gerar PIX');
+    }
+  }
+
+  renderPixMensalidade(data) {
+    const area = document.getElementById('pixMensArea');
+    if (!area) return;
+    area.style.display = 'block';
+    const code = data.br_code || data.pix_br_code;
+    const qr = data.qr_code_base64 || data.pix_qr_base64;
+    area.innerHTML = `
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
+        ${qr ? `<img src="${qr}" alt="QR Code" style="width:220px;height:220px;border:1px solid #eee;border-radius:8px;">` : ''}
+        <div style="flex:1;min-width:260px;">
+          <label style="display:block;color:#666;font-size:13px;margin-bottom:4px;">PIX Copia e Cola</label>
+          <textarea readonly rows="4" style="width:100%;font-family:monospace;font-size:12px;padding:8px;border:1px solid #ddd;border-radius:6px;">${code || ''}</textarea>
+          <button class="btn btn-secondary" style="margin-top:8px;" onclick="navigator.clipboard.writeText(this.previousElementSibling.value);this.textContent='Copiado!';">Copiar codigo</button>
+        </div>
+      </div>`;
+  }
+
+  async enviarComprovanteMensalidade(id) {
+    const fileInput = document.getElementById('fileCompMens');
+    if (!fileInput || !fileInput.files[0]) return alert('Selecione um arquivo');
+    const fd = new FormData();
+    fd.append('comprovante', fileInput.files[0]);
+    try {
+      const res = await fetch(`${API_URL}/mensalidade/${id}/comprovante`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${this.token}` },
+        body: fd
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro no upload');
+      alert('Comprovante enviado! Aguardando aprovacao.');
+      this.loadMensalidade();
+    } catch (err) {
+      alert(err.message || 'Erro ao enviar comprovante');
+    }
+  }
+
+  async refreshMensalidadeBadgeAsync() {
+    try {
+      const data = await this.apiGet('/mensalidade/minha');
+      this.refreshMensalidadeBadge(data.atual);
+    } catch (e) { /* silencioso */ }
+  }
+
+  refreshMensalidadeBadge(atual) {
+    const badge = document.getElementById('badge-mensalidade');
+    if (!badge) return;
+    if (atual && ['pendente', 'atrasada'].includes(atual.status)) {
+      badge.style.display = 'inline-block';
+      badge.textContent = atual.status === 'atrasada' ? '!' : '*';
+    } else {
+      badge.style.display = 'none';
+    }
   }
 
   async saveEmpresaData() {

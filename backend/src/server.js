@@ -24,6 +24,7 @@ const empresasRoutes = require('./routes/empresas');
 const tenantRoutes = require('./routes/tenant');
 const repassesRoutes = require('./routes/repasses');
 const uploadRoutes = require('./routes/upload');
+const mensalidadeRoutes = require('./routes/mensalidade');
 
 // Rotas do Painel CRM da Empresa
 const authEmpresaRoutes = require('./routes/authEmpresa');
@@ -284,6 +285,7 @@ app.use('/api/config', configRoutes);
 app.use('/api/clientes', clientesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/mensalidade', mensalidadeRoutes);
 
 // Apply stricter rate limit to agendamento creation
 app.post('/api/agendamentos', agendamentoLimiter);

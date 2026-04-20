@@ -1,7 +1,6 @@
 const { MercadoPagoConfig, Payment, Preference } = require('mercadopago');
 const Pagamento = require('../models/Pagamento');
 const Agendamento = require('../models/Agendamento');
-const SplitPaymentService = require('../services/splitPayment');
 
 // Initialize Mercado Pago client
 const client = new MercadoPagoConfig({
@@ -225,43 +224,12 @@ class PaymentController {
           console.log('🔄 Pagamento atualizado no banco:', pagamentoDB.id);
         }
 
-        // Se pagamento foi aprovado, processar split
         if (paymentInfo.status === 'approved') {
-          console.log('✅ Pagamento aprovado! Processando split...');
-
-          try {
-            // Processar split de pagamento
-            const splitResult = await SplitPaymentService.processar(pagamentoDB.id);
-
-            console.log('💰 Split processado:', splitResult);
-
-            // Atualizar status do agendamento para confirmado
-            await Agendamento.update(agendamentoId, {
-              status: 'confirmado',
-              pagamento_confirmado: true
-            });
-
-            console.log('✅ Agendamento confirmado:', agendamentoId);
-
-            // Log do split para o admin
-            console.log('');
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log('💸 SPLIT DE PAGAMENTO REALIZADO');
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log(`   Pagamento: #${pagamentoDB.id} (MP: ${paymentId})`);
-            console.log(`   Valor Total: R$ ${(splitResult.valor_total / 100).toFixed(2)}`);
-            console.log(`   Taxa Sistema: R$ ${(splitResult.taxa / 100).toFixed(2)}`);
-            console.log(`   Valor Empresa: R$ ${(splitResult.valor_empresa / 100).toFixed(2)}`);
-            console.log(`   Empresa: ${splitResult.empresa.nome}`);
-            console.log(`   PIX: ${splitResult.empresa.pix_key}`);
-            console.log(`   Transação Repasse: #${splitResult.transacao_repasse_id}`);
-            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-            console.log('');
-
-          } catch (splitError) {
-            console.error('❌ Erro ao processar split:', splitError);
-            // Não falha o webhook, apenas loga o erro
-          }
+          await Agendamento.update(agendamentoId, {
+            status: 'confirmado',
+            pagamento_confirmado: true
+          });
+          console.log('✅ Agendamento confirmado:', agendamentoId);
         } else if (paymentInfo.status === 'cancelled' || paymentInfo.status === 'rejected') {
           // Atualizar agendamento para cancelado/rejeitado
           await Agendamento.update(agendamentoId, {

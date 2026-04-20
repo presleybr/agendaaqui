@@ -6,6 +6,7 @@ const Empresa = require('../models/Empresa');
 const Agendamento = require('../models/Agendamento');
 const Transacao = require('../models/Transacao');
 const Configuracao = require('../models/Configuracao');
+const MensalidadeService = require('../services/MensalidadeService');
 
 // ============================================
 // DASHBOARD - Métricas consolidadas
@@ -1125,6 +1126,149 @@ router.post('/migrations/update-taxa-plataforma', authAdmin, async (req, res) =>
   } catch (error) {
     console.error('Erro na migration update-taxa-plataforma:', error);
     res.status(500).json({ error: 'Erro ao executar migration' });
+  }
+});
+
+// ============================================
+// MENSALIDADES (cobranca de empresas)
+// ============================================
+
+router.get('/mensalidades', authAdmin, async (req, res) => {
+  try {
+    const { status } = req.query;
+    let sql = `
+      SELECT m.*, e.nome AS empresa_nome, e.slug AS empresa_slug,
+             e.email AS empresa_email, p.nome AS plano_nome
+      FROM mensalidades m
+      JOIN empresas e ON e.id = m.empresa_id
+      LEFT JOIN planos_mensalidade p ON p.id = m.plano_id`;
+    const params = [];
+    if (status) {
+      sql += ' WHERE m.status = $1';
+      params.push(status);
+    }
+    sql += ' ORDER BY m.competencia DESC, m.created_at DESC LIMIT 500';
+    const r = await db.query(sql, params);
+    res.json(r.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/mensalidades/pendentes', authAdmin, async (req, res) => {
+  try {
+    const rows = await MensalidadeService.listarPendentesSuperAdmin();
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/mensalidades/gerar-todas', authAdmin, async (req, res) => {
+  try {
+    const { competencia } = req.body;
+    const r = await MensalidadeService.gerarMensalidadesDoMes(competencia);
+    res.json(r);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/mensalidades/marcar-atrasadas', authAdmin, async (req, res) => {
+  try {
+    const r = await MensalidadeService.marcarAtrasadas();
+    res.json(r);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/mensalidades/:id/aprovar', authAdmin, async (req, res) => {
+  try {
+    const aprovador = req.usuario?.email || req.admin?.email || 'admin';
+    const r = await MensalidadeService.aprovar(req.params.id, aprovador);
+    res.json({ success: true, mensalidade: r });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/mensalidades/:id/rejeitar', authAdmin, async (req, res) => {
+  try {
+    const { motivo } = req.body;
+    const r = await MensalidadeService.rejeitar(req.params.id, motivo);
+    res.json({ success: true, mensalidade: r });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================
+// PLANOS DE MENSALIDADE (CRUD)
+// ============================================
+
+router.get('/planos', authAdmin, async (req, res) => {
+  try {
+    const r = await db.query('SELECT * FROM planos_mensalidade ORDER BY ordem ASC, preco_centavos ASC');
+    res.json(r.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/planos', authAdmin, async (req, res) => {
+  try {
+    const { nome, slug, preco_centavos, limite_agendamentos_mes, features, ordem, ativo } = req.body;
+    const r = await db.query(
+      `INSERT INTO planos_mensalidade (nome, slug, preco_centavos, limite_agendamentos_mes, features, ordem, ativo)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [nome, slug, preco_centavos, limite_agendamentos_mes || null, features || {}, ordem || 0, ativo !== false]
+    );
+    res.json(r.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/planos/:id', authAdmin, async (req, res) => {
+  try {
+    const { nome, preco_centavos, limite_agendamentos_mes, features, ordem, ativo } = req.body;
+    const r = await db.query(
+      `UPDATE planos_mensalidade
+       SET nome = COALESCE($2, nome),
+           preco_centavos = COALESCE($3, preco_centavos),
+           limite_agendamentos_mes = $4,
+           features = COALESCE($5, features),
+           ordem = COALESCE($6, ordem),
+           ativo = COALESCE($7, ativo),
+           updated_at = NOW()
+       WHERE id = $1 RETURNING *`,
+      [req.params.id, nome, preco_centavos, limite_agendamentos_mes, features, ordem, ativo]
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: 'Plano nao encontrado' });
+    res.json(r.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/empresas/:id/plano', authAdmin, async (req, res) => {
+  try {
+    const { plano_id, mensalidade_dia_vencimento, mensalidade_isenta, em_carencia_ate } = req.body;
+    const r = await db.query(
+      `UPDATE empresas
+       SET plano_id = COALESCE($2, plano_id),
+           mensalidade_dia_vencimento = COALESCE($3, mensalidade_dia_vencimento),
+           mensalidade_isenta = COALESCE($4, mensalidade_isenta),
+           em_carencia_ate = COALESCE($5, em_carencia_ate),
+           updated_at = NOW()
+       WHERE id = $1 RETURNING id, nome, plano_id, mensalidade_dia_vencimento, mensalidade_isenta, em_carencia_ate`,
+      [req.params.id, plano_id, mensalidade_dia_vencimento, mensalidade_isenta, em_carencia_ate]
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: 'Empresa nao encontrada' });
+    res.json(r.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

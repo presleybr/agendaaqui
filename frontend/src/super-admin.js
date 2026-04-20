@@ -106,6 +106,12 @@ class SuperAdmin {
       case 'transacoes':
         this.loadTransacoes();
         break;
+      case 'mensalidades':
+        this.loadMensalidades();
+        break;
+      case 'planos':
+        this.loadPlanos();
+        break;
       case 'config':
         this.loadConfig();
         break;
@@ -533,6 +539,207 @@ class SuperAdmin {
     const diff = hoje - inicio;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     return `${days} dias`;
+  }
+
+  // ===== MENSALIDADES =====
+
+  async saMensalidadesFetch(path, opts = {}) {
+    const res = await fetch(`${API_URL}/super-admin${path}`, {
+      ...opts,
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
+        ...(opts.headers || {})
+      }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erro na requisicao');
+    return data;
+  }
+
+  formatCurrency(centavos) {
+    return 'R$ ' + (Number(centavos || 0) / 100).toFixed(2).replace('.', ',');
+  }
+
+  formatDateBR(dateStr) {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('pt-BR');
+  }
+
+  async loadMensalidades() {
+    const container = document.getElementById('mensalidadesContainer');
+    if (!container) return;
+    container.innerHTML = '<p style="padding:20px;color:#666;">Carregando...</p>';
+    try {
+      const rows = await this.saMensalidadesFetch('/mensalidades/pendentes');
+
+      document.getElementById('btnGerarMensalidadesMes').onclick = () => this.gerarMensalidadesMes();
+      document.getElementById('btnMarcarAtrasadas').onclick = () => this.marcarAtrasadas();
+
+      const badge = document.getElementById('badge-mensalidades');
+      if (badge) {
+        const count = rows.filter(r => r.status === 'aguardando_aprovacao').length;
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'inline-block' : 'none';
+      }
+
+      if (!rows.length) {
+        container.innerHTML = '<p style="padding:20px;color:#666;">Nenhuma mensalidade pendente.</p>';
+        return;
+      }
+
+      const statusBadge = (st) => {
+        const map = {
+          pendente: ['#ca8a04', '#fef9c3'],
+          aguardando_aprovacao: ['#2563eb', '#dbeafe'],
+          atrasada: ['#dc2626', '#fee2e2']
+        };
+        const [c, bg] = map[st] || ['#6b7280', '#f3f4f6'];
+        return `<span style="padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;color:${c};background:${bg};">${st}</span>`;
+      };
+
+      container.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#f9fafb;">
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Empresa</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Plano</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Competencia</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Valor</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Vencimento</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Status</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Comprovante</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Acoes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${r.empresa_nome}<br><small style="color:#666;">${r.empresa_email || ''}</small></td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${r.plano_nome || '-'}</td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${r.competencia}</td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${this.formatCurrency(r.valor_centavos)}</td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${this.formatDateBR(r.data_vencimento)}</td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${statusBadge(r.status)}</td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${r.comprovante_url ? `<a href="${API_URL.replace(/\/api$/, '')}${r.comprovante_url}" target="_blank">Ver</a>` : '-'}</td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">
+                  ${r.status === 'aguardando_aprovacao' ? `
+                    <button class="btn btn-primary" style="padding:4px 10px;font-size:12px;" onclick="superAdmin.aprovarMensalidade(${r.id})">Aprovar</button>
+                    <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;" onclick="superAdmin.rejeitarMensalidade(${r.id})">Rejeitar</button>
+                  ` : '-'}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    } catch (err) {
+      container.innerHTML = `<p style="padding:20px;color:#dc2626;">Erro: ${err.message}</p>`;
+    }
+  }
+
+  async aprovarMensalidade(id) {
+    if (!confirm('Confirmar aprovacao da mensalidade?')) return;
+    try {
+      await this.saMensalidadesFetch(`/mensalidades/${id}/aprovar`, { method: 'POST', body: '{}' });
+      this.loadMensalidades();
+    } catch (err) { alert(err.message); }
+  }
+
+  async rejeitarMensalidade(id) {
+    const motivo = prompt('Motivo da rejeicao:');
+    if (!motivo) return;
+    try {
+      await this.saMensalidadesFetch(`/mensalidades/${id}/rejeitar`, {
+        method: 'POST',
+        body: JSON.stringify({ motivo })
+      });
+      this.loadMensalidades();
+    } catch (err) { alert(err.message); }
+  }
+
+  async gerarMensalidadesMes() {
+    if (!confirm('Gerar mensalidades para todas as empresas ativas neste mes?')) return;
+    try {
+      const r = await this.saMensalidadesFetch('/mensalidades/gerar-todas', { method: 'POST', body: '{}' });
+      alert(`Processadas ${r.total} empresas`);
+      this.loadMensalidades();
+    } catch (err) { alert(err.message); }
+  }
+
+  async marcarAtrasadas() {
+    try {
+      const r = await this.saMensalidadesFetch('/mensalidades/marcar-atrasadas', { method: 'POST', body: '{}' });
+      alert(`${r.atualizadas} mensalidades marcadas como atrasadas`);
+      this.loadMensalidades();
+    } catch (err) { alert(err.message); }
+  }
+
+  // ===== PLANOS =====
+
+  async loadPlanos() {
+    const container = document.getElementById('planosContainer');
+    if (!container) return;
+    container.innerHTML = '<p style="padding:20px;color:#666;">Carregando...</p>';
+    try {
+      const planos = await this.saMensalidadesFetch('/planos');
+      document.getElementById('btnNovoPlano').onclick = () => this.editarPlano(null);
+      container.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#f9fafb;">
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Nome</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Slug</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Preco</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Limite agend.</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Ativo</th>
+              <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">Acoes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${planos.map(p => `
+              <tr>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${p.nome}</td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${p.slug}</td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${this.formatCurrency(p.preco_centavos)}</td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${p.limite_agendamentos_mes || 'ilimitado'}</td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">${p.ativo ? 'Sim' : 'Nao'}</td>
+                <td style="padding:10px;border-bottom:1px solid #f0f0f0;">
+                  <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;" onclick='superAdmin.editarPlano(${JSON.stringify(p)})'>Editar</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    } catch (err) {
+      container.innerHTML = `<p style="padding:20px;color:#dc2626;">Erro: ${err.message}</p>`;
+    }
+  }
+
+  async editarPlano(plano) {
+    const nome = prompt('Nome do plano:', plano?.nome || '');
+    if (!nome) return;
+    const precoReais = prompt('Preco (R$):', plano ? (plano.preco_centavos / 100).toFixed(2) : '49.90');
+    if (!precoReais) return;
+    const limite = prompt('Limite agend./mes (vazio = ilimitado):', plano?.limite_agendamentos_mes ?? '');
+    const ativo = confirm('Plano ativo? (OK = sim, Cancelar = nao)');
+
+    const payload = {
+      nome,
+      preco_centavos: Math.round(parseFloat(precoReais) * 100),
+      limite_agendamentos_mes: limite === '' ? null : parseInt(limite),
+      ativo
+    };
+
+    try {
+      if (plano) {
+        await this.saMensalidadesFetch(`/planos/${plano.id}`, { method: 'PUT', body: JSON.stringify(payload) });
+      } else {
+        const slug = prompt('Slug (identificador unico, ex: basic):');
+        if (!slug) return;
+        await this.saMensalidadesFetch('/planos', { method: 'POST', body: JSON.stringify({ ...payload, slug }) });
+      }
+      this.loadPlanos();
+    } catch (err) { alert(err.message); }
   }
 }
 
