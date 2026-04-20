@@ -7,6 +7,7 @@ const Empresa = require('../models/Empresa');
 const PrecoVistoria = require('../models/PrecoVistoria');
 const AvailabilityService = require('../utils/availability');
 const emailService = require('../utils/emailService');
+const NotificationDispatcher = require('../services/NotificationDispatcher');
 
 class AgendamentoController {
   static async create(req, res) {
@@ -125,6 +126,12 @@ class AgendamentoController {
       });
 
       console.log('✅ Agendamento criado com sucesso:', agendamento.protocolo);
+
+      // Dispara WhatsApp (cliente + gerente) se empresa tem sessao conectada.
+      // Fire-and-forget: erros nao bloqueiam a criacao do agendamento.
+      NotificationDispatcher.notifyAgendamentoCriado(agendamento).catch(err =>
+        console.error('[WhatsApp] agendamento criado:', err.message)
+      );
 
       // Enviar email de confirmação
       const emailAtivo = await Configuracao.get('email_confirmacao_ativo') === '1';

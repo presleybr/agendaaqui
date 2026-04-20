@@ -9,6 +9,7 @@ const Pagamento = require('../models/Pagamento');
 const Agendamento = require('../models/Agendamento');
 const { generateBRCode } = require('../utils/pixBRCode');
 const db = require('../config/database');
+const NotificationDispatcher = require('../services/NotificationDispatcher');
 
 const comprovanteDir = path.join(__dirname, '../../../uploads/comprovantes');
 if (!fs.existsSync(comprovanteDir)) fs.mkdirSync(comprovanteDir, { recursive: true });
@@ -215,6 +216,11 @@ router.post('/card', async (req, res) => {
         SET status = 'confirmado', pagamento_confirmado = true
         WHERE id = $1
       `, [agendamento_id]);
+
+      try {
+        const ag = await Agendamento.findById(agendamento_id);
+        if (ag) NotificationDispatcher.notifyPagamentoAprovado(ag).catch(() => {});
+      } catch (_) {}
     }
 
     res.json({
@@ -283,6 +289,9 @@ router.get('/status/:paymentId', async (req, res) => {
               WHERE id = $1
             `, [pagamentoRecord.agendamento_id]);
             console.log(`✅ Agendamento ${pagamentoRecord.agendamento_id} confirmado`);
+          }
+          if (agendamento) {
+            NotificationDispatcher.notifyPagamentoAprovado(agendamento).catch(() => {});
           }
         }
       }
@@ -373,6 +382,8 @@ router.post('/webhook', async (req, res) => {
               `, [pagamentoRecord.agendamento_id]);
 
               console.log('✅ Agendamento confirmed:', agendamento.protocolo);
+
+              NotificationDispatcher.notifyPagamentoAprovado(agendamento).catch(() => {});
             }
           }
         } else {

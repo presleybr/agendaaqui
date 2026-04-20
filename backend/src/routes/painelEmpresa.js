@@ -9,6 +9,8 @@ const router = express.Router();
 const db = require('../config/database');
 const { authEmpresa, requireRole } = require('../middleware/authEmpresa');
 const PrecoVistoria = require('../models/PrecoVistoria');
+const Agendamento = require('../models/Agendamento');
+const NotificationDispatcher = require('../services/NotificationDispatcher');
 
 // Todas as rotas requerem autenticação
 router.use(authEmpresa);
@@ -1041,6 +1043,16 @@ router.post('/pix-manual/:id/aprovar', requireRole('admin', 'gerente'), async (r
           `Aprovou PIX manual #${id}`,
           JSON.stringify({ pagamento_id: id, agendamento_id: pag.agendamento_id })]);
     } catch (e) { /* log nao bloqueia */ }
+
+    // Dispara WhatsApp (cliente + gerente) — fire-and-forget
+    try {
+      const agendamento = await Agendamento.findById(pag.agendamento_id);
+      if (agendamento) {
+        NotificationDispatcher.notifyPagamentoAprovado(agendamento).catch(err =>
+          console.error('[WhatsApp] pagamento aprovado:', err.message)
+        );
+      }
+    } catch (_) { /* nao bloqueia */ }
 
     res.json({ success: true, pagamento_id: id, agendamento_id: pag.agendamento_id });
   } catch (err) {
