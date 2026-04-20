@@ -286,9 +286,8 @@ export class PaymentForm {
       await api.post(`/payment/pix-manual/${this.pixManualPagamentoId}/comprovante`, fd, {
         headers: { 'Content-Type': undefined }
       });
-      statusEl.style.color = 'var(--status-success, #16a34a)';
-      statusEl.textContent = 'Comprovante enviado! A empresa vai confirmar em breve.';
-      btn.textContent = 'Enviado';
+      this.showComprovanteRecebido();
+      return;
     } catch (err) {
       console.error('Erro upload comprovante:', err);
       statusEl.style.color = 'var(--status-error, #dc2626)';
@@ -507,6 +506,96 @@ export class PaymentForm {
 
   showPaymentPending() {
     alert('Pagamento pendente. Aguardando confirmação do banco.');
+  }
+
+  showComprovanteRecebido() {
+    const container = document.querySelector('.payment-container');
+    container.innerHTML = `
+      <div style="text-align: center; padding: var(--spacing-12);">
+        <div style="font-size: 64px; margin-bottom: var(--spacing-6);">📩</div>
+        <h2 style="color: var(--brand-primary); margin-bottom: var(--spacing-4);">Comprovante recebido!</h2>
+        <p style="color: var(--text-secondary); margin-bottom: var(--spacing-8);">
+          Seu agendamento está <strong>aguardando confirmação</strong> da empresa.
+          Assim que o pagamento for validado, você receberá um contato.
+        </p>
+
+        <div style="background: var(--bg-secondary); padding: var(--spacing-6); border-radius: var(--radius-lg); margin-bottom: var(--spacing-6); text-align: left;">
+          <h3 style="margin-bottom: var(--spacing-4); text-align: center;">📋 Dados do Agendamento</h3>
+
+          <div style="margin-bottom: var(--spacing-3);">
+            <strong style="color: var(--text-tertiary);">Protocolo:</strong>
+            <span style="color: var(--brand-primary); font-weight: bold; font-size: var(--text-lg);">${this.agendamentoData.protocolo}</span>
+          </div>
+
+          <div style="margin-bottom: var(--spacing-3);">
+            <strong style="color: var(--text-tertiary);">Tipo de Vistoria:</strong>
+            <span>${this.getTipoVistoriaLabel(this.agendamentoData.tipo_vistoria)}</span>
+          </div>
+
+          <div style="margin-bottom: var(--spacing-3);">
+            <strong style="color: var(--text-tertiary);">Data e Horário:</strong>
+            <span>${this.formatDate(this.agendamentoData.data_agendamento)} às ${this.agendamentoData.horario_agendamento}</span>
+          </div>
+
+          <div style="margin-bottom: var(--spacing-3);">
+            <strong style="color: var(--text-tertiary);">Valor:</strong>
+            <span style="color: var(--brand-primary); font-weight: bold;">R$ ${(this.agendamentoData.preco / 100).toFixed(2)}</span>
+          </div>
+
+          <div style="margin-bottom: var(--spacing-3);">
+            <strong style="color: var(--text-tertiary);">Status do Pagamento:</strong>
+            <span style="color: #d97706; font-weight: bold;">⏳ Aguardando confirmação</span>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-secondary); padding: var(--spacing-6); border-radius: var(--radius-lg); margin-bottom: var(--spacing-6); text-align: left;">
+          <h3 style="margin-bottom: var(--spacing-4); text-align: center;">👤 Dados do Cliente</h3>
+
+          <div style="margin-bottom: var(--spacing-3);">
+            <strong style="color: var(--text-tertiary);">Nome:</strong>
+            <span>${this.agendamentoData.cliente_nome}</span>
+          </div>
+
+          <div style="margin-bottom: var(--spacing-3);">
+            <strong style="color: var(--text-tertiary);">Email:</strong>
+            <span>${this.agendamentoData.cliente_email}</span>
+          </div>
+
+          <div style="margin-bottom: var(--spacing-3);">
+            <strong style="color: var(--text-tertiary);">Telefone:</strong>
+            <span>${this.agendamentoData.cliente_telefone}</span>
+          </div>
+
+          ${this.agendamentoData.veiculo_placa ? `
+          <div style="margin-top: var(--spacing-4); padding-top: var(--spacing-4); border-top: 1px solid var(--border-light);">
+            <h4 style="margin-bottom: var(--spacing-3); font-size: var(--text-base);">🚗 Veículo</h4>
+            <div style="margin-bottom: var(--spacing-2);">
+              <strong style="color: var(--text-tertiary);">Placa:</strong>
+              <span>${this.agendamentoData.veiculo_placa}</span>
+            </div>
+            ${this.agendamentoData.veiculo_modelo ? `
+            <div style="margin-bottom: var(--spacing-2);">
+              <strong style="color: var(--text-tertiary);">Modelo:</strong>
+              <span>${this.agendamentoData.veiculo_modelo}</span>
+            </div>
+            ` : ''}
+          </div>
+          ` : ''}
+        </div>
+
+        <div style="display: flex; gap: var(--spacing-3); justify-content: center; flex-wrap: wrap;">
+          <a href="https://wa.me/5567999673464?text=Olá! Acabei de enviar o comprovante. Protocolo: ${this.agendamentoData.protocolo}" class="btn btn-success" target="_blank">
+            💬 Falar pelo WhatsApp
+          </a>
+          <button onclick="window.print()" class="btn btn-secondary">
+            🖨️ Imprimir Comprovante
+          </button>
+          <button onclick="location.reload()" class="btn btn-secondary">
+            🔄 Novo Agendamento
+          </button>
+        </div>
+      </div>
+    `;
   }
 
   getTipoVistoriaLabel(tipo) {
