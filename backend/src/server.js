@@ -1,3 +1,6 @@
+// Fuso horario do sistema: Dourados/MS (UTC-4, sem horario de verao)
+process.env.TZ = process.env.TZ || 'America/Campo_Grande';
+
 require('dotenv').config();
 
 const express = require('express');
