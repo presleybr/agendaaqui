@@ -740,7 +740,11 @@ export class ScheduleForm {
 
     } catch (error) {
       console.error('Error creating appointment:', error);
-      alert('Erro ao criar agendamento. Por favor, tente novamente.');
+      const serverMsg = error?.response?.data?.error
+        || (Array.isArray(error?.response?.data?.errors) && error.response.data.errors.map(e => e.msg).join('\n'))
+        || error?.message
+        || 'Tente novamente.';
+      alert('Erro ao criar agendamento: ' + serverMsg);
       confirmPayBtn.disabled = false;
       confirmPayBtn.textContent = 'Confirmar e Pagar';
     }

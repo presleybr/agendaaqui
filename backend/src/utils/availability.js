@@ -7,6 +7,7 @@ class AvailabilityService {
   static async getAvailableSlots(data) {
     const config = await Configuracao.getWorkingHours();
     const vagasPorHorario = parseInt(await Configuracao.get('vagas_por_horario') || '3');
+    const antecedenciaMinima = parseInt(await Configuracao.get('antecedencia_minima') || '2');
     const agendamentosNaData = await Agendamento.findByDate(data);
 
     const slots = [];
@@ -19,8 +20,21 @@ class AvailabilityService {
     const endTime = new Date();
     endTime.setHours(horaFim, minutoFim, 0, 0);
 
+    const minimoPermitido = new Date(Date.now() + antecedenciaMinima * 60 * 60 * 1000);
+
     while (currentTime < endTime) {
       const horario = format(currentTime, 'HH:mm');
+
+      // Timestamp efetivo do slot (data + horario)
+      const [sh, sm] = horario.split(':').map(Number);
+      const slotDateTime = new Date(`${data}T00:00:00`);
+      slotDateTime.setHours(sh, sm, 0, 0);
+
+      // Pular slots que nao atendem antecedencia minima
+      if (slotDateTime < minimoPermitido) {
+        currentTime = new Date(currentTime.getTime() + config.duracao_slot * 60000);
+        continue;
+      }
 
       // Verificar horários bloqueados
       const result = await db.query(`
