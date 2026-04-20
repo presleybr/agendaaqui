@@ -3,7 +3,15 @@
  * Gerencia sessoes WhatsApp por empresa com persistencia no PostgreSQL
  */
 
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, makeCacheableSignalKeyStore, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+const {
+  default: makeWASocket,
+  DisconnectReason,
+  makeCacheableSignalKeyStore,
+  fetchLatestBaileysVersion,
+  initAuthCreds,
+  BufferJSON,
+  proto
+} = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const db = require('../config/database');
 
@@ -16,63 +24,71 @@ class WhatsAppManager {
   }
 
   /**
-   * Cria um auth state adapter que persiste no PostgreSQL
+   * Cria um auth state adapter que persiste no PostgreSQL.
+   * Usa BufferJSON para serializar corretamente os Buffers que o Baileys
+   * armazena em creds/keys (noise keys, Curve25519, HKDF secrets, etc).
    */
   async usePostgresAuthState(empresaId) {
-    // Carrega creds e keys do banco
-    const config = await db.query(
+    const row = await db.query(
       'SELECT session_data, session_keys FROM whatsapp_config WHERE empresa_id = $1',
       [empresaId]
     );
 
-    let creds = config.rows[0]?.session_data || null;
-    let keys = config.rows[0]?.session_keys || {};
+    // session_data e JSONB; re-stringify + reviver restaura Buffers.
+    const rawCreds = row.rows[0]?.session_data;
+    const rawKeys = row.rows[0]?.session_keys;
+
+    let creds = rawCreds
+      ? JSON.parse(JSON.stringify(rawCreds), BufferJSON.reviver)
+      : initAuthCreds();
+
+    const keys = rawKeys
+      ? JSON.parse(JSON.stringify(rawKeys), BufferJSON.reviver)
+      : {};
 
     const saveCreds = async () => {
       await db.query(
         'UPDATE whatsapp_config SET session_data = $1, updated_at = CURRENT_TIMESTAMP WHERE empresa_id = $2',
-        [JSON.stringify(creds), empresaId]
+        [JSON.stringify(creds, BufferJSON.replacer), empresaId]
       );
     };
 
     const saveKeys = async () => {
       await db.query(
         'UPDATE whatsapp_config SET session_keys = $1, updated_at = CURRENT_TIMESTAMP WHERE empresa_id = $2',
-        [JSON.stringify(keys), empresaId]
+        [JSON.stringify(keys, BufferJSON.replacer), empresaId]
       );
     };
 
     return {
       state: {
-        creds: creds || undefined,
+        creds,
         keys: {
           get: (type, ids) => {
             const data = {};
             for (const id of ids) {
-              const key = `${type}-${id}`;
-              if (keys[key]) {
-                data[id] = keys[key];
+              let value = keys[`${type}-${id}`];
+              if (type === 'app-state-sync-key' && value) {
+                value = proto.Message.AppStateSyncKeyData.fromObject(value);
               }
+              data[id] = value;
             }
             return data;
           },
           set: async (data) => {
             for (const category in data) {
               for (const id in data[category]) {
+                const value = data[category][id];
                 const key = `${category}-${id}`;
-                keys[key] = data[category][id];
+                if (value) keys[key] = value;
+                else delete keys[key];
               }
             }
             await saveKeys();
           }
         }
       },
-      saveCreds: async () => {
-        await saveCreds();
-      },
-      setCreds: (newCreds) => {
-        creds = newCreds;
-      }
+      saveCreds
     };
   }
 
@@ -92,7 +108,7 @@ class WhatsAppManager {
       ON CONFLICT (empresa_id) DO NOTHING
     `, [empresaId]);
 
-    const { state, saveCreds, setCreds } = await this.usePostgresAuthState(empresaId);
+    const { state, saveCreds } = await this.usePostgresAuthState(empresaId);
     const { version } = await fetchLatestBaileysVersion();
 
     const sessionData = {
@@ -109,7 +125,7 @@ class WhatsAppManager {
       version,
       logger,
       auth: {
-        creds: state.creds || undefined,
+        creds: state.creds,
         keys: makeCacheableSignalKeyStore(state.keys, logger)
       },
       printQRInTerminal: false,
@@ -120,11 +136,8 @@ class WhatsAppManager {
 
     sessionData.socket = sock;
 
-    // Evento de credenciais atualizadas
-    sock.ev.on('creds.update', async (update) => {
-      setCreds(update);
-      await saveCreds();
-    });
+    // Baileys muta state.creds in-place; saveCreds persiste o objeto atual.
+    sock.ev.on('creds.update', saveCreds);
 
     // Evento de conexao
     sock.ev.on('connection.update', async (update) => {
