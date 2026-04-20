@@ -29,6 +29,17 @@ class AgendamentoController {
         veiculoData
       });
 
+      // Se empresa_id informada, validar que existe e está ativa (multi-tenant)
+      if (empresa_id) {
+        const empresaCheck = await Empresa.findById(empresa_id);
+        if (!empresaCheck) {
+          return res.status(404).json({ error: 'Empresa não encontrada' });
+        }
+        if (empresaCheck.status && empresaCheck.status !== 'ativo') {
+          return res.status(403).json({ error: 'Empresa inativa ou suspensa' });
+        }
+      }
+
       // Verificar disponibilidade
       console.log('🔍 Verificando disponibilidade...');
       const availability = await AvailabilityService.canSchedule(data, horario);
@@ -141,7 +152,7 @@ class AgendamentoController {
 
   static async getAll(req, res) {
     try {
-      const { data, status, tipo_vistoria, data_inicio, data_fim, limit, offset } = req.query;
+      const { data, status, tipo_vistoria, data_inicio, data_fim, limit, offset, empresa_id } = req.query;
 
       const agendamentos = await Agendamento.findAll({
         data,
@@ -149,11 +160,17 @@ class AgendamentoController {
         tipo_vistoria,
         data_inicio,
         data_fim,
+        empresa_id: empresa_id ? parseInt(empresa_id) : undefined,
         limit: limit ? parseInt(limit) : 100,
         offset: offset ? parseInt(offset) : 0
       });
 
-      const total = await Agendamento.count({ status, data_inicio, data_fim });
+      const total = await Agendamento.count({
+        status,
+        data_inicio,
+        data_fim,
+        empresa_id: empresa_id ? parseInt(empresa_id) : undefined
+      });
 
       res.json({
         agendamentos,
@@ -190,10 +207,19 @@ class AgendamentoController {
   static async getByProtocolo(req, res) {
     try {
       const { protocolo } = req.params;
+      const { slug } = req.query;
       const agendamento = await Agendamento.findByProtocolo(protocolo);
 
       if (!agendamento) {
         return res.status(404).json({ error: 'Agendamento não encontrado' });
+      }
+
+      // Se slug informado, valida que o agendamento pertence à empresa do slug
+      if (slug && agendamento.empresa_id) {
+        const empresaMatch = await Empresa.findById(agendamento.empresa_id);
+        if (!empresaMatch || empresaMatch.slug !== slug) {
+          return res.status(404).json({ error: 'Agendamento não encontrado' });
+        }
       }
 
       res.json(agendamento);
@@ -307,13 +333,13 @@ class AgendamentoController {
 
   static async getStats(req, res) {
     try {
-      const { data_inicio, data_fim } = req.query;
+      const { data_inicio, data_fim, empresa_id } = req.query;
 
       if (!data_inicio || !data_fim) {
         return res.status(400).json({ error: 'Período obrigatório' });
       }
 
-      const stats = await Agendamento.getStats(data_inicio, data_fim);
+      const stats = await Agendamento.getStats(data_inicio, data_fim, empresa_id ? parseInt(empresa_id) : undefined);
       res.json(stats);
     } catch (error) {
       res.status(500).json({ error: 'Erro ao buscar estatísticas' });

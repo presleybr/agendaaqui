@@ -42,7 +42,6 @@ const payment = new Payment(client);
 router.post('/pix', async (req, res) => {
   try {
     const {
-      transaction_amount,
       description,
       payer_email,
       payer_first_name,
@@ -53,16 +52,33 @@ router.post('/pix', async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!transaction_amount || !payer_email || !agendamento_id) {
+    if (!payer_email || !agendamento_id) {
       return res.status(400).json({
         error: 'Campos obrigatórios faltando'
       });
     }
 
-    // Check if agendamento exists
+    // Check if agendamento exists — fonte de verdade do valor (evita tampering)
     const agendamento = await Agendamento.findById(agendamento_id);
     if (!agendamento) {
       return res.status(404).json({ error: 'Agendamento não encontrado' });
+    }
+
+    // Valida empresa ativa (multi-tenant)
+    if (agendamento.empresa_id) {
+      const empresaCheck = await db.query(
+        `SELECT status FROM empresas WHERE id = $1`,
+        [agendamento.empresa_id]
+      );
+      if (!empresaCheck.rows[0] || (empresaCheck.rows[0].status && empresaCheck.rows[0].status !== 'ativo')) {
+        return res.status(403).json({ error: 'Empresa inativa ou suspensa' });
+      }
+    }
+
+    // Valor do agendamento (em reais) — ignora qualquer transaction_amount vindo do body
+    const transaction_amount = Number(agendamento.valor) / 100;
+    if (!transaction_amount || transaction_amount <= 0) {
+      return res.status(400).json({ error: 'Valor do agendamento inválido' });
     }
 
     // Create payment in Mercado Pago
@@ -119,7 +135,6 @@ router.post('/pix', async (req, res) => {
 router.post('/card', async (req, res) => {
   try {
     const {
-      transaction_amount,
       token,
       description,
       installments,
@@ -133,16 +148,31 @@ router.post('/card', async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!transaction_amount || !token || !payer_email || !agendamento_id) {
+    if (!token || !payer_email || !agendamento_id) {
       return res.status(400).json({
         error: 'Campos obrigatórios faltando'
       });
     }
 
-    // Check if agendamento exists
+    // Check if agendamento exists — fonte de verdade do valor (evita tampering)
     const agendamento = await Agendamento.findById(agendamento_id);
     if (!agendamento) {
       return res.status(404).json({ error: 'Agendamento não encontrado' });
+    }
+
+    if (agendamento.empresa_id) {
+      const empresaCheck = await db.query(
+        `SELECT status FROM empresas WHERE id = $1`,
+        [agendamento.empresa_id]
+      );
+      if (!empresaCheck.rows[0] || (empresaCheck.rows[0].status && empresaCheck.rows[0].status !== 'ativo')) {
+        return res.status(403).json({ error: 'Empresa inativa ou suspensa' });
+      }
+    }
+
+    const transaction_amount = Number(agendamento.valor) / 100;
+    if (!transaction_amount || transaction_amount <= 0) {
+      return res.status(400).json({ error: 'Valor do agendamento inválido' });
     }
 
     // Create payment in Mercado Pago
@@ -384,7 +414,7 @@ function ascii(str, max) {
 
 router.post('/pix-manual/gerar', async (req, res) => {
   try {
-    const { agendamento_id, valor } = req.body;
+    const { agendamento_id } = req.body;
     if (!agendamento_id) {
       return res.status(400).json({ error: 'agendamento_id e obrigatorio' });
     }
@@ -393,12 +423,15 @@ router.post('/pix-manual/gerar', async (req, res) => {
     if (!agendamento) return res.status(404).json({ error: 'Agendamento nao encontrado' });
 
     const empresaRes = await db.query(
-      `SELECT id, nome, chave_pix, pix_type, pix_titular, cidade, pix_manual_ativo
+      `SELECT id, nome, chave_pix, pix_type, pix_titular, cidade, pix_manual_ativo, status
        FROM empresas WHERE id = $1`,
       [agendamento.empresa_id]
     );
     const empresa = empresaRes.rows[0];
     if (!empresa) return res.status(404).json({ error: 'Empresa nao encontrada' });
+    if (empresa.status && empresa.status !== 'ativo') {
+      return res.status(403).json({ error: 'Empresa inativa ou suspensa' });
+    }
     if (!empresa.chave_pix || String(empresa.chave_pix).trim() === '') {
       return res.status(400).json({ error: 'Empresa nao configurou chave PIX' });
     }
@@ -406,8 +439,8 @@ router.post('/pix-manual/gerar', async (req, res) => {
       return res.status(400).json({ error: 'PIX manual desativado para esta empresa' });
     }
 
-    const valorReais = Number(valor || agendamento.valor || 0) / (valor ? 1 : 100);
-    const valorNumerico = valor ? Number(valor) : (Number(agendamento.valor || 0) / 100);
+    // Valor vem do agendamento (fonte de verdade) — ignora body para evitar tampering
+    const valorNumerico = Number(agendamento.valor || 0) / 100;
     if (!valorNumerico || valorNumerico <= 0) {
       return res.status(400).json({ error: 'Valor invalido' });
     }

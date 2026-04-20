@@ -17,6 +17,12 @@ const authenticateToken = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // Tokens de empresa (painel CRM) não devem autenticar em rotas admin.
+    // Evita confusão de token caso um id de usuario_empresa colida com usuarios_admin.
+    if (decoded.tipo === 'empresa') {
+      return res.status(403).json({ error: 'Token de empresa não autorizado em rota admin' });
+    }
+
     const usuario = await Usuario.findById(decoded.id);
 
     if (!usuario || !usuario.ativo) {

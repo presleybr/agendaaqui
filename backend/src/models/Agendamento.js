@@ -226,7 +226,13 @@ class Agendamento {
     return parseInt(result.rows[0].total);
   }
 
-  static async getStats(dataInicio, dataFim) {
+  static async getStats(dataInicio, dataFim, empresaId) {
+    const params = [dataInicio, dataFim];
+    let empresaClause = '';
+    if (empresaId) {
+      params.push(empresaId);
+      empresaClause = ` AND empresa_id = $${params.length}`;
+    }
     const result = await db.query(`
       SELECT
         COUNT(*) as total,
@@ -237,8 +243,8 @@ class Agendamento {
         SUM(valor) as receita_total,
         SUM(CASE WHEN status = 'realizado' THEN valor ELSE 0 END) as receita_realizada
       FROM agendamentos
-      WHERE DATE(data_hora) BETWEEN $1 AND $2
-    `, [dataInicio, dataFim]);
+      WHERE DATE(data_hora) BETWEEN $1 AND $2${empresaClause}
+    `, params);
     return result.rows[0];
   }
 }
