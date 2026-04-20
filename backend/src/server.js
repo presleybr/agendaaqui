@@ -589,6 +589,17 @@ app.listen(PORT, async () => {
       )
     `);
 
+    // Tabela de carrossel de imagens da empresa
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS empresa_carrossel (
+        id SERIAL PRIMARY KEY,
+        empresa_id INTEGER NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
+        imagem_url TEXT NOT NULL,
+        ordem INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Log de notificacoes WhatsApp enviadas
     await db.query(`
       CREATE TABLE IF NOT EXISTS whatsapp_notificacoes_log (

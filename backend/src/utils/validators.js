@@ -5,12 +5,17 @@ const validators = {
     body('cliente.nome').trim().notEmpty().withMessage('Nome do cliente é obrigatório'),
     body('cliente.telefone').trim().notEmpty().withMessage('Telefone é obrigatório'),
     body('cliente.email').isEmail().withMessage('Email inválido'),
-    body('cliente.cpf').matches(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/).withMessage('CPF inválido'),
+    body('cliente.cpf').custom((v) => {
+      if (!v) throw new Error('CPF obrigatório');
+      const digits = String(v).replace(/\D/g, '');
+      if (digits.length !== 11) throw new Error('CPF inválido');
+      return true;
+    }),
     body('veiculo.placa').trim().notEmpty().withMessage('Placa é obrigatória'),
     body('veiculo.marca').trim().notEmpty().withMessage('Marca é obrigatória'),
     body('veiculo.modelo').trim().notEmpty().withMessage('Modelo é obrigatório'),
     body('veiculo.ano').isInt({ min: 1900, max: new Date().getFullYear() + 1 }).withMessage('Ano inválido'),
-    body('tipo_vistoria').isIn(['cautelar', 'transferencia', 'outros']).withMessage('Tipo de vistoria inválido'),
+    body('tipo_vistoria').optional().trim().notEmpty().withMessage('Tipo de vistoria inválido'),
     body('data').isDate().withMessage('Data inválida'),
     body('horario').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Horário inválido')
   ],
