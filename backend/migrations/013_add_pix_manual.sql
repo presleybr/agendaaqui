@@ -41,7 +41,14 @@ ADD COLUMN IF NOT EXISTS rejeicao_motivo TEXT;
 CREATE INDEX IF NOT EXISTS idx_pagamentos_pix_txid ON pagamentos(pix_txid);
 CREATE INDEX IF NOT EXISTS idx_pagamentos_status ON pagamentos(status);
 
--- 3) Nexus: chave aleatoria fixa (empresa dona da plataforma)
+-- 3) Agendamentos: colunas que o codigo ja referencia mas nao existiam
+ALTER TABLE agendamentos
+ADD COLUMN IF NOT EXISTS endereco_vistoria TEXT;
+
+ALTER TABLE agendamentos
+ADD COLUMN IF NOT EXISTS pagamento_confirmado BOOLEAN DEFAULT false;
+
+-- 4) Nexus: chave aleatoria fixa (empresa dona da plataforma)
 UPDATE empresas
 SET chave_pix = '974c2ff6-a51b-4efb-91de-8821cbf3f0a4',
     pix_type = 'aleatoria',
