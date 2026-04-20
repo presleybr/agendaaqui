@@ -7,7 +7,6 @@ const Empresa = require('../models/Empresa');
 const PrecoVistoria = require('../models/PrecoVistoria');
 const AvailabilityService = require('../utils/availability');
 const emailService = require('../utils/emailService');
-const { TAXA_PIX_ASAAS, calcularValorTotal } = require('../config/taxas');
 
 class AgendamentoController {
   static async create(req, res) {
@@ -102,9 +101,9 @@ class AgendamentoController {
         console.log('✅ Preço global:', precoVistoria, 'para tipo:', tipo_vistoria);
       }
 
-      // Adicionar taxa PIX Asaas ao valor total (cliente paga)
-      const preco = calcularValorTotal(precoVistoria, true);
-      console.log('💳 Valor total com taxa PIX:', preco, 'centavos (vistoria:', precoVistoria, '+ taxa PIX:', TAXA_PIX_ASAAS, ')');
+      // Valor do agendamento = preço da vistoria (sem taxa Asaas — PIX manual vai direto pra chave da empresa)
+      const preco = precoVistoria;
+      console.log('💳 Valor do agendamento:', preco, 'centavos');
 
       // Combinar data e horário em timestamp
       const data_hora = `${data} ${horario}:00`;
