@@ -28,8 +28,8 @@
   <script src="https://sdk.mercadopago.com/js/v2"></script>
 
   <!-- CSS -->
-  <link rel="stylesheet" href="/src/styles/main.css?v=20260323">
-  <link rel="stylesheet" href="/src/styles/empresa-social.css?v=20260323">
+  <link rel="stylesheet" href="/src/styles/main.css?v=20260420">
+  <link rel="stylesheet" href="/src/styles/empresa-social.css?v=20260420">
 
   <style id="dynamicStyles">
     /* Estilos dinâmicos baseados nas cores da empresa */
@@ -106,8 +106,8 @@
     <div class="profile-info-container">
       <div class="profile-main">
         <!-- Profile Picture -->
-        <div class="profile-picture" id="profilePicture">
-          <img src="" alt="Logo da empresa" id="profileImage" loading="lazy" onerror="this.parentElement.classList.add('no-image')">
+        <div class="profile-picture no-image" id="profilePicture">
+          <img alt="Logo da empresa" id="profileImage" loading="lazy" style="display:none">
           <span class="profile-initial" id="profileInitial">V</span>
         </div>
 
@@ -465,6 +465,6 @@
     <button class="modal-nav modal-next" id="modalNext">&#10095;</button>
   </div>
 
-  <script type="module" src="/src/empresa.js?v=20260323"></script>
+  <script type="module" src="/src/empresa.js?v=20260420"></script>
 </body>
 </html>

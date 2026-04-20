@@ -488,16 +488,29 @@ class EmpresaPage {
     if (fotoPerfil) {
       const logoUrl = getImageUrl(fotoPerfil);
       console.log('Foto perfil URL:', logoUrl);
-      profileImage.onload = () => {
+
+      const showImage = () => {
         profilePicture.classList.remove('no-image');
         profileImage.style.display = 'block';
       };
-      profileImage.onerror = () => {
-        console.error('Erro ao carregar foto de perfil:', logoUrl);
+      const hideImage = () => {
+        profileImage.style.display = 'none';
         profilePicture.classList.add('no-image');
       };
+
+      profileImage.onload = showImage;
+      profileImage.onerror = () => {
+        console.error('Erro ao carregar foto de perfil:', logoUrl);
+        hideImage();
+      };
       profileImage.src = logoUrl;
+
+      // Caso a imagem ja esteja em cache (load nao dispara), forca exibicao.
+      if (profileImage.complete && profileImage.naturalWidth > 0) {
+        showImage();
+      }
     } else {
+      profileImage.style.display = 'none';
       profilePicture.classList.add('no-image');
     }
     profileInitial.textContent = this.empresa.nome?.charAt(0).toUpperCase() || 'V';
