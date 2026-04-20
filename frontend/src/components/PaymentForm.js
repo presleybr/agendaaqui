@@ -281,7 +281,7 @@ export class PaymentForm {
           <a href="https://wa.me/5567999673464?text=Olá! Acabei de enviar o comprovante. Protocolo: ${this.agendamentoData.protocolo}" class="btn btn-success" target="_blank">
             💬 Falar pelo WhatsApp
           </a>
-          <button onclick="window.print()" class="btn btn-secondary">
+          <button id="printReceiptBtn" class="btn btn-secondary">
             🖨️ Imprimir Comprovante
           </button>
           <button onclick="location.reload()" class="btn btn-secondary">
@@ -290,6 +290,129 @@ export class PaymentForm {
         </div>
       </div>
     `;
+
+    const printBtn = document.getElementById('printReceiptBtn');
+    if (printBtn) {
+      printBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.printReceipt();
+      });
+    }
+  }
+
+  async getEmpresa() {
+    if (window.empresaData) return window.empresaData;
+    const slug = window.empresaSlug || window.location.pathname.split('/').filter(Boolean)[0];
+    if (!slug) return null;
+    try {
+      const data = await api.get(`/empresas/${slug}`);
+      window.empresaData = data;
+      return data;
+    } catch { return null; }
+  }
+
+  async printReceipt() {
+    const empresa = (await this.getEmpresa()) || {};
+    const a = this.agendamentoData;
+    const valor = `R$ ${((a.preco || 0) / 100).toFixed(2).replace('.', ',')}`;
+    const dataEmissao = new Date().toLocaleString('pt-BR');
+    const dataVistoria = `${this.formatDate(a.data_agendamento)} as ${a.horario_agendamento || ''}`;
+    const enderecoEmpresa = [empresa.endereco, empresa.numero, empresa.bairro, empresa.cidade && `${empresa.cidade}/${empresa.estado || ''}`, empresa.cep]
+      .filter(Boolean).join(', ');
+    const veiculo = [a.veiculo_placa, a.veiculo_marca, a.veiculo_modelo].filter(Boolean).join(' - ');
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Comprovante - ${esc(a.protocolo || '')}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; padding: 32px; background: #fff; font-size: 13px; line-height: 1.5; }
+  .receipt { max-width: 720px; margin: 0 auto; border: 1px solid #ddd; padding: 28px 32px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 16px; margin-bottom: 20px; }
+  .empresa-nome { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
+  .empresa-info { font-size: 12px; color: #333; }
+  .doc-title { text-align: right; }
+  .doc-title h2 { margin: 0 0 6px; font-size: 16px; }
+  .doc-title .proto { font-family: monospace; font-size: 13px; color: #555; }
+  .section { margin: 18px 0; }
+  .section h3 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #555; border-bottom: 1px solid #eee; padding-bottom: 6px; }
+  .row { display: flex; padding: 4px 0; }
+  .row .label { flex: 0 0 160px; color: #555; }
+  .row .value { flex: 1; color: #111; word-break: break-word; }
+  .total { margin-top: 20px; padding: 14px 16px; background: #f5f5f5; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+  .total .label { font-weight: 600; }
+  .total .value { font-weight: 700; color: #0a7a33; font-size: 18px; }
+  .status-pendente { display: inline-block; padding: 4px 10px; background: #fff7ed; color: #b45309; border: 1px solid #fbbf24; border-radius: 4px; font-size: 12px; font-weight: 600; }
+  .footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #eee; font-size: 11px; color: #777; text-align: center; }
+  .noprint { text-align: center; margin-top: 20px; }
+  .noprint button { padding: 10px 18px; font-size: 14px; cursor: pointer; border: none; border-radius: 6px; background: #111; color: #fff; }
+  @media print { .noprint { display: none; } body { padding: 0; } .receipt { border: none; } }
+</style>
+</head>
+<body>
+  <div class="receipt">
+    <div class="header">
+      <div>
+        <h1 class="empresa-nome">${esc(empresa.razao_social || empresa.nome || 'Empresa')}</h1>
+        <div class="empresa-info">
+          ${empresa.nome && empresa.razao_social && empresa.nome !== empresa.razao_social ? `Nome fantasia: ${esc(empresa.nome)}<br>` : ''}
+          ${empresa.cnpj ? `CNPJ: ${esc(empresa.cnpj)}<br>` : ''}
+          ${enderecoEmpresa ? `${esc(enderecoEmpresa)}<br>` : ''}
+          ${empresa.telefone ? `Tel: ${esc(empresa.telefone)}` : ''}
+          ${empresa.email ? ` · ${esc(empresa.email)}` : ''}
+        </div>
+      </div>
+      <div class="doc-title">
+        <h2>Comprovante de Agendamento</h2>
+        <div class="proto">Protocolo: ${esc(a.protocolo || '')}</div>
+        <div class="proto">Emissao: ${esc(dataEmissao)}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Dados do Cliente</h3>
+      <div class="row"><div class="label">Nome</div><div class="value">${esc(a.cliente_nome || '')}</div></div>
+      ${a.cliente_cpf ? `<div class="row"><div class="label">CPF</div><div class="value">${esc(a.cliente_cpf)}</div></div>` : ''}
+      ${a.cliente_email ? `<div class="row"><div class="label">E-mail</div><div class="value">${esc(a.cliente_email)}</div></div>` : ''}
+      ${a.cliente_telefone ? `<div class="row"><div class="label">Telefone</div><div class="value">${esc(a.cliente_telefone)}</div></div>` : ''}
+    </div>
+
+    <div class="section">
+      <h3>Servico Contratado</h3>
+      <div class="row"><div class="label">Tipo</div><div class="value">${esc(this.getTipoVistoriaLabel(a.tipo_vistoria))}</div></div>
+      <div class="row"><div class="label">Data/Hora</div><div class="value">${esc(dataVistoria)}</div></div>
+      ${veiculo ? `<div class="row"><div class="label">Veiculo</div><div class="value">${esc(veiculo)}</div></div>` : ''}
+      <div class="row"><div class="label">Status pagamento</div><div class="value"><span class="status-pendente">Aguardando confirmacao</span></div></div>
+    </div>
+
+    <div class="total">
+      <div class="label">Valor total</div>
+      <div class="value">${esc(valor)}</div>
+    </div>
+
+    <div class="footer">
+      Este documento e um comprovante de agendamento. A confirmacao do pagamento sera validada pela empresa apos verificacao do comprovante PIX enviado.
+    </div>
+
+    <div class="noprint">
+      <button onclick="window.print()">Imprimir / Salvar em PDF</button>
+    </div>
+  </div>
+  <script>window.addEventListener('load', function(){ setTimeout(function(){ window.print(); }, 300); });<\/script>
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=820,height=900');
+    if (!w) {
+      alert('Desbloqueie pop-ups para imprimir o comprovante.');
+      return;
+    }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
   }
 
   getTipoVistoriaLabel(tipo) {

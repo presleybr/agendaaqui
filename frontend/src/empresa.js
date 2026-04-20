@@ -67,6 +67,8 @@ class EmpresaPage {
     }
 
     this.empresa = await response.json();
+    window.empresaData = this.empresa;
+    window.empresaSlug = this.empresa.slug;
     console.log('Empresa carregada:', this.empresa);
   }
 

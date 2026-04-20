@@ -162,8 +162,8 @@ router.get('/agendamentos', async (req, res) => {
     const countResult = await db.query(countQuery, params);
     const total = parseInt(countResult.rows[0].count);
 
-    // Adicionar ordenação e paginação
-    query += ` ORDER BY a.data_hora DESC LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
+    // Adicionar ordenação e paginação (mais recentes primeiro por criacao)
+    query += ` ORDER BY a.created_at DESC NULLS LAST, a.data_hora DESC LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
     params.push(parseInt(limit), offset);
 
     const result = await db.query(query, params);
