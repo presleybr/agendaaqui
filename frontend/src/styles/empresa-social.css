@@ -436,9 +436,8 @@ body.empresa-profile-page {
 .profile-name {
   font-size: 2rem;
   font-weight: 700;
-  color: white;
+  color: var(--text-primary, #111);
   margin: 0 0 4px 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   word-break: break-word;
 }
 
@@ -454,7 +453,7 @@ body.empresa-profile-page {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--text-secondary, #555);
   font-size: 0.95rem;
 }
 
@@ -477,7 +476,7 @@ body.empresa-profile-page {
 
 .star {
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(0, 0, 0, 0.2);
 }
 
 .star.filled {
@@ -486,12 +485,12 @@ body.empresa-profile-page {
 
 .rating-value {
   font-weight: 700;
-  color: white;
+  color: var(--text-primary, #111);
   font-size: 1rem;
 }
 
 .rating-count {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary, #555);
   font-size: 0.9rem;
 }
 
