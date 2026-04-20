@@ -72,19 +72,24 @@ export class PaymentForm {
           </div>
         </div>
 
-        <!-- Payment Method -->
+        <!-- Payment Method Tabs -->
         <div class="payment-methods" style="margin-bottom: var(--spacing-6);">
-          <h3 style="margin-bottom: var(--spacing-4); text-align: center;">💰 Pagamento via PIX</h3>
-          <p style="text-align: center; color: var(--text-secondary); margin-bottom: var(--spacing-4);">
-            Pague de forma rápida e segura usando PIX
-          </p>
+          <h3 style="margin-bottom: var(--spacing-4); text-align: center;">Escolha a forma de pagamento</h3>
+          <div style="display: flex; gap: var(--spacing-2); margin-bottom: var(--spacing-4);">
+            <button type="button" id="tabPixAuto" class="btn btn-primary" style="flex:1;">
+              PIX Automatico
+            </button>
+            <button type="button" id="tabPixManual" class="btn btn-secondary" style="flex:1;">
+              PIX Copia e Cola
+            </button>
+          </div>
         </div>
 
-        <!-- PIX Payment -->
+        <!-- PIX Automatico (Mercado Pago) -->
         <div id="pixPayment" class="payment-section active">
           <div style="text-align: center; padding: var(--spacing-8); background: var(--bg-secondary); border-radius: var(--radius-lg);">
             <p style="margin-bottom: var(--spacing-6); color: var(--text-secondary);">
-              Pague com PIX de forma rápida e segura
+              Pague com PIX via Mercado Pago. Confirmacao automatica.
             </p>
             <button id="generatePixBtn" class="btn btn-primary btn-large" style="width: 100%; max-width: 400px; margin-bottom: var(--spacing-4);">
               Gerar QR Code PIX
@@ -115,6 +120,41 @@ export class PaymentForm {
             <p style="margin-top: var(--spacing-6); color: var(--text-secondary); font-size: var(--text-sm);">
               ⏱️ Aguardando pagamento...
             </p>
+          </div>
+        </div>
+
+        <!-- PIX Manual (Copia e Cola, chave da empresa) -->
+        <div id="pixManualPayment" class="payment-section" style="display:none;">
+          <div style="text-align: center; padding: var(--spacing-6); background: var(--bg-secondary); border-radius: var(--radius-lg);">
+            <p style="margin-bottom: var(--spacing-4); color: var(--text-secondary);">
+              Gere o codigo PIX e pague direto na chave da empresa. Depois envie o comprovante aqui.
+            </p>
+            <button id="generatePixManualBtn" class="btn btn-primary btn-large" style="width: 100%; max-width: 400px;">
+              Gerar PIX Copia e Cola
+            </button>
+          </div>
+
+          <div id="pixManualResult" style="display:none; margin-top: var(--spacing-6); padding: var(--spacing-6); background: white; border-radius: var(--radius-lg); border: 2px solid var(--brand-primary);">
+            <h3 style="margin-bottom: var(--spacing-4); text-align: center;">Pague com PIX</h3>
+            <div id="pixManualQr" style="text-align:center; margin-bottom: var(--spacing-4);"></div>
+            <div style="background: var(--bg-secondary); padding: var(--spacing-4); border-radius: var(--radius-md);">
+              <p style="font-size: var(--text-sm); color: var(--text-tertiary); margin-bottom: var(--spacing-2);">
+                Codigo PIX (copia e cola):
+              </p>
+              <div style="display: flex; gap: var(--spacing-3); align-items: center;">
+                <input type="text" id="pixManualCode" readonly style="flex: 1; padding: var(--spacing-3); border: 1px solid var(--border-medium); border-radius: var(--radius-md); font-family: monospace; font-size: var(--text-sm);">
+                <button id="copyPixManualBtn" class="btn btn-secondary">Copiar</button>
+              </div>
+            </div>
+
+            <div style="margin-top: var(--spacing-6); padding-top: var(--spacing-4); border-top: 1px solid var(--border-light);">
+              <p style="margin-bottom: var(--spacing-3); font-weight: bold;">Ja pagou? Envie o comprovante:</p>
+              <input type="file" id="comprovanteInput" accept="image/*,application/pdf" style="width:100%; padding: var(--spacing-3); border: 1px dashed var(--border-medium); border-radius: var(--radius-md); margin-bottom: var(--spacing-3);">
+              <button id="uploadComprovanteBtn" class="btn btn-primary" style="width:100%;">
+                Enviar Comprovante
+              </button>
+              <p id="comprovanteStatus" style="margin-top: var(--spacing-3); font-size: var(--text-sm); color: var(--text-tertiary);"></p>
+            </div>
           </div>
         </div>
 
@@ -153,6 +193,108 @@ export class PaymentForm {
         e.preventDefault();
         this.simulatePaymentApproved();
       });
+    }
+
+    // Tabs PIX automatico x manual
+    const tabAuto = document.getElementById('tabPixAuto');
+    const tabManual = document.getElementById('tabPixManual');
+    const secAuto = document.getElementById('pixPayment');
+    const secManual = document.getElementById('pixManualPayment');
+    if (tabAuto && tabManual) {
+      tabAuto.addEventListener('click', () => {
+        tabAuto.className = 'btn btn-primary';
+        tabManual.className = 'btn btn-secondary';
+        secAuto.style.display = 'block';
+        secManual.style.display = 'none';
+      });
+      tabManual.addEventListener('click', () => {
+        tabManual.className = 'btn btn-primary';
+        tabAuto.className = 'btn btn-secondary';
+        secManual.style.display = 'block';
+        secAuto.style.display = 'none';
+      });
+    }
+
+    const genManualBtn = document.getElementById('generatePixManualBtn');
+    if (genManualBtn) {
+      genManualBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.generatePixManual();
+      });
+    }
+
+    const copyManualBtn = document.getElementById('copyPixManualBtn');
+    if (copyManualBtn) {
+      copyManualBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('pixManualCode');
+        input.select();
+        document.execCommand('copy');
+        copyManualBtn.textContent = 'Copiado!';
+        setTimeout(() => { copyManualBtn.textContent = 'Copiar'; }, 2000);
+      });
+    }
+
+    const uploadBtn = document.getElementById('uploadComprovanteBtn');
+    if (uploadBtn) {
+      uploadBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.uploadComprovante();
+      });
+    }
+  }
+
+  async generatePixManual() {
+    const btn = document.getElementById('generatePixManualBtn');
+    btn.disabled = true;
+    btn.textContent = 'Gerando...';
+    try {
+      const response = await api.post('/payment/pix-manual/gerar', {
+        agendamento_id: this.agendamentoData.id
+      });
+      this.pixManualPagamentoId = response.pagamento_id;
+      document.getElementById('pixManualResult').style.display = 'block';
+      document.getElementById('pixManualQr').innerHTML =
+        `<img src="${response.qr_code_base64}" alt="QR Code PIX" style="max-width:280px; width:100%;">`;
+      document.getElementById('pixManualCode').value = response.br_code;
+      btn.style.display = 'none';
+    } catch (err) {
+      console.error('Erro gerar PIX manual:', err);
+      alert((err.response?.data?.error) || err.message || 'Erro ao gerar PIX');
+      btn.disabled = false;
+      btn.textContent = 'Gerar PIX Copia e Cola';
+    }
+  }
+
+  async uploadComprovante() {
+    const input = document.getElementById('comprovanteInput');
+    const statusEl = document.getElementById('comprovanteStatus');
+    const btn = document.getElementById('uploadComprovanteBtn');
+    if (!input.files || !input.files[0]) {
+      alert('Selecione o arquivo do comprovante');
+      return;
+    }
+    if (!this.pixManualPagamentoId) {
+      alert('Gere o PIX primeiro');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('comprovante', input.files[0]);
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    try {
+      await api.post(`/payment/pix-manual/${this.pixManualPagamentoId}/comprovante`, fd, {
+        headers: { 'Content-Type': undefined }
+      });
+      statusEl.style.color = 'var(--status-success, #16a34a)';
+      statusEl.textContent = 'Comprovante enviado! A empresa vai confirmar em breve.';
+      btn.textContent = 'Enviado';
+    } catch (err) {
+      console.error('Erro upload comprovante:', err);
+      statusEl.style.color = 'var(--status-error, #dc2626)';
+      statusEl.textContent = (err.response?.data?.error) || err.message || 'Erro no envio';
+      btn.disabled = false;
+      btn.textContent = 'Enviar Comprovante';
     }
   }
 

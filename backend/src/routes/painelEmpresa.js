@@ -329,11 +329,12 @@ router.put('/minha-empresa', requireRole('admin', 'gerente'), async (req, res) =
     const {
       telefone, whatsapp, endereco, numero, complemento, bairro,
       cidade, estado, cep, descricao, horario_funcionamento,
-      cor_primaria, cor_secundaria, facebook_url, instagram_url, site_url
+      cor_primaria, cor_secundaria, facebook_url, instagram_url, site_url,
+      chave_pix, pix_type, pix_titular, pix_manual_ativo
     } = req.body;
 
     // Campos que a empresa PODE editar
-    // NÃO pode editar: nome, slug, email principal, PIX, preços, comissão
+    // Inclui chave PIX propria (empresa recebe direto no banco dela).
     await db.query(`
       UPDATE empresas SET
         telefone = COALESCE($1, telefone),
@@ -352,11 +353,16 @@ router.put('/minha-empresa', requireRole('admin', 'gerente'), async (req, res) =
         facebook_url = COALESCE($14, facebook_url),
         instagram_url = COALESCE($15, instagram_url),
         site_url = COALESCE($16, site_url),
+        chave_pix = COALESCE($17, chave_pix),
+        pix_type = COALESCE($18, pix_type),
+        pix_titular = COALESCE($19, pix_titular),
+        pix_manual_ativo = COALESCE($20, pix_manual_ativo),
         updated_at = NOW()
-      WHERE id = $17
+      WHERE id = $21
     `, [telefone, whatsapp, endereco, numero, complemento, bairro,
         cidade, estado, cep, descricao, horario_funcionamento,
         cor_primaria, cor_secundaria, facebook_url, instagram_url, site_url,
+        chave_pix, pix_type, pix_titular, pix_manual_ativo,
         req.empresa_id]);
 
     // Log (não bloqueante)
@@ -959,6 +965,114 @@ router.post('/upload-imagem', requireRole('admin', 'gerente'), (req, res) => {
       res.status(500).json({ error: 'Erro ao salvar imagem no banco' });
     }
   });
+});
+
+// ==================== PIX MANUAL - APROVACAO ====================
+
+/**
+ * GET /api/empresa/painel/pix-manual/pendentes
+ * Lista pagamentos PIX manual aguardando aprovacao da empresa.
+ */
+router.get('/pix-manual/pendentes', async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT
+        p.id, p.agendamento_id, p.valor_total, p.status, p.pix_txid,
+        p.comprovante_url, p.comprovante_enviado_em, p.created_at,
+        a.protocolo, a.data_hora, a.tipo_vistoria,
+        c.nome AS cliente_nome, c.telefone AS cliente_telefone, c.email AS cliente_email,
+        v.placa AS veiculo_placa
+      FROM pagamentos p
+      JOIN agendamentos a ON a.id = p.agendamento_id
+      LEFT JOIN clientes c ON c.id = a.cliente_id
+      LEFT JOIN veiculos v ON v.id = a.veiculo_id
+      WHERE p.empresa_id = $1
+        AND p.metodo_pagamento = 'pix_manual'
+        AND p.status = 'aguardando_aprovacao'
+      ORDER BY p.comprovante_enviado_em DESC
+    `, [req.empresa_id]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Erro pix-manual/pendentes:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/empresa/painel/pix-manual/:id/aprovar
+ * Aprova o pagamento PIX manual: marca como pago, confirma agendamento,
+ * dispara split (sem valor efetivo, ja que PIX caiu direto na empresa).
+ */
+router.post('/pix-manual/:id/aprovar', requireRole('admin', 'gerente'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const usuario = req.usuarioEmpresa?.email || 'empresa';
+
+    const pagRes = await db.query(
+      `SELECT * FROM pagamentos WHERE id = $1 AND empresa_id = $2 AND metodo_pagamento = 'pix_manual'`,
+      [id, req.empresa_id]
+    );
+    const pag = pagRes.rows[0];
+    if (!pag) return res.status(404).json({ error: 'Pagamento nao encontrado' });
+    if (pag.status === 'approved' || pag.status === 'aprovado') {
+      return res.status(400).json({ error: 'Pagamento ja aprovado' });
+    }
+
+    await db.query(
+      `UPDATE pagamentos
+       SET status = 'approved', aprovado_em = NOW(), aprovado_por = $1,
+           pago_em = NOW(), updated_at = NOW()
+       WHERE id = $2`,
+      [usuario, id]
+    );
+
+    await db.query(
+      `UPDATE agendamentos
+       SET status = 'confirmado', pagamento_confirmado = true
+       WHERE id = $1`,
+      [pag.agendamento_id]
+    );
+
+    try {
+      await db.query(`
+        INSERT INTO log_atividades_empresa (empresa_id, usuario_id, acao, descricao, dados_extras)
+        VALUES ($1, $2, 'aprovar_pix_manual', $3, $4)
+      `, [req.empresa_id, req.usuarioEmpresa.id,
+          `Aprovou PIX manual #${id}`,
+          JSON.stringify({ pagamento_id: id, agendamento_id: pag.agendamento_id })]);
+    } catch (e) { /* log nao bloqueia */ }
+
+    res.json({ success: true, pagamento_id: id, agendamento_id: pag.agendamento_id });
+  } catch (err) {
+    console.error('Erro pix-manual/aprovar:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/empresa/painel/pix-manual/:id/rejeitar
+ * Rejeita o pagamento. Body: { motivo }
+ */
+router.post('/pix-manual/:id/rejeitar', requireRole('admin', 'gerente'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { motivo } = req.body;
+
+    const upd = await db.query(
+      `UPDATE pagamentos
+       SET status = 'rejected', rejeitado_em = NOW(), rejeicao_motivo = $1,
+           updated_at = NOW()
+       WHERE id = $2 AND empresa_id = $3 AND metodo_pagamento = 'pix_manual'
+       RETURNING id, agendamento_id`,
+      [motivo || 'Comprovante invalido', id, req.empresa_id]
+    );
+    if (!upd.rows[0]) return res.status(404).json({ error: 'Pagamento nao encontrado' });
+
+    res.json({ success: true, pagamento_id: id });
+  } catch (err) {
+    console.error('Erro pix-manual/rejeitar:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

@@ -142,6 +142,9 @@ class PainelEmpresa {
         this.showDashboard();
         this.loadDashboard();
       }
+
+      // Atualiza badge de PIX pendentes em segundo plano
+      this.refreshPixPendentesBadge();
     } catch (err) {
       console.error('Token invalido:', err);
       localStorage.removeItem('empresa_token');
@@ -370,6 +373,9 @@ class PainelEmpresa {
         break;
       case 'minha-empresa':
         this.loadMinhaEmpresa();
+        break;
+      case 'pix-manual':
+        this.loadPixPendentes();
         break;
       case 'configuracoes':
         this.loadConfiguracoes();
@@ -1184,9 +1190,40 @@ class PainelEmpresa {
               <input type="text" id="empWhatsapp" value="${empresa.whatsapp || ''}">
             </div>
             <div class="form-group">
-              <label>Chave PIX</label>
-              <input type="text" value="${empresa.chave_pix_masked || '****'}" disabled>
-              <small style="color: var(--text-tertiary);">Para alterar, entre em contato com o suporte</small>
+              <label>Status PIX Copia e Cola</label>
+              <label style="display:flex; align-items:center; gap:8px; padding-top:8px;">
+                <input type="checkbox" id="empPixManualAtivo" ${empresa.pix_manual_ativo !== false ? 'checked' : ''}>
+                <span>Receber pagamentos PIX direto na minha chave</span>
+              </label>
+            </div>
+          </div>
+
+          <div style="padding: 16px; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-light);">
+            <h4 style="margin: 0 0 12px 0;">Chave PIX (recebimento direto)</h4>
+            <p style="margin: 0 0 12px 0; color: var(--text-tertiary); font-size: 0.85rem;">
+              Os pagamentos feitos pelos clientes via "PIX Copia e Cola" caem direto nesta chave.
+              A confirmacao do pagamento e feita por voce no painel, apos o cliente enviar o comprovante.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+              <div class="form-group">
+                <label>Tipo da chave</label>
+                <select id="empPixType" style="width:100%; padding:10px; border:1px solid var(--border-light); border-radius:8px;">
+                  <option value="cpf" ${empresa.pix_type === 'cpf' ? 'selected' : ''}>CPF</option>
+                  <option value="cnpj" ${empresa.pix_type === 'cnpj' ? 'selected' : ''}>CNPJ</option>
+                  <option value="email" ${empresa.pix_type === 'email' ? 'selected' : ''}>Email</option>
+                  <option value="telefone" ${empresa.pix_type === 'telefone' ? 'selected' : ''}>Telefone</option>
+                  <option value="aleatoria" ${empresa.pix_type === 'aleatoria' ? 'selected' : ''}>Chave Aleatoria</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Chave</label>
+                <input type="text" id="empChavePix" value="${empresa.chave_pix || ''}" placeholder="Digite a chave completa">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Nome do Titular (aparece no QR)</label>
+              <input type="text" id="empPixTitular" maxlength="25" value="${empresa.pix_titular || ''}" placeholder="Ex: NEXUS VISTORIAS">
+              <small style="color: var(--text-tertiary);">Maximo 25 caracteres, sem acentos</small>
             </div>
           </div>
 
@@ -1424,6 +1461,126 @@ class PainelEmpresa {
     }
   }
 
+  // ============================================
+  // PIX MANUAL - APROVACAO DE PAGAMENTOS
+  // ============================================
+
+  async loadPixPendentes() {
+    const container = document.getElementById('pixPendentesContainer');
+    if (!container) return;
+    container.innerHTML = '<div class="loading" style="padding: 40px; text-align: center;"><div class="spinner"></div></div>';
+
+    try {
+      const pendentes = await this.apiGet('/empresa/painel/pix-manual/pendentes');
+
+      // Atualizar badge no menu
+      const badge = document.getElementById('badge-pix-pendentes');
+      if (badge) {
+        if (pendentes.length > 0) {
+          badge.textContent = pendentes.length;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+
+      if (!pendentes.length) {
+        container.innerHTML = `
+          <div style="padding: 40px; text-align: center; color: var(--text-tertiary);">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px;">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            <p style="font-size: 1.1rem; margin: 0;">Nenhum pagamento aguardando aprovacao</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = pendentes.map(p => {
+        const comprovante = p.comprovante_url
+          ? (p.comprovante_url.match(/\.pdf$/i)
+              ? `<a href="${getImageUrl(p.comprovante_url)}" target="_blank" class="btn btn-secondary" style="display:inline-block; margin-top:8px;">Abrir comprovante (PDF)</a>`
+              : `<a href="${getImageUrl(p.comprovante_url)}" target="_blank"><img src="${getImageUrl(p.comprovante_url)}" style="max-width:220px; max-height:220px; border-radius:8px; border:1px solid var(--border-light); margin-top:8px;"></a>`)
+          : '<em>Sem comprovante</em>';
+
+        const valor = (Number(p.valor_total || 0) / 100).toFixed(2);
+        const dataEnv = p.comprovante_enviado_em ? this.formatDateTime(p.comprovante_enviado_em) : '-';
+
+        return `
+          <div style="border: 1px solid var(--border-light); border-radius: 12px; padding: 16px; margin-bottom: 16px; background: var(--bg-primary);">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
+              <div><strong>Protocolo:</strong><br>${p.protocolo || '-'}</div>
+              <div><strong>Cliente:</strong><br>${p.cliente_nome || '-'}</div>
+              <div><strong>Valor:</strong><br>R$ ${valor}</div>
+              <div><strong>Telefone:</strong><br>${p.cliente_telefone || '-'}</div>
+              <div><strong>Veiculo:</strong><br>${p.veiculo_placa || '-'}</div>
+              <div><strong>Enviado em:</strong><br>${dataEnv}</div>
+              <div style="grid-column: span 3;"><strong>TXID:</strong> <code>${p.pix_txid || '-'}</code></div>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <strong>Comprovante:</strong><br>
+              ${comprovante}
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-primary" onclick="painel.aprovarPixManual(${p.id})">
+                Aprovar Pagamento
+              </button>
+              <button class="btn btn-secondary" onclick="painel.rejeitarPixManual(${p.id})" style="background: var(--status-danger, #dc2626); color:white;">
+                Rejeitar
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error('Erro loadPixPendentes:', err);
+      container.innerHTML = `<div style="color: var(--status-danger); padding: 20px;">Erro ao carregar: ${err.message || err}</div>`;
+    }
+  }
+
+  async refreshPixPendentesBadge() {
+    try {
+      const pendentes = await this.apiGet('/empresa/painel/pix-manual/pendentes');
+      const badge = document.getElementById('badge-pix-pendentes');
+      if (!badge) return;
+      if (pendentes.length > 0) {
+        badge.textContent = pendentes.length;
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+    } catch (e) { /* nao bloqueia */ }
+  }
+
+  async aprovarPixManual(id) {
+    if (!confirm('Confirmar aprovacao? O agendamento sera marcado como confirmado.')) return;
+    try {
+      await this.apiPost(`/empresa/painel/pix-manual/${id}/aprovar`, {});
+      alert('Pagamento aprovado!');
+      this.loadPixPendentes();
+    } catch (err) {
+      alert(err.message || 'Erro ao aprovar');
+    }
+  }
+
+  async rejeitarPixManual(id) {
+    const motivo = prompt('Motivo da rejeicao (opcional):');
+    if (motivo === null) return;
+    try {
+      await this.apiPost(`/empresa/painel/pix-manual/${id}/rejeitar`, { motivo });
+      alert('Pagamento rejeitado.');
+      this.loadPixPendentes();
+    } catch (err) {
+      alert(err.message || 'Erro ao rejeitar');
+    }
+  }
+
+  formatDateTime(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
   async saveEmpresaData() {
     const dados = {
       telefone: document.getElementById('empTelefone')?.value,
@@ -1434,7 +1591,11 @@ class PainelEmpresa {
       descricao: document.getElementById('empDescricao')?.value,
       horario_funcionamento: this.getHorariosValue(),
       cor_primaria: document.getElementById('empCorPrimaria')?.value,
-      cor_secundaria: document.getElementById('empCorSecundaria')?.value
+      cor_secundaria: document.getElementById('empCorSecundaria')?.value,
+      chave_pix: document.getElementById('empChavePix')?.value?.trim() || null,
+      pix_type: document.getElementById('empPixType')?.value || null,
+      pix_titular: document.getElementById('empPixTitular')?.value?.trim() || null,
+      pix_manual_ativo: document.getElementById('empPixManualAtivo')?.checked ?? null
     };
 
     try {

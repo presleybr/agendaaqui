@@ -1,10 +1,34 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const QRCode = require('qrcode');
 const { MercadoPagoConfig, Payment } = require('mercadopago');
 const Pagamento = require('../models/Pagamento');
 const Agendamento = require('../models/Agendamento');
 const PaymentSplitService = require('../services/PaymentSplitService');
+const { generateBRCode } = require('../utils/pixBRCode');
 const db = require('../config/database');
+
+const comprovanteDir = path.join(__dirname, '../../../uploads/comprovantes');
+if (!fs.existsSync(comprovanteDir)) fs.mkdirSync(comprovanteDir, { recursive: true });
+
+const comprovanteUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, comprovanteDir),
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      cb(null, `comp-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+    }
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ok = /jpeg|jpg|png|webp|pdf/.test(file.mimetype) ||
+               /\.(jpe?g|png|webp|pdf)$/i.test(file.originalname);
+    cb(ok ? null : new Error('Formato invalido (use JPG, PNG, WEBP ou PDF)'), ok);
+  }
+}).single('comprovante');
 
 // Initialize Mercado Pago client
 const client = new MercadoPagoConfig({
@@ -395,6 +419,165 @@ router.post('/webhook', async (req, res) => {
     console.error('❌ Error processing webhook:', error);
     // Já enviamos o status 200, então não precisamos fazer nada aqui
   }
+});
+
+/**
+ * =============================================================================
+ * PIX MANUAL (Copia e Cola offline — sem API, sem webhook)
+ * =============================================================================
+ * Fluxo:
+ *   1) Frontend chama POST /pix-manual/gerar com agendamento_id.
+ *   2) Backend monta BR Code com a chave da empresa dona do agendamento e
+ *      responde com copia-e-cola + QR em base64. Status inicial: 'pending'.
+ *   3) Cliente paga no banco e envia comprovante via POST
+ *      /pix-manual/:pagamentoId/comprovante. Status -> 'aguardando_aprovacao'.
+ *   4) Empresa aprova/rejeita pelo painel (rotas em painelEmpresa.js).
+ */
+
+function ascii(str, max) {
+  if (!str) return '';
+  return String(str)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9 .,\-\/]/g, '')
+    .trim()
+    .slice(0, max);
+}
+
+router.post('/pix-manual/gerar', async (req, res) => {
+  try {
+    const { agendamento_id, valor } = req.body;
+    if (!agendamento_id) {
+      return res.status(400).json({ error: 'agendamento_id e obrigatorio' });
+    }
+
+    const agendamento = await Agendamento.findById(agendamento_id);
+    if (!agendamento) return res.status(404).json({ error: 'Agendamento nao encontrado' });
+
+    const empresaRes = await db.query(
+      `SELECT id, nome, chave_pix, pix_type, pix_titular, cidade, pix_manual_ativo
+       FROM empresas WHERE id = $1`,
+      [agendamento.empresa_id]
+    );
+    const empresa = empresaRes.rows[0];
+    if (!empresa) return res.status(404).json({ error: 'Empresa nao encontrada' });
+    if (!empresa.chave_pix || String(empresa.chave_pix).trim() === '') {
+      return res.status(400).json({ error: 'Empresa nao configurou chave PIX' });
+    }
+    if (empresa.pix_manual_ativo === false) {
+      return res.status(400).json({ error: 'PIX manual desativado para esta empresa' });
+    }
+
+    const valorReais = Number(valor || agendamento.valor || 0) / (valor ? 1 : 100);
+    const valorNumerico = valor ? Number(valor) : (Number(agendamento.valor || 0) / 100);
+    if (!valorNumerico || valorNumerico <= 0) {
+      return res.status(400).json({ error: 'Valor invalido' });
+    }
+
+    const txid = `AG${agendamento.id}${Date.now().toString(36).toUpperCase()}`.slice(0, 25);
+    const titular = ascii(empresa.pix_titular || empresa.nome || 'EMPRESA', 25) || 'EMPRESA';
+    const cidade = ascii(empresa.cidade || 'BRASIL', 15) || 'BRASIL';
+
+    const brCode = generateBRCode({
+      pixKey: empresa.chave_pix,
+      merchantName: titular,
+      merchantCity: cidade,
+      amount: valorNumerico,
+      txid
+    });
+
+    const qrBase64 = await QRCode.toDataURL(brCode, { errorCorrectionLevel: 'M', margin: 1, width: 360 });
+
+    const existing = await db.query(
+      `SELECT id FROM pagamentos
+       WHERE agendamento_id = $1 AND metodo_pagamento = 'pix_manual'
+         AND status NOT IN ('approved','aprovado','rejected','rejeitado')
+       ORDER BY id DESC LIMIT 1`,
+      [agendamento_id]
+    );
+
+    let pagamentoId;
+    const valorCentavos = Math.round(valorNumerico * 100);
+
+    if (existing.rows[0]) {
+      pagamentoId = existing.rows[0].id;
+      await db.query(
+        `UPDATE pagamentos SET
+          pix_br_code = $1, pix_qr_base64 = $2, pix_txid = $3,
+          valor_total = $4, status = 'pending', updated_at = NOW()
+         WHERE id = $5`,
+        [brCode, qrBase64, txid, valorCentavos, pagamentoId]
+      );
+    } else {
+      const insert = await db.query(
+        `INSERT INTO pagamentos (
+          agendamento_id, empresa_id, metodo_pagamento, valor_total, status,
+          pix_br_code, pix_qr_base64, pix_txid
+        ) VALUES ($1, $2, 'pix_manual', $3, 'pending', $4, $5, $6)
+        RETURNING id`,
+        [agendamento_id, empresa.id, valorCentavos, brCode, qrBase64, txid]
+      );
+      pagamentoId = insert.rows[0].id;
+    }
+
+    res.json({
+      pagamento_id: pagamentoId,
+      br_code: brCode,
+      qr_code_base64: qrBase64,
+      txid,
+      valor: valorNumerico,
+      titular,
+      cidade,
+      chave_pix: empresa.chave_pix,
+      pix_type: empresa.pix_type,
+      status: 'pending'
+    });
+  } catch (err) {
+    console.error('Erro pix-manual/gerar:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/pix-manual/:pagamentoId', async (req, res) => {
+  try {
+    const r = await db.query(
+      `SELECT id, agendamento_id, empresa_id, valor_total, status,
+              pix_br_code, pix_qr_base64, pix_txid, comprovante_url,
+              comprovante_enviado_em, aprovado_em, rejeitado_em, rejeicao_motivo
+       FROM pagamentos WHERE id = $1`,
+      [req.params.pagamentoId]
+    );
+    if (!r.rows[0]) return res.status(404).json({ error: 'Pagamento nao encontrado' });
+    res.json(r.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/pix-manual/:pagamentoId/comprovante', (req, res) => {
+  comprovanteUpload(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: 'Arquivo nao enviado' });
+    try {
+      const { pagamentoId } = req.params;
+      const url = '/uploads/comprovantes/' + req.file.filename;
+      const upd = await db.query(
+        `UPDATE pagamentos
+         SET comprovante_url = $1,
+             comprovante_enviado_em = NOW(),
+             status = 'aguardando_aprovacao',
+             updated_at = NOW()
+         WHERE id = $2 AND metodo_pagamento = 'pix_manual'
+         RETURNING id, agendamento_id, status, comprovante_url`,
+        [url, pagamentoId]
+      );
+      if (!upd.rows[0]) return res.status(404).json({ error: 'Pagamento nao encontrado' });
+      res.json({ success: true, pagamento: upd.rows[0] });
+    } catch (e) {
+      console.error('Erro upload comprovante:', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
 });
 
 module.exports = router;
