@@ -236,6 +236,32 @@ class WhatsAppManager {
   }
 
   /**
+   * Envia midia (imagem ou documento) com legenda opcional.
+   * mimetype define o tipo: image/* vira image, outros viram document.
+   */
+  async sendMedia(empresaId, phone, buffer, { filename, mimetype, caption } = {}) {
+    const session = this.sessions.get(empresaId);
+    if (!session || session.status !== 'connected') {
+      throw new Error('WhatsApp nao conectado');
+    }
+
+    const jid = this.formatJID(phone);
+    const isImage = mimetype && mimetype.startsWith('image/');
+
+    const payload = isImage
+      ? { image: buffer, caption: caption || '' }
+      : { document: buffer, mimetype: mimetype || 'application/octet-stream', fileName: filename || 'arquivo', caption: caption || '' };
+
+    try {
+      await session.socket.sendMessage(jid, payload);
+      return { success: true };
+    } catch (error) {
+      console.error(`[WhatsApp] Erro ao enviar midia empresa ${empresaId}:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Desconecta sessao
    */
   async disconnect(empresaId) {

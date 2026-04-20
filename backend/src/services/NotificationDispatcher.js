@@ -6,9 +6,19 @@
  * nunca derruba o fluxo principal (criar agendamento / aprovar pagamento).
  */
 
+const fs = require('fs');
+const path = require('path');
 const db = require('../config/database');
 const whatsAppManager = require('./WhatsAppService');
 const MessageTemplates = require('./MessageTemplates');
+
+const MIME_BY_EXT = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.pdf': 'application/pdf'
+};
 
 async function getConfig(empresaId) {
   const r = await db.query(
@@ -108,7 +118,58 @@ async function notifyPagamentoAprovado(agendamento) {
   }
 }
 
+/**
+ * Envia o comprovante (imagem/PDF) + legenda ao gerente quando o cliente envia.
+ * comprovanteUrl e o caminho relativo gravado no banco (ex: /uploads/comprovantes/comp-xxx.png).
+ */
+async function notifyComprovanteEnviado(agendamento, comprovanteUrl) {
+  try {
+    if (!agendamento?.empresa_id || !comprovanteUrl) return;
+    const cfg = await getConfig(agendamento.empresa_id);
+    if (!cfg || !cfg.ativo) return;
+    if (!cfg.telefone_gerente) return;
+    if (!whatsAppManager.isConnected(agendamento.empresa_id)) return;
+
+    const tipo = 'comprovante_enviado_gerente';
+    if (await alreadySent(agendamento.empresa_id, agendamento.id, tipo)) return;
+
+    // Monta caminho absoluto: rota serve /uploads a partir de backend/../uploads
+    const filePath = path.join(__dirname, '../../../', comprovanteUrl.replace(/^\//, ''));
+    if (!fs.existsSync(filePath)) {
+      console.error('[NotifDispatcher] comprovante nao encontrado:', filePath);
+      return;
+    }
+
+    const buffer = fs.readFileSync(filePath);
+    const ext = path.extname(filePath).toLowerCase();
+    const mimetype = MIME_BY_EXT[ext] || 'application/octet-stream';
+    const filename = `comprovante-${agendamento.protocolo || agendamento.id}${ext}`;
+    const caption = MessageTemplates.comprovanteEnviadoGerente(agendamento);
+
+    try {
+      await whatsAppManager.sendMedia(agendamento.empresa_id, cfg.telefone_gerente, buffer, {
+        filename, mimetype, caption
+      });
+      await db.query(
+        `INSERT INTO whatsapp_notificacoes_log (empresa_id, agendamento_id, tipo, telefone_destino, mensagem, status)
+         VALUES ($1, $2, $3, $4, $5, 'enviado')`,
+        [agendamento.empresa_id, agendamento.id, tipo, cfg.telefone_gerente, caption]
+      );
+    } catch (err) {
+      console.error(`[NotifDispatcher] ${tipo} empresa=${agendamento.empresa_id}:`, err.message);
+      await db.query(
+        `INSERT INTO whatsapp_notificacoes_log (empresa_id, agendamento_id, tipo, telefone_destino, mensagem, status, erro_detalhes)
+         VALUES ($1, $2, $3, $4, $5, 'erro', $6)`,
+        [agendamento.empresa_id, agendamento.id, tipo, cfg.telefone_gerente, caption, err.message]
+      ).catch(() => {});
+    }
+  } catch (err) {
+    console.error('[NotifDispatcher] notifyComprovanteEnviado:', err.message);
+  }
+}
+
 module.exports = {
   notifyAgendamentoCriado,
-  notifyPagamentoAprovado
+  notifyPagamentoAprovado,
+  notifyComprovanteEnviado
 };

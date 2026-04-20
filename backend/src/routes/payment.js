@@ -554,6 +554,12 @@ router.post('/pix-manual/:pagamentoId/comprovante', (req, res) => {
         [url, pagamentoId]
       );
       if (!upd.rows[0]) return res.status(404).json({ error: 'Pagamento nao encontrado' });
+
+      // Dispara o comprovante pro gerente via WhatsApp (fire-and-forget).
+      Agendamento.findById(upd.rows[0].agendamento_id).then(ag => {
+        if (ag) NotificationDispatcher.notifyComprovanteEnviado(ag, url).catch(() => {});
+      }).catch(() => {});
+
       res.json({ success: true, pagamento: upd.rows[0] });
     } catch (e) {
       console.error('Erro upload comprovante:', e);

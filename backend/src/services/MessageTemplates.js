@@ -182,6 +182,29 @@ class MessageTemplates {
   }
 
   /**
+   * Evento: cliente enviou comprovante PIX manual - para o GERENTE
+   * Enviado junto com o arquivo do comprovante.
+   */
+  static comprovanteEnviadoGerente(agendamento) {
+    const { data, hora } = this._dataHora(agendamento);
+    const valor = this._valor(agendamento);
+    return [
+      `📎 *Comprovante recebido*`,
+      '',
+      `👤 *Cliente:* ${agendamento.cliente_nome || 'N/A'}`,
+      `📞 *Telefone:* ${agendamento.cliente_telefone || 'N/A'}`,
+      `🔖 *Protocolo:* ${agendamento.protocolo || 'N/A'}`,
+      `📆 *Vistoria em:* ${data} as ${hora}`,
+      `🚗 *Veiculo:* ${agendamento.veiculo_placa || ''} ${agendamento.veiculo_modelo ? '- ' + agendamento.veiculo_modelo : ''}`.trim(),
+      valor ? `💰 *Valor:* ${valor}` : '',
+      '',
+      `⏳ _Confirme o pagamento no painel para liberar o agendamento._`,
+      '',
+      `📋 _AgendaAqui_`
+    ].filter(l => l !== '').join('\n');
+  }
+
+  /**
    * Mensagem de teste
    */
   static teste() {
